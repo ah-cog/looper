@@ -27,14 +27,12 @@ public class MyGameActivity extends Activity {
 
     @Override
     protected void onResume () {
-        // TODO Auto-generated method stub
         super.onResume ();
         mySurfaceView.MyGameSurfaceView_OnResume ();
     }
 
     @Override
     protected void onPause () {
-        // TODO Auto-generated method stub
         super.onPause ();
         mySurfaceView.MyGameSurfaceView_OnPause ();
     }

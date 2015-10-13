@@ -11,76 +11,63 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-import java.util.Random;
-
 public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Callback {
 
-    SurfaceHolder surfaceHolder;
+    private SurfaceHolder surfaceHolder;
 
-    MyGameThread myGameThread = null;
+    private MyGameThread myGameThread;
 
-    int myCanvas_w, myCanvas_h;
-    Bitmap myCanvasBitmap = null;
-    Canvas myCanvas = null;
-    Matrix identityMatrix;
-
-    Substrate substrate = new Substrate ();
+    private int myCanvas_w, myCanvas_h;
+    private Bitmap myCanvasBitmap = null;
+    private Canvas myCanvas = null;
+    private Matrix identityMatrix;
 
     private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    Random random;
 
     // In this test, handle maximum of 2 pointer
-    final int MAXIMUM_TOUCH_COUNT = 5;
+    private final int MAXIMUM_TOUCH_COUNT = 5;
 
-    float[] xTouch = new float[MAXIMUM_TOUCH_COUNT];
-    float[] yTouch = new float[MAXIMUM_TOUCH_COUNT];
-    boolean[] isTouch = new boolean[MAXIMUM_TOUCH_COUNT];
+    private float[] xTouch = new float[MAXIMUM_TOUCH_COUNT];
+    private float[] yTouch = new float[MAXIMUM_TOUCH_COUNT];
+    private boolean[] isTouch = new boolean[MAXIMUM_TOUCH_COUNT];
 
-    float[] x_last = new float[MAXIMUM_TOUCH_COUNT];
-    float[] y_last = new float[MAXIMUM_TOUCH_COUNT];
-    boolean[] isTouch_last = new boolean[MAXIMUM_TOUCH_COUNT];
+    private float[] x_last = new float[MAXIMUM_TOUCH_COUNT];
+    private float[] y_last = new float[MAXIMUM_TOUCH_COUNT];
+    private boolean[] isTouch_last = new boolean[MAXIMUM_TOUCH_COUNT];
 
-    float[] xTouchDown = new float[MAXIMUM_TOUCH_COUNT];
-    float[] yTouchDown = new float[MAXIMUM_TOUCH_COUNT];
+    private float[] xTouchDown = new float[MAXIMUM_TOUCH_COUNT];
+    private float[] yTouchDown = new float[MAXIMUM_TOUCH_COUNT];
 
-    float[] xTouchUp = new float[MAXIMUM_TOUCH_COUNT];
-    float[] yTouchUp = new float[MAXIMUM_TOUCH_COUNT];
+    private float[] xTouchUp = new float[MAXIMUM_TOUCH_COUNT];
+    private float[] yTouchUp = new float[MAXIMUM_TOUCH_COUNT];
 
-    // Loop
-//    float loopPositionX = 0;
-//    float loopPositionY = 0;
-//    float loopRadius = 300;
-//    float loopStartAngle = -75;
-//    float loopAngleSpan = 330;
+    private Substrate substrate = new Substrate ();
 
-    public MyGameSurfaceView(Context context) {
-        super(context);
-        // TODO Auto-generated constructor stub
+    public MyGameSurfaceView (Context context) {
+        super (context);
     }
 
-    public MyGameSurfaceView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        // TODO Auto-generated constructor stub
+    public MyGameSurfaceView (Context context, AttributeSet attrs) {
+        super (context, attrs);
     }
 
-    public MyGameSurfaceView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
-        // TODO Auto-generated constructor stub
+    public MyGameSurfaceView (Context context, AttributeSet attrs, int defStyle) {
+        super (context, attrs, defStyle);
     }
 
     @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+    public void surfaceChanged (SurfaceHolder holder, int format, int width, int height) {
         // TODO Auto-generated method stub
     }
 
     @Override
-    public void surfaceCreated(SurfaceHolder holder) {
+    public void surfaceCreated (SurfaceHolder holder) {
 
         myCanvas_w = getWidth();
         myCanvas_h = getHeight();
         myCanvasBitmap = Bitmap.createBitmap (myCanvas_w, myCanvas_h, Bitmap.Config.ARGB_8888);
         myCanvas = new Canvas();
-        myCanvas.setBitmap(myCanvasBitmap);
+        myCanvas.setBitmap (myCanvasBitmap);
 
         identityMatrix = new Matrix();
     }
@@ -90,23 +77,23 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
         // TODO Auto-generated method stub
     }
 
-    public void MyGameSurfaceView_OnResume (){
+    public void MyGameSurfaceView_OnResume () {
 
-        random = new Random();
-        surfaceHolder = getHolder();
-        getHolder().addCallback(this);
+        surfaceHolder = getHolder ();
+        getHolder ().addCallback (this);
 
         // Create and start background Thread
-        myGameThread = new MyGameThread(this, 100);
-        myGameThread.setRunning(true);
-        myGameThread.start();
+        myGameThread = new MyGameThread (this);
+        myGameThread.setRunning (true);
+        myGameThread.start ();
 
     }
 
-    public void MyGameSurfaceView_OnPause (){
+    public void MyGameSurfaceView_OnPause () {
+
         // Kill the background Thread
         boolean retry = true;
-        myGameThread.setRunning(false);
+        myGameThread.setRunning (false);
 
         while (retry) {
             try {
@@ -121,11 +108,8 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
     @Override
     protected void onDraw (Canvas canvas) {
 
-        //canvas.drawColor(Color.WHITE);
+        // Draw the background
         myCanvas.drawColor(Color.WHITE);
-
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(3);
 
         /*
         if(isTouch[0]) {
@@ -180,6 +164,8 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
 
         // Create the default, empty loop if none exist.
         if (this.substrate.loops.size() == 0) {
+
+            // Create a loop on the substrate if one doesn't exist.
             Loop defaultLoop = new Loop(this.substrate);
             this.substrate.addLoop(defaultLoop);
         }
@@ -187,7 +173,7 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
         // Draw the loops
         for (Loop loop : this.substrate.getLoops()) {
 
-            // Set loop style
+            // Set the loop's style
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(2);
             paint.setColor(Color.BLACK);
