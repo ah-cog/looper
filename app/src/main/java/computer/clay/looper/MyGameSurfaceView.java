@@ -109,7 +109,7 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
     protected void onDraw (Canvas canvas) {
 
         // Draw the background
-        myCanvas.drawColor(Color.WHITE);
+        myCanvas.drawColor (Color.WHITE);
 
         /*
         if(isTouch[0]) {
@@ -121,52 +121,20 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
                 circles.add(new Point(Math.round(xTouch[0]), Math.round(yTouch[0])));
             }
         }
-        if(isTouch[1]){
-            if(isTouch_last[1]){
-                paint.setStyle(Paint.Style.STROKE);
-                paint.setStrokeWidth(5);
-                paint.setColor(Color.BLUE);
-                myCanvas.drawLine(x_last[1], y_last[1], xTouch[1], yTouch[1], paint);
-            }
-        }
-        if(isTouch[2]){
-            if(isTouch_last[2]){
-                paint.setStyle(Paint.Style.STROKE);
-                paint.setStrokeWidth(5);
-                paint.setColor(Color.GREEN);
-                myCanvas.drawLine(x_last[2], y_last[2], xTouch[2], yTouch[2], paint);
-            }
-        }
-        if(isTouch[3]){
-            if(isTouch_last[3]){
-                paint.setStyle(Paint.Style.STROKE);
-                paint.setStrokeWidth(5);
-                paint.setColor(Color.YELLOW);
-                myCanvas.drawLine(x_last[3], y_last[3], xTouch[3], yTouch[3], paint);
-            }
-        }
-        if(isTouch[4]){
-            if(isTouch_last[4]){
-                paint.setStyle(Paint.Style.STROKE);
-                paint.setStrokeWidth(5);
-                paint.setColor(Color.MAGENTA);
-                myCanvas.drawLine(x_last[4], y_last[4], xTouch[4], yTouch[4], paint);
-            }
-        }
         */
 
         // Define base coordinate system
         float xOrigin = (myCanvas.getWidth() / 2);
         float yOrigin = (myCanvas.getHeight() / 2);
 
-//        myCanvas.save();
-//        myCanvas.translate(xOrigin, yOrigin);
+//        myCanvas.save ();
+//        myCanvas.translate (xOrigin, yOrigin);
 
         // Create the default, empty loop if none exist.
-        if (this.substrate.loops.size() == 0) {
+        if (this.substrate.loops.size () == 0) {
 
             // Create a loop on the substrate if one doesn't exist.
-            Loop defaultLoop = new Loop(this.substrate);
+            Loop defaultLoop = new Loop (this.substrate);
             this.substrate.addLoop(defaultLoop);
         }
 
@@ -199,12 +167,12 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
 
         // Draw actions that represent Clay's current behavior.
         // TODO: Draw the actions here that are NOT on a loop. Those are drawn above.
-        for (Action action : this.substrate.getActions()) {
+        for (Action action : this.substrate.getActions ()) {
 
             // Set style
-            paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeWidth(2);
-            paint.setColor(Color.BLACK);
+            paint.setStyle (Paint.Style.STROKE);
+            paint.setStrokeWidth (2);
+            paint.setColor (Color.BLACK);
 
             // Draw behavior node
             myCanvas.drawCircle (action.getPosition().x, action.getPosition().y, action.getRadius (), paint);
@@ -215,25 +183,25 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
 
     }
 
-    public void updateStates(){
-//Dummy method() to handle the States
+    public void updateStates () {
+        // Dummy method() to handle the States
     }
 
-    public void updateSurfaceView(){
-//The function run in background thread, not ui thread.
+    public void updateSurfaceView () {
+        //The function run in background thread, not ui thread.
 
         Canvas canvas = null;
 
-        try{
-            canvas = surfaceHolder.lockCanvas();
+        try {
+            canvas = surfaceHolder.lockCanvas ();
 
             synchronized (surfaceHolder) {
-                updateStates();
-                onDraw(canvas);
+                updateStates ();
+                onDraw (canvas);
             }
-        }finally{
-            if(canvas != null){
-                surfaceHolder.unlockCanvasAndPost(canvas);
+        } finally {
+            if (canvas != null) {
+                surfaceHolder.unlockCanvasAndPost (canvas);
             }
         }
     }
@@ -248,7 +216,7 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
         int pointCnt = motionEvent.getPointerCount();
 
         if (pointCnt <= MAXIMUM_TOUCH_COUNT){
-            if (pointerIndex <= MAXIMUM_TOUCH_COUNT - 1){
+            if (pointerIndex <= MAXIMUM_TOUCH_COUNT - 1) {
 
                 for (int i = 0; i < pointCnt; i++) {
                     int id = motionEvent.getPointerId(i);
@@ -367,195 +335,3 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
     }
 
 }
-
-//package computer.clay.surfaceviewplayground;
-//
-//import android.content.Context;
-//import android.graphics.Canvas;
-//import android.graphics.Color;
-//import android.graphics.Paint;
-//import android.view.MotionEvent;
-//import android.view.SurfaceHolder;
-//import android.view.SurfaceView;
-//
-//class MyGameSurfaceView extends SurfaceView implements Runnable {
-//
-//    // In this test, handle maximum of 2 pointer
-//    final int MAXIMUM_TOUCH_COUNT = 5;
-//
-//    private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-//
-//    float[] xTouch = new float[MAXIMUM_TOUCH_COUNT];
-//    float[] yTouch = new float[MAXIMUM_TOUCH_COUNT];
-//    boolean[] isTouch = new boolean[MAXIMUM_TOUCH_COUNT];
-//
-//    float[] x_last = new float[MAXIMUM_TOUCH_COUNT];
-//    float[] y_last = new float[MAXIMUM_TOUCH_COUNT];
-//    boolean[] isTouch_last = new boolean[MAXIMUM_TOUCH_COUNT];
-//
-//    Thread thread = null;
-//    SurfaceHolder surfaceHolder;
-//    volatile boolean running = false;
-//
-//    public MyGameSurfaceView(Context context) {
-//        super(context);
-//        // TODO Auto-generated constructor stub
-//        surfaceHolder = getHolder();
-//
-//    }
-//
-//    public void onResumeMySurfaceView () {
-//        running = true;
-//        thread = new Thread(this);
-//        thread.start();
-//    }
-//
-//    public void onPauseMySurfaceView() {
-//        boolean retry = true;
-//        running = false;
-//        while(retry){
-//            try {
-//                thread.join();
-//                retry = false;
-//            } catch (InterruptedException e) {
-//                // TODO Auto-generated catch block
-//                e.printStackTrace();
-//            }
-//        }
-//    }
-//
-//    @Override
-//    public void run() {
-//        while (running) {
-//            if (surfaceHolder.getSurface().isValid()) {
-//                Canvas canvas = surfaceHolder.lockCanvas();
-//                //... actual drawing on canvas
-//
-//                paint.setStyle(Paint.Style.STROKE);
-//                paint.setStrokeWidth(1);
-//
-//                if(isTouch[0]){
-//                    if(isTouch_last[0]){
-//                        paint.setStyle(Paint.Style.STROKE);
-//                        paint.setStrokeWidth(5);
-//                        paint.setColor(Color.RED);
-//                        canvas.drawLine(x_last[0], y_last[0], xTouch[0], yTouch[0], paint);
-//                    }
-//                }
-//                if(isTouch[1]){
-//                    if(isTouch_last[1]){
-//                        paint.setStyle(Paint.Style.STROKE);
-//                        paint.setStrokeWidth(5);
-//                        paint.setColor(Color.BLUE);
-//                        canvas.drawLine(x_last[1], y_last[1], xTouch[1], yTouch[1], paint);
-//                    }
-//                }
-//                if(isTouch[2]){
-//                    if(isTouch_last[2]){
-//                        paint.setStyle(Paint.Style.STROKE);
-//                        paint.setStrokeWidth(5);
-//                        paint.setColor(Color.GREEN);
-//                        canvas.drawLine(x_last[2], y_last[2], xTouch[2], yTouch[2], paint);
-//                    }
-//                }
-//                if(isTouch[3]){
-//                    if(isTouch_last[3]){
-//                        paint.setStyle(Paint.Style.STROKE);
-//                        paint.setStrokeWidth(5);
-//                        paint.setColor(Color.YELLOW);
-//                        canvas.drawLine(x_last[3], y_last[3], xTouch[3], yTouch[3], paint);
-//                    }
-//                }
-//                if(isTouch[4]){
-//                    if(isTouch_last[4]){
-//                        paint.setStyle(Paint.Style.STROKE);
-//                        paint.setStrokeWidth(5);
-//                        paint.setColor(Color.MAGENTA);
-//                        canvas.drawLine(x_last[4], y_last[4], xTouch[4], yTouch[4], paint);
-//                    }
-//                }
-//
-//                // Define base coordinate system
-//                float xOrigin = (canvas.getWidth() / 2);
-//                float yOrigin = (canvas.getHeight() / 2);
-//
-//                // Draw loop style
-//                paint.setStyle(Paint.Style.STROKE);
-//                paint.setStrokeWidth(2);
-//                paint.setColor(Color.WHITE);
-//
-//                // Define loop geometry
-//                float loopPositionX = 0;
-//                float loopPositionY = 0;
-//                float loopRadius = 300;
-//                float loopStartAngle = -75;
-//                float loopAngleSpan = 330;
-//
-//                float loopLeft = xOrigin + loopPositionX - loopRadius;
-//                float loopTop = yOrigin + -1 * loopPositionY - loopRadius;
-//                float loopRight = xOrigin + loopPositionX + loopRadius;
-//                float loopBottom = yOrigin + -1 * loopPositionY + loopRadius;
-//                canvas.drawArc(loopLeft, loopTop, loopRight, loopBottom, loopStartAngle, loopAngleSpan, false, paint);
-//
-//                // TODO: Draw arrowhead on loop
-//
-//                // TODO: Draw behaviors
-//                canvas.drawCircle(200, 200, 50, paint);
-//
-//                surfaceHolder.unlockCanvasAndPost(canvas);
-//            }
-//        }
-//    }
-//
-//    @Override
-//    public boolean onTouchEvent(MotionEvent motionEvent) {
-//        int pointerIndex = ((motionEvent.getAction() & MotionEvent.ACTION_POINTER_ID_MASK)
-//                >> MotionEvent.ACTION_POINTER_ID_SHIFT);
-//        int pointerId = motionEvent.getPointerId(pointerIndex);
-//        int action = (motionEvent.getAction() & MotionEvent.ACTION_MASK);
-//        int pointCnt = motionEvent.getPointerCount();
-//
-//        if (pointCnt <= MAXIMUM_TOUCH_COUNT){
-//            if (pointerIndex <= MAXIMUM_TOUCH_COUNT - 1){
-//
-//                for (int i = 0; i < pointCnt; i++) {
-//                    int id = motionEvent.getPointerId(i);
-//                    x_last[id] = xTouch[id];
-//                    y_last[id] = yTouch[id];
-//                    isTouch_last[id] = isTouch[id];
-//                    xTouch[id] = motionEvent.getX(i);
-//                    yTouch[id] = motionEvent.getY(i);
-//                }
-//
-//                switch (action){
-//                    case MotionEvent.ACTION_DOWN:
-//                        isTouch[pointerId] = true;
-//                        break;
-//                    case MotionEvent.ACTION_POINTER_DOWN:
-//                        isTouch[pointerId] = true;
-//                        break;
-//                    case MotionEvent.ACTION_MOVE:
-//                        isTouch[pointerId] = true;
-//                        break;
-//                    case MotionEvent.ACTION_UP:
-//                        isTouch[pointerId] = false;
-//                        isTouch_last[pointerId] = false;
-//                        break;
-//                    case MotionEvent.ACTION_POINTER_UP:
-//                        isTouch[pointerId] = false;
-//                        isTouch_last[pointerId] = false;
-//                        break;
-//                    case MotionEvent.ACTION_CANCEL:
-//                        isTouch[pointerId] = false;
-//                        isTouch_last[pointerId] = false;
-//                        break;
-//                    default:
-//                        isTouch[pointerId] = false;
-//                        isTouch_last[pointerId] = false;
-//                }
-//            }
-//        }
-//
-//        return true;
-//    }
-//}

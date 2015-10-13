@@ -1,6 +1,5 @@
 package computer.clay.looper;
 
-import android.content.Context;
 import android.graphics.Point;
 
 public class Perspective {
@@ -9,14 +8,16 @@ public class Perspective {
 
     private Substrate substrate = null;
 
-    public Perspective (Context context) {
+    public Perspective (Substrate substrate) {
         super();
 
         this.substrate = substrate;
+
+        this.position.set (0, 0);
     }
 
     public void setPosition (int x, int y) {
-        position.set(x, y);
+        position.set (x, y);
     }
 
     public void moveBy (int xOffset, int yOffset) {
