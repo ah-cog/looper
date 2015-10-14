@@ -4,7 +4,7 @@ import android.graphics.Point;
 
 public class Perspective {
 
-    private Point position;
+    private Point position = new Point();
 
     private Substrate substrate = null;
 
@@ -18,6 +18,10 @@ public class Perspective {
 
     public void setPosition (int x, int y) {
         position.set (x, y);
+    }
+
+    public Point getPosition () {
+        return this.position;
     }
 
     public void moveBy (int xOffset, int yOffset) {

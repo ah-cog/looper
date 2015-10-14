@@ -4,7 +4,7 @@ import android.graphics.Point;
 
 public class Action {
 
-    public static int DEFAULT_RADIUS = 50;
+    public static int DEFAULT_RADIUS = 60;
 
     private Point position = new Point ();
     private int radius;

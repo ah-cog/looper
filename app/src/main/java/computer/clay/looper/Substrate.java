@@ -28,4 +28,6 @@ public class Substrate {
     public ArrayList<Loop> getLoops () {
         return this.loops;
     }
+
+    // TODO: getNearestLoop (int x, int y)
 }
