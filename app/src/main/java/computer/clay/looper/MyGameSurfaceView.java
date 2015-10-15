@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -141,8 +142,9 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
     protected void onDraw (Canvas canvas) {
 
         // Move the perspective
-        myCanvas.save();
-        myCanvas.translate(perspective.getPosition().x, perspective.getPosition().y);
+        myCanvas.save ();
+        myCanvas.translate (perspective.getPosition ().x, perspective.getPosition ().y);
+        myCanvas.scale (perspective.getScaleFactor (), perspective.getScaleFactor ());
 
         // Draw the background
         myCanvas.drawColor (Color.WHITE);
@@ -221,12 +223,17 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
         for (Action action : this.substrate.getActions ()) {
 
             // Set style
-            paint.setStyle (Paint.Style.STROKE);
-            paint.setStrokeWidth (2);
-            paint.setColor (Color.BLACK);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(2);
+            paint.setColor(Color.BLACK);
 
             // Draw behavior node
-            myCanvas.drawCircle (action.getPosition().x, action.getPosition().y, action.getRadius (), paint);
+            myCanvas.drawCircle(action.getPosition().x, action.getPosition().y, action.getRadius(), paint);
+
+            Loop nearestLoop = this.substrate.getLoops().get(0);
+            Point nearestPoint = action.getNearestPoint(nearestLoop);
+
+            myCanvas.drawLine (action.getPosition().x, action.getPosition().y, nearestPoint.x, nearestPoint.y, paint);
         }
 
         // Paint the bitmap to the "primary" canvas
@@ -289,8 +296,8 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
                     yTouchPrevious[id] = yTouch[id];
                     isTouchPrevious[id] = isTouch[id];
 
-                    xTouch[id] = motionEvent.getX (i) - perspective.getPosition ().x; // HACK: TODO: Get x position directly!
-                    yTouch[id] = motionEvent.getY (i) - perspective.getPosition ().y; // HACK: TODO: Get y position directly!
+                    xTouch[id] = (motionEvent.getX (i) - perspective.getPosition ().x) / perspective.getScaleFactor (); // HACK: TODO: Get x position directly!
+                    yTouch[id] = (motionEvent.getY (i) - perspective.getPosition ().y) / perspective.getScaleFactor (); // HACK: TODO: Get y position directly!
                 }
 
                 // Check if touching _any_ actions. If so, keep the canvas locked, and find the action that's being touched.

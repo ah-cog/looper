@@ -60,4 +60,20 @@ public class Action {
         double distance = Math.sqrt(distanceSquare);
         return distance;
     }
+
+    public Point getNearestPoint (Loop loop) {
+
+        Point nearestPoint = new Point();
+
+        double deltaX = this.position.x - loop.getPosition().x;
+        double deltaY = this.position.y - loop.getPosition().y;
+        double angleInDegrees = Math.atan2(deltaY, deltaX);
+
+        int nearestX = (int) ((0) + (loop.getRadius()) * Math.cos (angleInDegrees));
+        int nearestY = (int) ((0) + (loop.getRadius()) * Math.sin (angleInDegrees));
+
+        nearestPoint.set (nearestX, nearestY);
+
+        return nearestPoint;
+    }
 }

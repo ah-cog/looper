@@ -4,7 +4,10 @@ import android.graphics.Point;
 
 public class Perspective {
 
-    private Point position = new Point();
+    public static float DEFAULT_SCALE_FACTOR = 1.0f;
+
+    private Point position = new Point ();
+    private float scaleFactor = DEFAULT_SCALE_FACTOR;
 
     private Substrate substrate = null;
 
@@ -14,6 +17,7 @@ public class Perspective {
         this.substrate = substrate;
 
         this.position.set (0, 0);
+        this.scaleFactor = DEFAULT_SCALE_FACTOR;
     }
 
     public void setPosition (int x, int y) {
@@ -26,5 +30,13 @@ public class Perspective {
 
     public void moveBy (int xOffset, int yOffset) {
         position.offset (xOffset, yOffset);
+    }
+
+    public void setScaleFactor (float scaleFactor) {
+        this.scaleFactor = scaleFactor;
+    }
+
+    public float getScaleFactor () {
+        return this.scaleFactor;
     }
 }
