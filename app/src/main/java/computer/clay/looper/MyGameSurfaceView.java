@@ -20,7 +20,7 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
 
     private SurfaceHolder surfaceHolder;
 
-    private int myCanvas_w, myCanvas_h;
+    private int myCanvasWidth, myCanvasHeight;
     private Bitmap myCanvasBitmap = null;
     private Canvas myCanvas = null;
     private Matrix identityMatrix;
@@ -53,22 +53,22 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
     private float[] xTouchStop = new float[MAXIMUM_TOUCH_COUNT];
     private float[] yTouchStop = new float[MAXIMUM_TOUCH_COUNT];
 
-    /**
-     * "Reciprocating" is responding to an action performed by a person with their body.
-     */
-    public void reciprocateTouchInteraction () {
-
-        if (hasTouches) {
-
-            if (touchCount == 1) {
-
-            } else if (touchCount == 2) {
-
-            }
-
-        }
-
-    }
+//    /**
+//     * "Reciprocating" is responding to an action performed by a person with their body.
+//     */
+//    public void reciprocateTouchInteraction () {
+//
+//        if (hasTouches) {
+//
+//            if (touchCount == 1) {
+//
+//            } else if (touchCount == 2) {
+//
+//            }
+//
+//        }
+//
+//    }
 
     private Substrate substrate = new Substrate ();
     private Perspective perspective = new Perspective (substrate);
@@ -93,14 +93,14 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
     @Override
     public void surfaceCreated (SurfaceHolder holder) {
 
-        myCanvas_w = getWidth();
-        myCanvas_h = getHeight();
-        myCanvasBitmap = Bitmap.createBitmap(myCanvas_w, myCanvas_h, Bitmap.Config.ARGB_8888);
+        myCanvasWidth = getWidth();
+        myCanvasHeight = getHeight();
+        myCanvasBitmap = Bitmap.createBitmap(myCanvasWidth, myCanvasHeight, Bitmap.Config.ARGB_8888);
         myCanvas = new Canvas();
         myCanvas.setBitmap (myCanvasBitmap);
 
         // TODO: Move setPosition to a better location!
-        perspective.setPosition(myCanvas.getWidth() / 2, myCanvas.getHeight() / 2);
+        perspective.setPosition (myCanvas.getWidth() / 2, myCanvas.getHeight() / 2);
 
         identityMatrix = new Matrix();
     }
@@ -126,7 +126,7 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
 
         // Kill the background Thread
         boolean retry = true;
-        myGameThread.setRunning(false);
+        myGameThread.setRunning (false);
 
         while (retry) {
             try {
@@ -149,24 +149,9 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
         // Draw the background
         myCanvas.drawColor (Color.WHITE);
 
-        /*
-        if(isTouch[0]) {
-            if(isTouch_last[0]) {
-                paint.setStyle(Paint.Style.STROKE);
-                paint.setStrokeWidth(5);
-                paint.setColor(Color.RED);
-                myCanvas.drawLine(x_last[0], y_last[0], xTouch[0], yTouch[0], paint);
-                circles.add(new Point(Math.round(xTouch[0]), Math.round(yTouch[0])));
-            }
-        }
-        */
-
         // Define base coordinate system
         float xOrigin = 0;
         float yOrigin = 0;
-
-//        myCanvas.save ();
-//        myCanvas.translate (xOrigin, yOrigin);
 
         // Create the default, empty loop if none exist.
         if (this.substrate.loops.size () == 0) {
@@ -211,13 +196,6 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
             // TODO: Draw the actions for each loop
         }
 
-//        myCanvas.save();
-//        myCanvas.translate(50, 250);
-//        myCanvas.rotate(45);
-//        myCanvas.drawLine(0, 0, 50, 50, paint);
-//        myCanvas.drawLine(0, 0, 50, -50, paint);
-//        myCanvas.restore();
-
         // Draw actions that represent Clay's current behavior.
         // TODO: Draw the actions here that are NOT on a loop. Those are drawn above.
         for (Action action : this.substrate.getActions ()) {
@@ -230,10 +208,22 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
             // Draw behavior node
             myCanvas.drawCircle(action.getPosition().x, action.getPosition().y, action.getRadius(), paint);
 
-            Loop nearestLoop = this.substrate.getLoops().get(0);
-            Point nearestPoint = action.getNearestPoint(nearestLoop);
+            /* Draw snapping path to nearest loop. */
 
-            myCanvas.drawLine (action.getPosition().x, action.getPosition().y, nearestPoint.x, nearestPoint.y, paint);
+            // Search for the nearest loop and snap to that one (ongoing).
+            Loop nearestLoop = null;
+            double nearestLoopDistance = Double.MAX_VALUE;
+            for (Loop loop : this.substrate.getLoops()) {
+                if (action.getDistanceToLoop(loop) < nearestLoopDistance) {
+                    nearestLoop = loop;
+                }
+            }
+
+            // Draw snapping path to nearest loop
+            if (action.getDistanceToLoop (nearestLoop) < 250) {
+                Point nearestPoint = action.getNearestPoint (nearestLoop);
+                myCanvas.drawLine(action.getPosition().x, action.getPosition().y, nearestPoint.x, nearestPoint.y, paint);
+            }
         }
 
         // Paint the bitmap to the "primary" canvas
@@ -303,30 +293,11 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
                 // Check if touching _any_ actions. If so, keep the canvas locked, and find the action that's being touched.
                 for (Action action : this.substrate.getActions()) {
                     double distanceToTouch = action.getDistance ((int) xTouch[pointerId], (int) yTouch[pointerId]);
-//                    Log.v(null, "distanceToTouch = " + distanceToTouch);
                     if (distanceToTouch < action.getRadius() + 20) {
                         touchedActions.add (action);
                         touchingAction = true;
                     }
                 }
-
-//                // Set the canvas as moved
-//                if (touchingAction == false) {
-//
-//                    // Calculate the drag distance
-//                    double dragDistanceSquare = Math.pow(xTouch[pointerId] - xTouchStart[pointerId], 2) + Math.pow(yTouch[pointerId] - yTouchStart[pointerId], 2);
-//                    dragDistance = (dragDistanceSquare != 0 ? Math.sqrt(dragDistanceSquare) : 0);
-//
-////                    if (this.substrate.getActions().size() > 0) { // Enable moving only if at least one action exists!
-//                    if (dragDistance > 10) {
-//                        // TODO: Get distance between down and current touch point. Set movingCanvas to true if the drag distance is greater than a specified threshold.
-//                        movingCanvas = true;
-//                    }
-//                }
-
-//                Log.v(null, "touchingAction = " + touchingAction);
-//                Log.v(null, "movingCanvas = " + movingCanvas);
-//                Log.v(null, "dragDistance = " + dragDistance);
 
                 // Update the touch interaction state with the most recent raw touch information.
                 if (touchAction == MotionEvent.ACTION_DOWN) {
@@ -349,17 +320,6 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
                         }
                     }
 
-//                        // Get the touched actions and update their position
-//                        if (touchingAction) {
-//                            for (Action action : touchedActions) {
-//                                action.setPosition((int) xTouch[pointerId],(int)  yTouch[pointerId]);
-//                            }
-//                        } else {
-//                            // Move the canvas if this is a drag event!
-//                            if (movingCanvas) {
-//                                perspective.moveBy ((int) (xTouch[pointerId] - xTouchStart[pointerId]), (int) (yTouch[pointerId] - yTouchStart[pointerId]));
-//                            }
-//                        }
                 } else if (touchAction == MotionEvent.ACTION_POINTER_DOWN) {
                     isTouch[pointerId] = true;
 
@@ -396,21 +356,9 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
                         perspective.moveBy ((int) (xTouch[pointerId] - xTouchStart[pointerId]), (int) (yTouch[pointerId] - yTouchStart[pointerId]));
                     } else if (isTouchingAction[pointerId]) {
                         for (Action action : touchedActions) {
-                            action.setPosition((int) xTouch[pointerId],(int)  yTouch[pointerId]);
+                            action.setPosition ((int) xTouch[pointerId],(int)  yTouch[pointerId]);
                         }
                     }
-
-                    // Get the touched actions and update their position
-//                    if (isDragging[pointerId]) {
-//                        for (Action action : touchedActions) {
-//                            action.setPosition((int) xTouch[pointerId],(int)  yTouch[pointerId]);
-//                        }
-//                    } else {
-//                        // Move the canvas if this is a drag event!
-//                        if (movingCanvas) {
-//                            perspective.moveBy ((int) (xTouch[pointerId] - xTouchStart[pointerId]), (int) (yTouch[pointerId] - yTouchStart[pointerId]));
-//                        }
-//                    }
 
                 } else if (touchAction == MotionEvent.ACTION_UP) {
                     isTouch[pointerId] = false;
@@ -419,33 +367,34 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
                     xTouchStop[pointerId] = xTouch[pointerId];
                     yTouchStop[pointerId] = yTouch[pointerId];
 
-//                    if (dragDistance > 15) {
-//                        // TODO: Get distance between down and current touch point. Set movingCanvas to true if the drag distance is greater than a specified threshold.
-//                        movingCanvas = true;
-//                    }
-
                     // Move the canvas if this is a drag event!
                     if (movingCanvas) {
                         perspective.moveBy ((int) (xTouch[pointerId] - xTouchStart[pointerId]), (int) (yTouch[pointerId] - yTouchStart[pointerId]));
                     } else {
-                        // Create a new action
-                        this.substrate.addAction(new Action(this.substrate, (int) xTouch[pointerId], (int) yTouch[pointerId]));
-                    }
 
-//                    // Get the touched actions and update their position
-//                    if (touchingAction) {
-//                        for (Action action : touchedActions) {
-//                            action.setPosition((int) xTouch[pointerId],(int)  yTouch[pointerId]);
+                        // TODO: If moving an action, upon release, call "searchForPosition()" to check the "logical state" of the action in the substrate WRT the other loops, and find it's final position and update its state (e.g., if it's near enough to snap to a loop, to be deleted, etc.).
+
+//                        if (!isTouchingAction[pointerId]) {
+                            this.substrate.addAction (new Action (this.substrate, (int) xTouch[pointerId], (int) yTouch[pointerId]));
 //                        }
-//                    } else {
-//                        // Move the canvas if this is a drag event!
-//                        if (movingCanvas) {
-//                            perspective.moveBy ((int) (xTouch[pointerId] - xTouchStart[pointerId]), (int) (yTouch[pointerId] - yTouchStart[pointerId]));
+
+                        
+
+//                        if (isTouchingAction[pointerId]) {
+//                            // Settle the action.
+//                            // Check if touching an action and set isTouchingAction accordingly.
+//                            for (Action action : this.substrate.getActions()) {
+//                                double distanceToAction = action.getDistance ((int) xTouch[pointerId], (int) yTouch[pointerId]);
+//                                if (distanceToAction < action.getRadius ()) {
+////                                    action.settlePosition ();
+//                                    break;
+//                                }
+//                            }
 //                        } else {
 //                            // Create a new action
 //                            this.substrate.addAction(new Action(this.substrate, (int) xTouch[pointerId], (int) yTouch[pointerId]));
 //                        }
-//                    }
+                    }
 
                     /* Reset touch state for the finger. */
 
@@ -456,31 +405,6 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
 
                     // TODO: In processTouchInteractions, compute movingCanvas and if it is true, move the perspective.
                     movingCanvas = false;
-//                    // Calculate the drag distance
-//                    double dragDistanceSquare = Math.pow(xTouch[pointerId] - xTouchStart[pointerId], 2) + Math.pow(yTouch[pointerId] - yTouchStart[pointerId], 2);
-//                    dragDistance[pointerId] = (dragDistanceSquare != 0 ? Math.sqrt(dragDistanceSquare) : 0);
-//
-//                    if (dragDistance[pointerId] > 15) {
-//                        // TODO: Get distance between down and current touch point. Set movingCanvas to true if the drag distance is greater than a specified threshold.
-//                        isDragging[pointerId] = true;
-//
-//                        // TODO: Move this into a separate processTouchInteraction() function, and in this event listener, only update the touch interaction state.
-//                        if (isTouchingAction[pointerId] == false) {
-//                            movingCanvas = true;
-//                        }
-//                    }
-
-
-
-//                    if (isDragging[pointerId]) {
-//                        // Calculate the drag distance
-//                        double dragDistanceSquare = Math.pow(xTouch[pointerId]  - xTouchStart[pointerId], 2) + Math.pow(yTouch[pointerId] - yTouchStart[pointerId], 2);
-//                        dragDistance[pointerId] = (dragDistanceSquare != 0 ? Math.sqrt(dragDistanceSquare) : 0);
-//
-//                        if (movingCanvas) {
-//                            movingCanvas = false;
-//                        }
-//                    }
 
                 } else if (touchAction == MotionEvent.ACTION_POINTER_UP) {
                     isTouch[pointerId] = false;
