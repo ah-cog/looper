@@ -1,6 +1,7 @@
 package computer.clay.looper;
 
 import android.graphics.Point;
+import android.util.Log;
 
 public class Action {
 
@@ -12,21 +13,24 @@ public class Action {
     public enum State {
         FREE, // The action is not on a loop.
         MOVING, // The action is being moved by touch.
+        COUPLED, // The action is near enough to a loop to snap onto it.
         SEQUENCED // The action is in a sequence (i.e., on a loop).
     }
 
-    private State state;
+    public State state;
 
     private Substrate substrate = null;
 
     // TODO: Title
     // TODO: Graphical representation and layout
     // TODO: Associate with a particular Clay by address
-    // TODO: Associate with command
+    // TODO: Associate with command (action's behavior tree/graph structure)
     // TODO: Associate with cloud object
 
     public Action (Substrate substrate, int xPosition, int yPosition) {
         super();
+
+        this.state = State.FREE;
 
         this.substrate = substrate;
 
@@ -44,6 +48,8 @@ public class Action {
      * "Settling" the position means computing the position based on the state of the action.
      */
     public Point settlePosition () {
+        Log.v("Clay", "settlePosition");
+
         Point resolvedPoint = new Point ();
 
         // TODO: If the action is entangled with the nearest loop, then snap it onto the nearest position on that loop.
@@ -55,7 +61,15 @@ public class Action {
         double nearestLoopDistance = Double.MAX_VALUE;
         for (Loop loop : this.substrate.getLoops ()) {
             if (this.getDistanceToLoop (loop) < nearestLoopDistance) {
-                Point nearestPoint = this.getNearestPoint (nearestLoop);
+                nearestLoop = loop; // Update the nearest loop.
+                nearestLoopDistance = this.getDistanceToLoop (loop); // Update the nearest loop distance.
+            }
+        }
+
+        // Snap to the loop if within snapping range
+        if (nearestLoop != null) {
+            if (nearestLoopDistance < 250) {
+                Point nearestPoint = this.getNearestPoint(nearestLoop);
                 this.setPosition(nearestPoint.x, nearestPoint.y);
             }
         }

@@ -4,5 +4,5 @@ import java.util.ArrayList;
 
 public class Clay {
 
-    private ArrayList<Clay> peers = new ArrayList<Clay> ();
+    private ArrayList<Clay> modules = new ArrayList<Clay> ();
 }

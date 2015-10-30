@@ -8,6 +8,7 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -263,7 +264,7 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
     Action touchedAction = null;
 
     boolean touchingAction = false; // True if touching _any_ action.
-    ArrayList<Action> touchedActions = new ArrayList<Action>(); // List of the actions that are currently being touched.
+    ArrayList<Action> touchedActions = new ArrayList<Action> (); // List of the actions that are currently being touched.
 
     boolean movingCanvas = false; // True if not touching an action, but dragging (not just touching) the canvas.
     double maxDragDistance = 0;
@@ -279,7 +280,7 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
         if (pointCnt <= MAXIMUM_TOUCH_COUNT) {
             if (pointerIndex <= MAXIMUM_TOUCH_COUNT - 1) {
 
-                // Get the raw touch information.
+                // Update touch action state with the raw touch information provided by the operating platform (i.e., Android).
                 for (int i = 0; i < pointCnt; i++) {
                     int id = motionEvent.getPointerId (i);
                     xTouchPrevious[id] = xTouch[id];
@@ -290,17 +291,20 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
                     yTouch[id] = (motionEvent.getY (i) - perspective.getPosition ().y) / perspective.getScaleFactor (); // HACK: TODO: Get y position directly!
                 }
 
-                // Check if touching _any_ actions. If so, keep the canvas locked, and find the action that's being touched.
-                for (Action action : this.substrate.getActions()) {
-                    double distanceToTouch = action.getDistance ((int) xTouch[pointerId], (int) yTouch[pointerId]);
-                    if (distanceToTouch < action.getRadius() + 20) {
-                        touchedActions.add (action);
-                        touchingAction = true;
-                    }
-                }
+//                // Check if touching _any_ actions (or loops, or canvas, or perspective). If so, keep the canvas locked, and find the action that's being touched.
+//                for (Action action : this.substrate.getActions ()) {
+//                    double distanceToTouch = action.getDistance ((int) xTouch[pointerId], (int) yTouch[pointerId]);
+//                    if (distanceToTouch < action.getRadius () + 20) {
+//                        touchedActions.add (action);
+//                        touchingAction = true;  // TODO: Set state of finger
+////                        action.state = Action.State.MOVING; // Set state of touched action
+//                    }
+//                }
 
-                // Update the touch interaction state with the most recent raw touch information.
+                // Update the state of the touched object based on the current touch interaction state.
                 if (touchAction == MotionEvent.ACTION_DOWN) {
+
+                    // Update touch action state.
                     isTouch[pointerId] = true;
 
                     xTouchStart[pointerId] = xTouch[pointerId];
@@ -311,19 +315,39 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
                     isDragging[pointerId] = false;
                     dragDistance[pointerId] = 0;
 
+                    // Check if touching _any_ actions (or loops, or canvas, or perspective). If so, keep the canvas locked, and find the action that's being touched.
+                    for (Action action : this.substrate.getActions ()) {
+                        double distanceToTouch = action.getDistance ((int) xTouch[pointerId], (int) yTouch[pointerId]);
+                        if (distanceToTouch < action.getRadius () + 20) {
+
+//                            isTouchingAction[pointerId] = true; // TODO: Set state of finger
+
+                            if (!this.touchedActions.contains(action)) {
+                                touchedActions.add(action);
+                            }
+
+                            touchingAction = true;  // TODO: Set state of finger
+//                        action.state = Action.State.MOVING; // Set state of touched action
+                        }
+                    }
+
                     // Check if touching an action and set isTouchingAction accordingly.
                     for (Action action : this.substrate.getActions()) {
                         double distanceToAction = action.getDistance ((int) xTouch[pointerId], (int) yTouch[pointerId]);
                         if (distanceToAction < action.getRadius ()) {
-                            isTouchingAction[pointerId] = true;
+                            isTouchingAction[pointerId] = true; // TODO: Set state of finger
+//                            action.state = Action.State.MOVING; // Set state of touched action
                             break;
                         }
                     }
 
                 } else if (touchAction == MotionEvent.ACTION_POINTER_DOWN) {
+
                     isTouch[pointerId] = true;
 
                 } else if (touchAction == MotionEvent.ACTION_MOVE) {
+
+                    // Update touch action state.
                     isTouch[pointerId] = true;
 
                     // Calculate the drag distance
@@ -361,6 +385,7 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
                     }
 
                 } else if (touchAction == MotionEvent.ACTION_UP) {
+
                     isTouch[pointerId] = false;
                     isTouchPrevious[pointerId] = false;
 
@@ -374,9 +399,25 @@ public class MyGameSurfaceView extends SurfaceView implements SurfaceHolder.Call
 
                         // TODO: If moving an action, upon release, call "searchForPosition()" to check the "logical state" of the action in the substrate WRT the other loops, and find it's final position and update its state (e.g., if it's near enough to snap to a loop, to be deleted, etc.).
 
-//                        if (!isTouchingAction[pointerId]) {
+                        Log.v("Clay", "before isTouchingAction[pointerId]");
+                        if (touchedActions.size() > 0) { // if (isTouchingAction[pointerId]) {
+                            Log.v("Clay", "touchedActions.size() = " + touchedActions.size());
+
+                            // Settle position of action.
+                            for (Action action : touchedActions) {
+                                action.settlePosition ();
+                            }
+
+                            // HACK: Remove all touched actions
+                            touchedActions.clear ();
+
+                            // Update the touch state
+                            touchingAction = false;  // TODO: Set state of finger
+
+
+                        } else {
                             this.substrate.addAction (new Action (this.substrate, (int) xTouch[pointerId], (int) yTouch[pointerId]));
-//                        }
+                        }
 
                         
 
