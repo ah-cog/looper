@@ -27,7 +27,7 @@ public class Action {
     // TODO: Associate with command (action's behavior tree/graph structure)
     // TODO: Associate with cloud object
 
-    public Action (Substrate substrate, int xPosition, int yPosition) {
+    public Action(Substrate substrate, int xPosition, int yPosition) {
         super();
 
         this.state = State.FREE;
@@ -47,7 +47,7 @@ public class Action {
     /**
      * "Settling" the position means computing the position based on the state of the action.
      */
-    public Point settlePosition () {
+    public Point settlePosition () { // TODO: Implement continuous flow-based call: "public Point settlePosition (Point currentActionPosition) {"
         Log.v("Clay", "settlePosition");
 
         Point resolvedPoint = new Point ();

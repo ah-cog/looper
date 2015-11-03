@@ -12,7 +12,7 @@ public class Loop {
 
     private Substrate substrate = null;
 
-    private ArrayList<Action> actions = new ArrayList<Action> ();
+    private ArrayList<Action> activities = new ArrayList<Action> ();
 
     private Point position = new Point ();
 
@@ -32,16 +32,16 @@ public class Loop {
     }
 
     public void addAction (Action action) {
-        this.actions.add(action);
+        this.activities.add(action);
     }
 
-    public ArrayList<Action> getActions () {
-        return this.actions;
+    public ArrayList<Action> getActivities() {
+        return this.activities;
     }
 
     public Action getAction (int index) {
-        if (0 < index && index < this.actions.size()) {
-            return this.actions.get(index);
+        if (0 < index && index < this.activities.size()) {
+            return this.activities.get(index);
         } else {
             return null;
         }
@@ -63,7 +63,70 @@ public class Loop {
         return this.angleSpan;
     }
 
-    // TODO: getActionNearestToPoint (int x, int y)
+    /**
+     * Calculates the distance between the center of the loop and the specified point.
+     * @param x
+     * @param y
+     * @return
+     */
+    public double getDistance (int x, int y) {
+        double distanceSquare = Math.pow (x - this.position.x, 2) + Math.pow (y - this.position.y, 2);
+        double distance = Math.sqrt(distanceSquare);
+        return distance;
+    }
 
-    // TODO: getActionNearestToAngle (int angle)
+    /**
+     * Get the angle at which the specified point falls with respect to the center of the loop.
+     */
+    public double getAngle (int x, int y) {
+        Point startAngle = this.getPoint (this.startAngle);
+        Point stopAngle = new Point (x, y);
+        double angle = this.getAngle (startAngle, stopAngle);
+        return angle;
+    }
+
+    /**
+     * Get the angle at which the specified point falls with respect to the center of the loop.
+     */
+    public double getAngle (Point point) {
+        Point startAngle = this.getPoint (this.startAngle);
+        double angle = this.getAngle (startAngle, point);
+        return angle;
+    }
+
+    /**
+     * Calculates and returns the angle (in degrees) between the specified points and the center
+     * point of the loop.
+     *
+     * @param startingPoint
+     * @param endingPoint
+     * @return
+     */
+    public double getAngle (Point startingPoint, Point endingPoint) {
+        Point p1 = this.getPosition (); // The center point is p1.
+
+        double a = startingPoint.x - p1.x;
+        double b = startingPoint.y - p1.y;
+        double c = endingPoint.x - p1.x;
+        double d = endingPoint.y - p1.y;
+
+        double atanA = Math.atan2 (a, b);
+        double atanB = Math.atan2 (c, d);
+
+        double result = Math.toDegrees (atanA - atanB);
+
+        return result;
+    }
+
+    /**
+     * Calculates the point on the circumference of the circle at the specified angle (in degrees).
+     */
+    public Point getPoint (double angle) {
+        Point point = new Point ();
+        double angleInRadians = Math.toRadians(this.startAngle + angle); // ((90.0 - angle) + angle);
+        double x = this.getPosition ().x + this.getRadius () * Math.cos (angleInRadians);
+        double y = this.getPosition ().y + this.getRadius () * Math.sin (angleInRadians);
+        point.set ((int) x, (int) y);
+        return point;
+    }
 }

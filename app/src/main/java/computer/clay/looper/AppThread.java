@@ -1,14 +1,14 @@
 package computer.clay.looper;
 
-public class MyGameThread extends Thread {
+public class AppThread extends Thread {
 
     static final long FPS = 30;
 
-    computer.clay.looper.MyGameSurfaceView view;
+    computer.clay.looper.AppSurfaceView view;
 
     volatile boolean running = false;
 
-    MyGameThread (computer.clay.looper.MyGameSurfaceView sv) {
+    AppThread(computer.clay.looper.AppSurfaceView sv) {
         super ();
         this.view = sv;
     }

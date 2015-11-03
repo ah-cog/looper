@@ -11,6 +11,11 @@ public class Perspective {
 
     private Substrate substrate = null;
 
+    public Point loopCutPoint = null;
+    public Point loopCutSpanPoint = null;
+    public int loopCutStartAngle = 0;
+    public int loopCutSpan = 0;
+
     public Perspective (Substrate substrate) {
         super();
 

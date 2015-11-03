@@ -2,17 +2,20 @@ package computer.clay.looper;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 
-public class MyGameActivity extends Activity {
+public class AppActivity extends Activity {
 
-    MyGameSurfaceView mySurfaceView;
+    AppSurfaceView mySurfaceView;
 
     /** Called when the activity is first created. */
     @Override
     public void onCreate (Bundle savedInstanceState) {
         super.onCreate (savedInstanceState);
+
+        Log.v("Clay", "AppActivity.onCreate");
 
         // Set fullscreen
         requestWindowFeature (Window.FEATURE_NO_TITLE);
@@ -22,19 +25,19 @@ public class MyGameActivity extends Activity {
         // setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         setContentView (R.layout.activity_main);
-        mySurfaceView = (MyGameSurfaceView) findViewById (R.id.myview1);
+        mySurfaceView = (AppSurfaceView) findViewById (R.id.myview1);
     }
 
     @Override
     protected void onResume () {
         super.onResume ();
-        mySurfaceView.MyGameSurfaceView_OnResume ();
+        mySurfaceView.AppSurfaceView_OnResume();
     }
 
     @Override
     protected void onPause () {
         super.onPause ();
-        mySurfaceView.MyGameSurfaceView_OnPause ();
+        mySurfaceView.AppSurfaceView_OnPause();
     }
 
 }

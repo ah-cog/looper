@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class Substrate {
 
-    ArrayList<Action> actions = new ArrayList<Action>();
+    ArrayList<Action> activities = new ArrayList<Action>();
     ArrayList<Loop> loops = new ArrayList<Loop>();
 
     // TODO: Include Operator/People/Agents/Actors/Robots/Intelligence
@@ -14,11 +14,11 @@ public class Substrate {
     }
 
     public void addAction (Action action) {
-        this.actions.add(action);
+        this.activities.add(action);
     }
 
-    public ArrayList<Action> getActions () {
-        return this.actions;
+    public ArrayList<Action> getActivities() {
+        return this.activities;
     }
 
     public void addLoop (Loop loop) {
