@@ -3,7 +3,7 @@ package computer.clay.looper;
 import android.graphics.Point;
 import android.util.Log;
 
-public class Action {
+public class Dot {
 
     public static int DEFAULT_RADIUS = 60;
 
@@ -27,7 +27,7 @@ public class Action {
     // TODO: Associate with command (action's behavior tree/graph structure)
     // TODO: Associate with cloud object
 
-    public Action(Substrate substrate, int xPosition, int yPosition) {
+    public Dot(Substrate substrate, int xPosition, int yPosition) {
         super();
 
         this.state = State.FREE;

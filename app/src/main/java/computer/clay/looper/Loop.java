@@ -12,7 +12,7 @@ public class Loop {
 
     private Substrate substrate = null;
 
-    private ArrayList<Action> activities = new ArrayList<Action> ();
+    private ArrayList<Dot> activities = new ArrayList<Dot> ();
 
     private Point position = new Point ();
 
@@ -31,15 +31,15 @@ public class Loop {
         return this.substrate;
     }
 
-    public void addAction (Action action) {
-        this.activities.add(action);
+    public void addAction (Dot dot) {
+        this.activities.add(dot);
     }
 
-    public ArrayList<Action> getActivities() {
+    public ArrayList<Dot> getActivities() {
         return this.activities;
     }
 
-    public Action getAction (int index) {
+    public Dot getAction (int index) {
         if (0 < index && index < this.activities.size()) {
             return this.activities.get(index);
         } else {

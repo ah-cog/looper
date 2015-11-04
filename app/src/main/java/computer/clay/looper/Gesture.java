@@ -47,10 +47,10 @@ public class Gesture {
     double previousDistanceToSelectedLoopCenter = 0.0;
     double distanceToSelectedLoopCenter = 0.0;
 
-    Action touchedAction = null;
+    Dot touchedDot = null;
 
     boolean touchingAction = false; // True if touching _any_ action.
-    ArrayList<Action> touchedActivities = new ArrayList<Action> (); // List of the activities that are currently being touched.
+    ArrayList<Dot> touchedActivities = new ArrayList<Dot> (); // List of the activities that are currently being touched.
 
     boolean isPerformingPerspectiveGesture = false;
     boolean isMovingPerspective = false; // True if not touching an action, but dragging (not just touching) the canvas.
@@ -157,7 +157,7 @@ public class Gesture {
         // isCreatingLoopPerspective
         // touchingAction
         // touchedActivities
-        // TODO: touchedAction[]
+        // TODO: touchedDot[]
 
         // Check if this is the start of a touch gesture (i.e., the first touch in a sequence of touch events for the given finger)
 
@@ -173,27 +173,27 @@ public class Gesture {
             dragDistance[finger] = 0;
 
             // Check if touching _any_ activities (or loops, or canvas, or perspective). If so, keep the canvas locked, and find the action that's being touched.
-            for (Action action : this.substrate.getActivities()) {
-                double distanceToTouch = action.getDistance ((int) xTouch[finger], (int) yTouch[finger]);
-                if (distanceToTouch < action.getRadius () + 20) {
+            for (Dot dot : this.substrate.getActivities()) {
+                double distanceToTouch = dot.getDistance ((int) xTouch[finger], (int) yTouch[finger]);
+                if (distanceToTouch < dot.getRadius () + 20) {
 
 //                            isTouchingAction[pointerId] = true; // TODO: Set state of finger
 
-                    if (!this.touchedActivities.contains(action)) {
-                        touchedActivities.add (action);
+                    if (!this.touchedActivities.contains(dot)) {
+                        touchedActivities.add (dot);
                     }
 
                     touchingAction = true;  // TODO: Set state of finger
-//                        action.state = Action.State.MOVING; // Set state of touched action
+//                        dot.state = Dot.State.MOVING; // Set state of touched dot
                 }
             }
 
             // Check if touching an action and set isTouchingAction accordingly.
-            for (Action action : this.substrate.getActivities()) {
-                double distanceToAction = action.getDistance ((int) xTouch[finger], (int) yTouch[finger]);
-                if (distanceToAction < action.getRadius ()) {
+            for (Dot dot : this.substrate.getActivities()) {
+                double distanceToAction = dot.getDistance ((int) xTouch[finger], (int) yTouch[finger]);
+                if (distanceToAction < dot.getRadius ()) {
                     isTouchingAction[finger] = true; // TODO: Set state of finger
-//                            action.state = Action.State.MOVING; // Set state of touched action
+//                            dot.state = Dot.State.MOVING; // Set state of touched dot
                     break;
                 }
             }
@@ -215,7 +215,7 @@ public class Gesture {
 //                            }
 
                     touchingAction = true;  // TODO: Set state of finger
-//                        action.state = Action.State.MOVING; // Set state of touched action
+//                        action.state = Dot.State.MOVING; // Set state of touched action
                 }
             }
 
@@ -308,7 +308,7 @@ public class Gesture {
                 // TODO: Look for the point on the loop at which the finger crosses the line (i.e., the distance is greater than the loop's radius).
 
             } else if (isTouchingAction[finger]) {
-                for (Action dot : touchedActivities) {
+                for (Dot dot : touchedActivities) {
                     dot.setPosition ((int) xTouch[finger],(int)  yTouch[finger]);
                 }
             }
@@ -349,8 +349,8 @@ public class Gesture {
                     Log.v("Clay", "touchedActivities.size() = " + touchedActivities.size());
 
                     // Settle position of action.
-                    for (Action action : touchedActivities) {
-                        action.settlePosition();
+                    for (Dot dot : touchedActivities) {
+                        dot.settlePosition();
                     }
 
                     // HACK: This hack removes _all_ touched activities when _any_ finger is lifted up.
@@ -368,15 +368,15 @@ public class Gesture {
                 } else {
 
                     // Add an action to the substrate.
-                    Action newAction = new Action(this.substrate, (int) xTouch[finger], (int) yTouch[finger]);
-                    this.substrate.addAction (newAction);
-                    newAction.settlePosition ();
+                    Dot newDot = new Dot(this.substrate, (int) xTouch[finger], (int) yTouch[finger]);
+                    this.substrate.addAction (newDot);
+                    newDot.settlePosition ();
                 }
 
 //                        if (isTouchingAction[pointerId]) {
 //                            // Settle the action.
 //                            // Check if touching an action and set isTouchingAction accordingly.
-//                            for (Action action : this.substrate.getActivities()) {
+//                            for (Dot action : this.substrate.getActivities()) {
 //                                double distanceToAction = action.getDistance ((int) xTouch[pointerId], (int) yTouch[pointerId]);
 //                                if (distanceToAction < action.getRadius ()) {
 ////                                    action.settlePosition ();
@@ -385,7 +385,7 @@ public class Gesture {
 //                            }
 //                        } else {
 //                            // Create a new action
-//                            this.substrate.addAction(new Action(this.substrate, (int) xTouch[pointerId], (int) yTouch[pointerId]));
+//                            this.substrate.addAction(new Dot(this.substrate, (int) xTouch[pointerId], (int) yTouch[pointerId]));
 //                        }
             }
 
