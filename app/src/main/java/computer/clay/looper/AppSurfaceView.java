@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -14,7 +15,7 @@ import android.view.SurfaceView;
 
 public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callback {
 
-    private AppThread appThread;
+    private AppRenderingThread appRenderingThread;
 
     private SurfaceHolder surfaceHolder;
 
@@ -76,9 +77,9 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
         getHolder ().addCallback (this);
 
         // Create and start background Thread
-        appThread = new AppThread(this);
-        appThread.setRunning (true);
-        appThread.start();
+        appRenderingThread = new AppRenderingThread (this);
+        appRenderingThread.setRunning (true);
+        appRenderingThread.start();
 
     }
 
@@ -86,11 +87,11 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
         // Kill the background Thread
         boolean retry = true;
-        appThread.setRunning (false);
+        appRenderingThread.setRunning (false);
 
         while (retry) {
             try {
-                appThread.join ();
+                appRenderingThread.join ();
                 retry = false;
             } catch (InterruptedException e) {
                 e.printStackTrace ();
@@ -102,12 +103,12 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
     protected void onDraw (Canvas canvas) {
 
         // Move the perspective
-        myCanvas.save ();
-        myCanvas.translate (perspective.getPosition ().x, perspective.getPosition ().y);
-        myCanvas.scale (perspective.getScaleFactor (), perspective.getScaleFactor ());
+        myCanvas.save();
+        myCanvas.translate(perspective.getPosition().x, perspective.getPosition().y);
+        myCanvas.scale(perspective.getScaleFactor(), perspective.getScaleFactor());
 
         // Draw the background
-        myCanvas.drawColor (Color.WHITE);
+        myCanvas.drawColor(Color.WHITE);
 
         // Define base coordinate system
         float xOrigin = 0;
@@ -124,7 +125,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
         // Draw the loops
         for (Loop loop : this.substrate.getLoops ()) {
 
-            myCanvas.save ();
+            myCanvas.save();
 
             // Set the loop's style
             paint.setStyle (Paint.Style.STROKE);
@@ -136,13 +137,13 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
             float loopTop    = yOrigin + -1 * loop.getPosition ().y - loop.getRadius ();
             float loopRight  = xOrigin +      loop.getPosition ().x + loop.getRadius ();
             float loopBottom = yOrigin + -1 * loop.getPosition ().y + loop.getRadius ();
-            myCanvas.drawArc (loopLeft, loopTop, loopRight, loopBottom, -90 + loop.getStartAngle(), loop.getAngleSpan(), false, paint);
+            myCanvas.drawArc(loopLeft, loopTop, loopRight, loopBottom, -90 + loop.getStartAngle(), loop.getAngleSpan(), false, paint);
 
             // Draw arrowhead on loop
-            myCanvas.save ();
+            myCanvas.save();
 //            myCanvas.translate(perspective.getPosition().x, perspective.getPosition().y);
-            myCanvas.rotate (-1 * (360 - (loop.getStartAngle () + loop.getAngleSpan ())));
-            myCanvas.translate (0, -1 * loop.getRadius ());
+            myCanvas.rotate(-1 * (360 - (loop.getStartAngle() + loop.getAngleSpan())));
+            myCanvas.translate(0, -1 * loop.getRadius());
 
             // Set the arrowhead's style
             paint.setStyle (Paint.Style.STROKE);
@@ -150,16 +151,40 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
             paint.setColor (Color.BLACK);
 
             // Draw the arrowhead
-            myCanvas.drawLine (-20, -20, 0, 0, paint);
-            myCanvas.drawLine (-20, 20, 0, 0, paint);
+            myCanvas.drawLine(-20, -20, 0, 0, paint);
+            myCanvas.drawLine(-20, 20, 0, 0, paint);
 
-            myCanvas.restore ();
+            myCanvas.restore();
 
             // Draw the sections of the loop
 
-            myCanvas.save ();
+            myCanvas.save();
 
             if (this.perspective.loopCutPoint != null && this.perspective.loopCutSpanPoint != null) {
+
+                int radiusExtension = 70;
+                int innerLoopRadius = 30;
+
+                double cutStartAngle = loop.getStartAngle() + loop.getAngle (this.perspective.loopCutPoint);
+                Point cutStartPoint = loop.getPoint(cutStartAngle, loop.getRadius() + radiusExtension);
+                double cutStopAngle = loop.getStartAngle() + this.perspective.loopCutStartAngle + this.perspective.loopCutSpan;
+                Point cutStopPoint = loop.getPoint(cutStopAngle, loop.getRadius() + radiusExtension);
+
+                // Draw the filled arc highlighting the perspective's area
+
+                paint.setStyle(Paint.Style.FILL);
+                paint.setStrokeWidth(2);
+                paint.setColor(Color.WHITE);
+
+                myCanvas.drawArc(loopLeft - radiusExtension, loopTop - radiusExtension, loopRight + radiusExtension, loopBottom + radiusExtension, (float) cutStartAngle, (float) cutStopAngle - this.perspective.loopCutStartAngle, true, paint);
+
+                // Draw the loop in the cut
+
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setStrokeWidth(2);
+                paint.setColor(Color.BLACK);
+
+                myCanvas.drawArc(loopLeft - innerLoopRadius, loopTop - innerLoopRadius, loopRight + innerLoopRadius, loopBottom + innerLoopRadius, (float) cutStartAngle, (float) cutStopAngle - this.perspective.loopCutStartAngle, false, paint);
 
                 // Draw the line indicating the start of the cut.
 
@@ -167,7 +192,9 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                 paint.setStrokeWidth(2);
                 paint.setColor(Color.RED);
 
-                myCanvas.drawLine(loop.getPosition().x, loop.getPosition().y, this.perspective.loopCutPoint.x, this.perspective.loopCutPoint.y, paint);
+                //myCanvas.drawLine (loop.getPosition().x, loop.getPosition().y, this.perspective.loopCutPoint.x, this.perspective.loopCutPoint.y, paint);
+                myCanvas.drawLine (loop.getPosition().x, loop.getPosition().y, cutStartPoint.x, cutStartPoint.y, paint);
+//                myCanvas.drawLine (loop.getPosition().x, loop.getPosition().y, cutStartPoint.x, cutStartPoint.y, paint);
 
                 // Draw the line indicating the end of the cut.
 
@@ -181,38 +208,49 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                     paint.setColor(Color.GREEN);
                 }
 
-                double cutStopAngle = loop.getStartAngle() + this.perspective.loopCutStartAngle + this.perspective.loopCutSpan;
-                Point cutStopPoint = loop.getPoint(cutStopAngle);
                 myCanvas.drawLine(loop.getPosition().x, loop.getPosition().y, cutStopPoint.x, cutStopPoint.y, paint);
                 // myCanvas.drawLine (loop.getPosition().x, loop.getPosition().y, this.loopCutSpanPoint.x, this.loopCutSpanPoint.y, paint);
+
             }
 
             myCanvas.restore();
 
-            // TODO: Draw the activities for each loop
+            // TODO: Draw the behaviors for each loop
 
             myCanvas.restore();
         }
 
-        // Draw activities that represent Clay's current behavior.
-        // TODO: Draw the activities here that are NOT on a loop. Those are drawn above.
-        for (Dot dot : this.substrate.getActivities()) {
+        // Draw behaviors that represent Clay's current behavior.
+        // TODO: Draw the behaviors here that are NOT on a loop. Those are drawn above.
+        for (BehaviorPlaceholder behaviorPlaceholder : this.substrate.getBehaviors()) {
 
-            // Set style for behavior node interior
-            paint.setStyle (Paint.Style.FILL_AND_STROKE);
-            paint.setStrokeWidth (2);
-            paint.setColor (Color.WHITE);
+            // Set style for behaviorPlaceholder node interior
+            paint.setStyle(Paint.Style.FILL_AND_STROKE);
+            paint.setStrokeWidth(2);
+            paint.setColor(Color.WHITE);
 
-            // Draw behavior node interior
-            myCanvas.drawCircle (dot.getPosition().x, dot.getPosition().y, dot.getRadius(), paint);
+            // Draw behaviorPlaceholder node interior
+            myCanvas.drawCircle(behaviorPlaceholder.getPosition().x, behaviorPlaceholder.getPosition().y, behaviorPlaceholder.getRadius(), paint);
 
-            // Set style for behavior node border
+            // Set style for behaviorPlaceholder node border
             paint.setStyle (Paint.Style.STROKE);
-            paint.setStrokeWidth (2);
-            paint.setColor (Color.BLACK);
+            paint.setStrokeWidth(2);
+            paint.setColor(Color.BLACK);
 
-            // Draw behavior node border
-            myCanvas.drawCircle (dot.getPosition().x, dot.getPosition().y, dot.getRadius(), paint);
+            // Draw behaviorPlaceholder node border
+            myCanvas.drawCircle(behaviorPlaceholder.getPosition().x, behaviorPlaceholder.getPosition().y, behaviorPlaceholder.getRadius(), paint);
+
+            // Draw behavior's label
+            //Typeface plain = Typeface.createFromAsset(assetManager, pathToFont);
+//            Typeface plain = Typeface.createFromAsset(getContext().getAssets(), "fonts/comic.TTF");
+//            Typeface bold = Typeface.create(plain, Typeface.DEFAULT_BOLD);
+//            paint.setTypeface(bold);
+            String name = "I/O";
+            Rect textBounds = new Rect();
+//            paint.setTextAlign(Paint.Align.CENTER);
+            paint.getTextBounds(name, 0, name.length(), textBounds);
+            paint.setTextSize (25);
+            myCanvas.drawText (name, behaviorPlaceholder.getPosition().x - textBounds.exactCenterX(), behaviorPlaceholder.getPosition().y - textBounds.exactCenterY(), paint);
 
             /* Draw snapping path to nearest loop. */
 
@@ -220,15 +258,15 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
             Loop nearestLoop = null;
             double nearestLoopDistance = Double.MAX_VALUE;
             for (Loop loop : this.substrate.getLoops()) {
-                if (dot.getDistanceToLoop(loop) < nearestLoopDistance) {
+                if (behaviorPlaceholder.getDistanceToLoop(loop) < nearestLoopDistance) {
                     nearestLoop = loop;
                 }
             }
 
             // Draw snapping path to nearest loop
-            if (dot.getDistanceToLoop (nearestLoop) < 250) {
-                Point nearestPoint = dot.getNearestPoint (nearestLoop);
-                myCanvas.drawLine(dot.getPosition().x, dot.getPosition().y, nearestPoint.x, nearestPoint.y, paint);
+            if (behaviorPlaceholder.getDistanceToLoop (nearestLoop) < 250) {
+                Point nearestPoint = behaviorPlaceholder.getNearestPoint (nearestLoop);
+                myCanvas.drawLine(behaviorPlaceholder.getPosition().x, behaviorPlaceholder.getPosition().y, nearestPoint.x, nearestPoint.y, paint);
             }
         }
 
@@ -288,13 +326,13 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                     yTouches[id] = (motionEvent.getY (i) - perspective.getPosition ().y) / perspective.getScaleFactor (); // HACK: TODO: Get y position directly!
                 }
 
-//                // Check if touching _any_ activities (or loops, or canvas, or perspective). If so, keep the canvas locked, and find the action that's being touched.
-//                for (Dot action : this.substrate.getActivities ()) {
+//                // Check if touching _any_ behaviors (or loops, or canvas, or perspective). If so, keep the canvas locked, and find the action that's being touched.
+//                for (BehaviorPlaceholder action : this.substrate.getBehaviors ()) {
 //                    double distanceToTouch = action.getDistance ((int) xTouch[pointerId], (int) yTouch[pointerId]);
 //                    if (distanceToTouch < action.getRadius () + 20) {
-//                        touchedActivities.add (action);
+//                        touchedBehaviors.add (action);
 //                        touchingAction = true;  // TODO: Set state of finger
-////                        action.state = Dot.State.MOVING; // Set state of touched action
+////                        action.state = BehaviorPlaceholder.State.MOVING; // Set state of touched action
 //                    }
 //                }
 

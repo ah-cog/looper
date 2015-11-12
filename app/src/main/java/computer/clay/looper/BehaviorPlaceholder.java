@@ -3,21 +3,23 @@ package computer.clay.looper;
 import android.graphics.Point;
 import android.util.Log;
 
-public class Dot {
+public class BehaviorPlaceholder {
 
     public static int DEFAULT_RADIUS = 60;
+
+    private Behavior behavior = null; // TODO: private ArrayList<Behavior> behaviors = new ArrayList<Behavior>();
 
     private Point position = new Point ();
     private int radius;
 
-    public enum State {
-        FREE, // The action is not on a loop.
-        MOVING, // The action is being moved by touch.
-        COUPLED, // The action is near enough to a loop to snap onto it.
-        SEQUENCED // The action is in a sequence (i.e., on a loop).
-    }
+//    public enum State {
+//        FREE, // The action is not on a loop.
+//        MOVING, // The action is being moved by touch.
+//        COUPLED, // The action is near enough to a loop to snap onto it.
+//        SEQUENCED // The action is in a sequence (i.e., on a loop).
+//    }
 
-    public State state;
+//    public State state;
 
     private Substrate substrate = null;
 
@@ -27,15 +29,23 @@ public class Dot {
     // TODO: Associate with command (action's behavior tree/graph structure)
     // TODO: Associate with cloud object
 
-    public Dot(Substrate substrate, int xPosition, int yPosition) {
+    public BehaviorPlaceholder (Substrate substrate, int xPosition, int yPosition) {
         super();
 
-        this.state = State.FREE;
+//        this.state = State.FREE;
 
         this.substrate = substrate;
 
         position.set (xPosition, yPosition);
         radius = DEFAULT_RADIUS;
+    }
+
+    public void setBehavior (Behavior behavior) {
+        this.behavior = behavior;
+    }
+
+    public Behavior getBehavior () {
+        return this.behavior;
     }
 
     public void setPosition (int x, int y) {

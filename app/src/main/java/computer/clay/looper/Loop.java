@@ -12,7 +12,7 @@ public class Loop {
 
     private Substrate substrate = null;
 
-    private ArrayList<Dot> activities = new ArrayList<Dot> ();
+    private ArrayList<BehaviorPlaceholder> behaviors = new ArrayList<BehaviorPlaceholder> ();
 
     private Point position = new Point ();
 
@@ -31,17 +31,17 @@ public class Loop {
         return this.substrate;
     }
 
-    public void addAction (Dot dot) {
-        this.activities.add(dot);
+    public void addBehavior (BehaviorPlaceholder behaviorPlaceholder) {
+        this.behaviors.add (behaviorPlaceholder);
     }
 
-    public ArrayList<Dot> getActivities() {
-        return this.activities;
+    public ArrayList<BehaviorPlaceholder> getBehaviors() {
+        return this.behaviors;
     }
 
-    public Dot getAction (int index) {
-        if (0 < index && index < this.activities.size()) {
-            return this.activities.get(index);
+    public BehaviorPlaceholder getAction (int index) {
+        if (0 < index && index < this.behaviors.size()) {
+            return this.behaviors.get(index);
         } else {
             return null;
         }
@@ -81,7 +81,7 @@ public class Loop {
     public double getAngle (int x, int y) {
         Point startAngle = this.getPoint (this.startAngle);
         Point stopAngle = new Point (x, y);
-        double angle = this.getAngle (startAngle, stopAngle);
+        double angle = this.getAngle(startAngle, stopAngle);
         return angle;
     }
 
@@ -111,9 +111,9 @@ public class Loop {
         double d = endingPoint.y - p1.y;
 
         double atanA = Math.atan2 (a, b);
-        double atanB = Math.atan2 (c, d);
+        double atanB = Math.atan2(c, d);
 
-        double result = Math.toDegrees (atanA - atanB);
+        double result = Math.toDegrees(atanA - atanB);
 
         return result;
     }
@@ -126,6 +126,18 @@ public class Loop {
         double angleInRadians = Math.toRadians(this.startAngle + angle); // ((90.0 - angle) + angle);
         double x = this.getPosition ().x + this.getRadius () * Math.cos (angleInRadians);
         double y = this.getPosition ().y + this.getRadius () * Math.sin (angleInRadians);
+        point.set ((int) x, (int) y);
+        return point;
+    }
+
+    /**
+     * Calculates the point on the circumference of the circle at the specified angle (in degrees).
+     */
+    public Point getPoint (double angle, double radius) {
+        Point point = new Point ();
+        double angleInRadians = Math.toRadians(this.startAngle + angle); // ((90.0 - angle) + angle);
+        double x = this.getPosition ().x + radius * Math.cos (angleInRadians);
+        double y = this.getPosition ().y + radius * Math.sin (angleInRadians);
         point.set ((int) x, (int) y);
         return point;
     }

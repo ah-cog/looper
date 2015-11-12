@@ -1,6 +1,6 @@
 package computer.clay.looper;
 
-public class AppThread extends Thread {
+public class AppRenderingThread extends Thread {
 
     static final long FPS = 30;
 
@@ -8,9 +8,9 @@ public class AppThread extends Thread {
 
     volatile boolean running = false;
 
-    AppThread(computer.clay.looper.AppSurfaceView sv) {
+    AppRenderingThread(computer.clay.looper.AppSurfaceView surfaceView) {
         super ();
-        this.view = sv;
+        this.view = surfaceView;
     }
 
     public void setRunning (boolean r) {
