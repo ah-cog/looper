@@ -222,7 +222,9 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
         // Draw behaviors that represent Clay's current behavior.
         // TODO: Draw the behaviors here that are NOT on a loop. Those are drawn above.
+//        String behaviorStates = "";
         for (BehaviorPlaceholder behaviorPlaceholder : this.substrate.getBehaviors()) {
+//            behaviorStates = behaviorStates + " " + behaviorPlaceholder.state.toString();
 
             // Set style for behaviorPlaceholder node interior
             paint.setStyle(Paint.Style.FILL_AND_STROKE);
@@ -245,11 +247,19 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 //            Typeface plain = Typeface.createFromAsset(getContext().getAssets(), "fonts/comic.TTF");
 //            Typeface bold = Typeface.create(plain, Typeface.DEFAULT_BOLD);
 //            paint.setTypeface(bold);
-            String name = "I/O";
+
+            paint.setStyle (Paint.Style.FILL);
+            paint.setStrokeWidth(0);
+            paint.setColor(Color.BLACK);
+
+            String name = "None";
+            if (behaviorPlaceholder.hasBehavior ()) {
+                name = behaviorPlaceholder.getBehavior().getTitle();
+            }
             Rect textBounds = new Rect();
 //            paint.setTextAlign(Paint.Align.CENTER);
             paint.getTextBounds(name, 0, name.length(), textBounds);
-            paint.setTextSize (25);
+            paint.setTextSize (35);
             myCanvas.drawText (name, behaviorPlaceholder.getPosition().x - textBounds.exactCenterX(), behaviorPlaceholder.getPosition().y - textBounds.exactCenterY(), paint);
 
             /* Draw snapping path to nearest loop. */
@@ -269,12 +279,22 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                 myCanvas.drawLine(behaviorPlaceholder.getPosition().x, behaviorPlaceholder.getPosition().y, nearestPoint.x, nearestPoint.y, paint);
             }
         }
+//        Log.v("Clay", behaviorStates);
 
         // Paint the bitmap to the "primary" canvas
         canvas.drawBitmap (canvasBitmap, identityMatrix, null);
 
         // Restore the perspective translation.
         myCanvas.restore();
+
+
+        // HACK: TODO: Move this to a separate "behavior execution thread"
+        for (Loop loop : this.substrate.getLoops()) {
+            for (BehaviorPlaceholder behaviorPlaceholder : loop.getBehaviors()) {
+                Behavior behavior = behaviorPlaceholder.getBehavior();
+                behavior.perform();
+            }
+        }
 
     }
 

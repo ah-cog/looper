@@ -1,12 +1,13 @@
 package computer.clay.looper;
 
 import android.graphics.Point;
+import android.util.Log;
 
 import java.util.ArrayList;
 
 public class Loop {
 
-    public static int DEFAULT_RADIUS = 300;
+    public static int DEFAULT_RADIUS = 350;
     public static int DEFAULT_START_ANGLE = 15; // i.e., -75
     public static int DEFAULT_ANGLE_SPAN = 330;
 
@@ -32,8 +33,75 @@ public class Loop {
     }
 
     public void addBehavior (BehaviorPlaceholder behaviorPlaceholder) {
-        this.behaviors.add (behaviorPlaceholder);
+
+        // Add behavior to the list of behaviors in the loop sequence
+        if (!this.behaviors.contains(behaviorPlaceholder)) {
+            this.behaviors.add(behaviorPlaceholder);
+        }
+
+        // Re-order the behaviors based on their position along the loop
+        this.reorderBehaviors();
+
     }
+
+    public boolean hasBehavior (BehaviorPlaceholder behaviorPlaceholder) {
+        return this.behaviors.contains (behaviorPlaceholder);
+    }
+
+    public void removeBehavior (BehaviorPlaceholder behaviorPlaceholder) {
+        if (behaviorPlaceholder != null) {
+
+            // Remove the specified behavior from the loop (if it is present)
+            if (this.behaviors.contains (behaviorPlaceholder)) {
+                this.behaviors.remove(behaviorPlaceholder);
+            }
+
+            // Re-order the behaviors based on their position along the loop
+            this.reorderBehaviors();
+        }
+    }
+
+    /**
+     * Updates the ordering of the behaviors on the loop based on their position along the loop.
+     */
+    public void reorderBehaviors () {
+        // Re-order the behaviors based on their sequence ordering
+
+        // Calculate angles along the loop for each behavior
+        ArrayList<Double> behaviorAngles = new ArrayList<Double>();
+        for (BehaviorPlaceholder behavior : this.behaviors) {
+            Point behaviorPosition = behavior.getPosition();
+            double behaviorAngle = this.getAngle(behaviorPosition);
+            behaviorAngles.add(behaviorAngle);
+            Log.v("Clay", "Behavior " + behaviorAngle + " = " + behaviorAngle);
+        }
+
+        // Sort the list of behaviors based on the sort manipulations done to sort the angles in ascending order.
+        for (int i = 0; i < this.behaviors.size(); i++) {
+            for (int j = 0; j < this.behaviors.size() - 1; j++) {
+                if (behaviorAngles.get(j) > behaviorAngles.get(j + 1)) {
+
+                    // Swap angle
+                    double angleToSwap = behaviorAngles.get(j);
+                    behaviorAngles.set(j, behaviorAngles.get(j + 1));
+                    behaviorAngles.set(j + 1, angleToSwap);
+
+                    // Swap behavior
+                    BehaviorPlaceholder behaviorToSwap = this.behaviors.get(j);
+                    this.behaviors.set(j, behaviors.get(j + 1));
+                    this.behaviors.set(j + 1, behaviorToSwap);
+                }
+            }
+        }
+
+        String loopSequence = "";
+        for (BehaviorPlaceholder behavior : this.behaviors) {
+            loopSequence += behavior.getBehavior().getTitle() + " ";
+        }
+        Log.v ("Clay", loopSequence);
+    }
+
+    // TODO: Intelligently compute adjustments to behavior position on loop and update the position, showing it clearly as automatically being updated by Clay.
 
     public ArrayList<BehaviorPlaceholder> getBehaviors() {
         return this.behaviors;

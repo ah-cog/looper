@@ -1,23 +1,12 @@
 package computer.clay.looper;
 
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.text.format.Time;
 import android.util.Log;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.text.SimpleDateFormat;
-
 public class Behavior {
+
+    public static int BEHAVIOR_COUNT = 0;
+
+    private String title;
 
     private BehaviorPlaceholder behaviorPlaceholder;
 
@@ -33,6 +22,14 @@ public class Behavior {
         return this.behaviorPlaceholder;
     }
 
+    public void setTitle (String title) {
+        this.title = title;
+    }
+
+    public String getTitle () {
+        return this.title;
+    }
+
     // TODO: setAction : Specifiy the URI of the action for which to download a script (to relay to Clay).
     // TODO: defineAction
     // TODO: clearAction
@@ -40,7 +37,7 @@ public class Behavior {
     public void perform () {
         // TODO: Perform the action, whatever it is!
 
-        Log.v("Clay", "Performing behavior " + this.toString());
+        Log.v("Clay", "Performing behavior " + this.getTitle() + ".");
     }
 
 //    public class HttpRequestTask extends AsyncTask<String, Void, String[]> { // Extend AsyncTask and use void generics (for now)

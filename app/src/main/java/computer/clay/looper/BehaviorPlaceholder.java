@@ -5,21 +5,23 @@ import android.util.Log;
 
 public class BehaviorPlaceholder {
 
-    public static int DEFAULT_RADIUS = 60;
+    public static int DEFAULT_RADIUS = 80; // 60
 
     private Behavior behavior = null; // TODO: private ArrayList<Behavior> behaviors = new ArrayList<Behavior>();
 
     private Point position = new Point ();
     private int radius;
 
-//    public enum State {
-//        FREE, // The action is not on a loop.
-//        MOVING, // The action is being moved by touch.
-//        COUPLED, // The action is near enough to a loop to snap onto it.
-//        SEQUENCED // The action is in a sequence (i.e., on a loop).
-//    }
+    private Loop loop = null; // The loop associated with this behavior placeholder, if any.
 
-//    public State state;
+    public enum State {
+        FREE, // The action is not on a loop.
+        MOVING, // The action is being moved by touch.
+        COUPLED, // The action is near enough to a loop to snap onto it.
+        SEQUENCED // The action is in a sequence (i.e., on a loop).
+    }
+
+    public State state;
 
     private Substrate substrate = null;
 
@@ -32,12 +34,61 @@ public class BehaviorPlaceholder {
     public BehaviorPlaceholder (Substrate substrate, int xPosition, int yPosition) {
         super();
 
-//        this.state = State.FREE;
+        this.state = State.FREE;
 
         this.substrate = substrate;
 
         position.set (xPosition, yPosition);
         radius = DEFAULT_RADIUS;
+
+        // Create and associate a behavior with this placeholder.
+        this.behavior = new Behavior(this); // TODO: Remove this! Assign this through the behavior selection interface.
+        this.behavior.setTitle(String.valueOf(Behavior.BEHAVIOR_COUNT));
+        Behavior.BEHAVIOR_COUNT++;
+    }
+
+    /**
+     * Adds this behavior placeholder to the specified loop sequence and updates the state
+     * accordingly.
+     *
+     * @param loop
+     */
+    public void setLoop (Loop loop) {
+
+        // Add this placeholder to the loop.
+        this.loop = loop;
+        this.loop.addBehavior (this);
+
+        // Update state of this placeholder
+        this.state = State.SEQUENCED;
+    }
+
+    /**
+     * Returns the loop associated with this behavior placeholder. Returns null if there is no loop
+     * associated with this behavior placeholder.
+     * @return
+     */
+    public Loop getLoop () {
+        return this.loop;
+    }
+
+    public boolean hasLoop () {
+        return (this.loop != null);
+    }
+
+    /**
+     * Removes this behavior placeholder from the loop it's associated with, if any, and update
+     * the state accordingly.
+     */
+    public void unsetLoop () {
+        if (this.loop != null) {
+            // Remove this placeholder from the loop.
+            this.loop.removeBehavior(this);
+            this.loop = null;
+
+            // Update state of the this placeholder
+            this.state = State.FREE;
+        }
     }
 
     public void setBehavior (Behavior behavior) {
@@ -46,6 +97,10 @@ public class BehaviorPlaceholder {
 
     public Behavior getBehavior () {
         return this.behavior;
+    }
+
+    public boolean hasBehavior () {
+        return (this.behavior != null);
     }
 
     public void setPosition (int x, int y) {
@@ -78,14 +133,29 @@ public class BehaviorPlaceholder {
 
         // Snap to the loop if within snapping range
         if (nearestLoop != null) {
-            if (nearestLoopDistance < 250) {
-                Point nearestPoint = this.getNearestPoint(nearestLoop);
-                this.setPosition(nearestPoint.x, nearestPoint.y);
+            if (nearestLoopDistance < 250) { // TODO: Replace magic number with a static class variable.
+
+                Point nearestPoint = this.getNearestPoint (nearestLoop);
+                setPosition (nearestPoint.x, nearestPoint.y);
+                setLoop (nearestLoop);
+
+            } else { // The behavior was positioned outside the snapping boundary of the loop.
+
+                if (this.hasLoop ()) { // Check if this behavior placeholder is in a loop sequence.
+                    unsetLoop();
+                } else {
+                    // NOTE: This happens when a free behavior is moved, but not onto a loop (it remains free after being moved).
+                    Log.v ("Clay", "UNHANGLED CONDITION MET. HANDLE THIS CONDITION!");
+                }
             }
         }
 
         return resolvedPoint;
     }
+
+//    public void updateState () {
+//
+//    }
 
 //    public void snapToLoop (Loop loop) {
 //        this.getNearestPoint (loop);

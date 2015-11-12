@@ -192,6 +192,7 @@ public class Gesture {
             for (BehaviorPlaceholder behaviorPlaceholder : this.substrate.getBehaviors()) {
                 double distanceToAction = behaviorPlaceholder.getDistance ((int) xTouch[finger], (int) yTouch[finger]);
                 if (distanceToAction < behaviorPlaceholder.getRadius ()) {
+                    behaviorPlaceholder.state = BehaviorPlaceholder.State.MOVING;
                     isTouchingAction[finger] = true; // TODO: Set state of finger
 //                            behaviorPlaceholder.state = BehaviorPlaceholder.State.MOVING; // Set state of touched behaviorPlaceholder
                     break;
@@ -222,6 +223,8 @@ public class Gesture {
         } else if (this.isTouch[finger] == true && this.isTouchPrevious[finger] == true) { // ...continue touching...
 
             Log.v ("Clay", "continuing touch");
+
+            // TODO: behaviorPlaceholder.state = BehaviorPlaceholder.State.MOVING;
 
             // Calculate the drag distance
             double dragDistanceSquare = Math.pow(xTouch[finger] - xTouchStart[finger], 2) + Math.pow(yTouch[finger] - yTouchStart[finger], 2);
@@ -316,6 +319,8 @@ public class Gesture {
         } else if (this.isTouch[finger] == false && this.isTouchPrevious[finger] == true) { // ...untouch.
 
             Log.v ("Clay", "untouch");
+
+            // TODO?: behaviorPlaceholder.state = BehaviorPlaceholder.State.FREE;
 
             // Move the canvas if this is a drag event!
             if (isPerformingPerspectiveGesture) {
