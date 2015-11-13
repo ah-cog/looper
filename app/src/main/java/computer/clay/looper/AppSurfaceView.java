@@ -9,6 +9,7 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -130,7 +131,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
             // Set the loop's style
             paint.setStyle (Paint.Style.STROKE);
             paint.setStrokeWidth (2);
-            paint.setColor (Color.BLACK);
+            paint.setColor (Color.LTGRAY);
 
             // Draw the loop
             float loopLeft   = xOrigin +      loop.getPosition ().x - loop.getRadius ();
@@ -147,8 +148,8 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
             // Set the arrowhead's style
             paint.setStyle (Paint.Style.STROKE);
-            paint.setStrokeWidth (2);
-            paint.setColor (Color.BLACK);
+            paint.setStrokeWidth(2);
+            paint.setColor(Color.LTGRAY);
 
             // Draw the arrowhead
             myCanvas.drawLine(-20, -20, 0, 0, paint);
@@ -220,6 +221,27 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
             // TODO: Draw the behaviors for each loop
 
+            /* Draw conditions for behaviors */
+
+            for (BehaviorPlaceholder behaviorPlaceholder : loop.getBehaviors()) {
+
+                // Set the behavior condition's style
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setStrokeWidth(2);
+                paint.setColor(Color.BLACK);
+
+                // Draw the behavior conditions
+                //myCanvas.drawArc(loopLeft, loopTop, loopRight, loopBottom, -90 + loop.getStartAngle(), 30, false, paint);
+//                double behaviorAngle = loop.getAngle (behaviorPlaceholder.getPosition()) + 90 - loop.getStartAngle();
+                double conditionSweep = -45.0;
+//                double behaviorAngle = loop.getAngle (behaviorPlaceholder.getPosition()) + 90 - conditionSweep;
+                double behaviorAngle = loop.getAngle (behaviorPlaceholder.getPosition());
+                Log.v("Clay", "behaviorAngle = " + behaviorAngle);
+                Log.v("Clay", "loop.getStartAngle() = " + loop.getStartAngle());
+                myCanvas.drawArc(loopLeft, loopTop, loopRight, loopBottom, (float) behaviorAngle + 2*loop.getStartAngle(), (float) conditionSweep, false, paint);
+
+            }
+
             myCanvas.restore();
         }
 
@@ -251,7 +273,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 //            Typeface bold = Typeface.create(plain, Typeface.DEFAULT_BOLD);
 //            paint.setTypeface(bold);
 
-            paint.setStyle (Paint.Style.FILL);
+            paint.setStyle(Paint.Style.FILL);
             paint.setStrokeWidth(0);
             paint.setColor(Color.BLACK);
 
@@ -262,8 +284,8 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
             Rect textBounds = new Rect();
 //            paint.setTextAlign(Paint.Align.CENTER);
             paint.getTextBounds(name, 0, name.length(), textBounds);
-            paint.setTextSize (35);
-            myCanvas.drawText (name, behaviorPlaceholder.getPosition().x - textBounds.exactCenterX(), behaviorPlaceholder.getPosition().y - textBounds.exactCenterY(), paint);
+            paint.setTextSize(35);
+            myCanvas.drawText(name, behaviorPlaceholder.getPosition().x - textBounds.exactCenterX(), behaviorPlaceholder.getPosition().y - textBounds.exactCenterY(), paint);
 
             /* Draw snapping path to nearest loop. */
 
