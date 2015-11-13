@@ -9,7 +9,6 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -223,22 +222,42 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
             /* Draw conditions for behaviors */
 
+            float previousBehaviorAngle = -90 + loop.getStartAngle (); // Initialize behavior condition to be the start of the loop.
             for (BehaviorPlaceholder behaviorPlaceholder : loop.getBehaviors()) {
 
-                // Set the behavior condition's style
-                paint.setStyle(Paint.Style.STROKE);
-                paint.setStrokeWidth(2);
-                paint.setColor(Color.BLACK);
+                // TODO: Get condition type and render the condition according to its type (e.g., for "switch" type, draw an arrowhead).
 
                 // Draw the behavior conditions
-                //myCanvas.drawArc(loopLeft, loopTop, loopRight, loopBottom, -90 + loop.getStartAngle(), 30, false, paint);
-//                double behaviorAngle = loop.getAngle (behaviorPlaceholder.getPosition()) + 90 - loop.getStartAngle();
-                double conditionSweep = -45.0;
-//                double behaviorAngle = loop.getAngle (behaviorPlaceholder.getPosition()) + 90 - conditionSweep;
-                double behaviorAngle = loop.getAngle (behaviorPlaceholder.getPosition());
-                Log.v("Clay", "behaviorAngle = " + behaviorAngle);
-                Log.v("Clay", "loop.getStartAngle() = " + loop.getStartAngle());
-                myCanvas.drawArc(loopLeft, loopTop, loopRight, loopBottom, (float) behaviorAngle + 2*loop.getStartAngle(), (float) conditionSweep, false, paint);
+                float behaviorAngle = (float) loop.getAngle (behaviorPlaceholder.getPosition()) + (2 * loop.getStartAngle ());
+//                Log.v("Clay", "behaviorAngle = " + behaviorAngle);
+//                Log.v("Clay", "loop.getStartAngle() = " + loop.getStartAngle());
+
+                if (behaviorPlaceholder.hasCondition()) { // TODO: Move this to out to a larger scope...
+                    if (behaviorPlaceholder.getCondition().getType() == BehaviorCondition.Type.NONE) {
+
+                        // Set the behavior condition's style
+                        paint.setStyle(Paint.Style.STROKE);
+                        paint.setStrokeWidth(2);
+                        paint.setColor(Color.BLACK);
+
+                        // Draw the condition
+                        myCanvas.drawArc(loopLeft, loopTop, loopRight, loopBottom, (float) previousBehaviorAngle, (float) behaviorAngle - previousBehaviorAngle, false, paint);
+
+                    } else if (behaviorPlaceholder.getCondition().getType() == BehaviorCondition.Type.SWITCH) {
+
+                        // Set the behavior condition's style
+                        paint.setStyle(Paint.Style.STROKE);
+                        paint.setStrokeWidth(2);
+                        paint.setColor(Color.CYAN);
+
+                        // Draw the condition
+                        myCanvas.drawArc(loopLeft, loopTop, loopRight, loopBottom, (float) previousBehaviorAngle, (float) behaviorAngle - previousBehaviorAngle, false, paint);
+
+                    }
+                }
+
+                // Store the current behavior's angle for calculating the geometry for the subsequent behavior's condition.
+                previousBehaviorAngle = behaviorAngle;
 
             }
 

@@ -26,4 +26,8 @@ public class BehaviorCondition { // TODO: Consider renaming this to BehaviorPrec
     public BehaviorPlaceholder getBehaviorPlaceholder () {
         return this.behaviorPlaceholder;
     }
+
+    public Type getType () {
+        return this.type;
+    }
 }

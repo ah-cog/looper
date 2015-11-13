@@ -47,6 +47,13 @@ public class BehaviorPlaceholder { // TODO: Consdier renaming to BehaviorScaffol
         this.behavior = new Behavior(this); // TODO: Remove this! Assign this through the behavior selection interface.
         this.behavior.setTitle(String.valueOf(Behavior.BEHAVIOR_COUNT));
         Behavior.BEHAVIOR_COUNT++;
+
+        // Create condition associated with this placeholder
+        if (behavior.BEHAVIOR_COUNT % 2 == 0) {
+            this.condition = new BehaviorCondition(this, BehaviorCondition.Type.SWITCH);
+        } else {
+            this.condition = new BehaviorCondition(this, BehaviorCondition.Type.NONE);
+        }
     }
 
     /**
