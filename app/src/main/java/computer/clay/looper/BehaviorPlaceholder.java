@@ -9,6 +9,8 @@ public class BehaviorPlaceholder { // TODO: Consdier renaming to BehaviorScaffol
 
     private Behavior behavior = null; // TODO: private ArrayList<Behavior> behaviors = new ArrayList<Behavior>();
 
+    private BehaviorCondition condition = null;
+
     private Point position = new Point ();
     private int radius;
 
@@ -57,7 +59,7 @@ public class BehaviorPlaceholder { // TODO: Consdier renaming to BehaviorScaffol
 
         // Add this placeholder to the loop.
         this.loop = loop;
-        this.loop.addBehavior (this);
+        this.loop.addBehavior(this);
 
         // Update state of this placeholder
         this.state = State.SEQUENCED;
@@ -66,6 +68,7 @@ public class BehaviorPlaceholder { // TODO: Consdier renaming to BehaviorScaffol
     /**
      * Returns the loop associated with this behavior placeholder. Returns null if there is no loop
      * associated with this behavior placeholder.
+     *
      * @return
      */
     public Loop getLoop () {
@@ -101,6 +104,18 @@ public class BehaviorPlaceholder { // TODO: Consdier renaming to BehaviorScaffol
 
     public boolean hasBehavior () {
         return (this.behavior != null);
+    }
+
+    public void setCondition (BehaviorCondition condition) {
+        this.condition = condition;
+    }
+
+    public BehaviorCondition getCondition () {
+        return this.condition;
+    }
+
+    public boolean hasCondition () {
+        return (this.condition != null);
     }
 
     public void setPosition (int x, int y) {
