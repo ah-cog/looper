@@ -2,13 +2,24 @@ package computer.clay.looper;
 
 import android.util.Log;
 
+import java.util.UUID;
+
 public class Behavior {
 
-    public static int BEHAVIOR_COUNT = 0;
+    public static int BEHAVIOR_COUNT = 0; // TODO: Replace this with UUID!
 
     private String title;
+    private UUID uuid;
 
     private BehaviorPlaceholder behaviorPlaceholder;
+
+    Behavior(String title) {
+        this.behaviorPlaceholder = null;
+
+        this.uuid = UUID.randomUUID();
+
+        this.title = title;
+    }
 
     Behavior(BehaviorPlaceholder behaviorPlaceholder) {
         this.behaviorPlaceholder = behaviorPlaceholder;
@@ -20,6 +31,10 @@ public class Behavior {
 
     public BehaviorPlaceholder getBehaviorPlaceholder() {
         return this.behaviorPlaceholder;
+    }
+
+    public UUID getUuid () {
+        return this.uuid;
     }
 
     public void setTitle (String title) {

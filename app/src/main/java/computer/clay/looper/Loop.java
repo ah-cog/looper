@@ -155,6 +155,9 @@ public class Loop {
 
     /**
      * Get the angle at which the specified point falls with respect to the center of the loop.
+     *
+     * @param point The point that defines the line, along with the point at the center of the loop, for which the angle will be determined.
+     * @return The angle of the line formed by the specified point and the center point of the loop.
      */
     public double getAngle (Point point) {
         Point startAngle = this.getPoint (this.startAngle);
@@ -166,9 +169,9 @@ public class Loop {
      * Calculates and returns the angle (in degrees) between the specified points and the center
      * point of the loop.
      *
-     * @param startingPoint
-     * @param endingPoint
-     * @return
+     * @param startingPoint The endpoint of the line from which the angle will be measured.
+     * @param endingPoint The endpoint of the line forming the stopping angle.
+     * @return The angle between the two lines formed by the specified points and the center point of the loop.
      */
     public double getAngle (Point startingPoint, Point endingPoint) {
         Point p1 = this.getPosition (); // The center point is p1.

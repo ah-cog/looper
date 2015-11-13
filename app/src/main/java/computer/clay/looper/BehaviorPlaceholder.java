@@ -3,7 +3,7 @@ package computer.clay.looper;
 import android.graphics.Point;
 import android.util.Log;
 
-public class BehaviorPlaceholder {
+public class BehaviorPlaceholder { // TODO: Consdier renaming to BehaviorScaffold or BehaviorForm
 
     public static int DEFAULT_RADIUS = 80; // 60
 

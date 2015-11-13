@@ -162,12 +162,13 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
             if (this.perspective.loopCutPoint != null && this.perspective.loopCutSpanPoint != null) {
 
-                int radiusExtension = 70;
-                int innerLoopRadius = 30;
+                int radiusExtension = 100;
+                int innerLoopRadius = 40; // TODO: Change this dynamically, based on the angular sweep size.
 
                 double cutStartAngle = loop.getStartAngle() + loop.getAngle (this.perspective.loopCutPoint);
                 Point cutStartPoint = loop.getPoint(cutStartAngle, loop.getRadius() + radiusExtension);
-                double cutStopAngle = loop.getStartAngle() + this.perspective.loopCutStartAngle + this.perspective.loopCutSpan;
+//                double cutStopAngle = loop.getStartAngle() + this.perspective.loopCutStartAngle + this.perspective.loopCutSpan;
+                double cutStopAngle = loop.getStartAngle() + loop.getAngle (this.perspective.loopCutPoint) + this.perspective.loopCutSpan;
                 Point cutStopPoint = loop.getPoint(cutStopAngle, loop.getRadius() + radiusExtension);
 
                 // Draw the filled arc highlighting the perspective's area
@@ -176,7 +177,8 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                 paint.setStrokeWidth(2);
                 paint.setColor(Color.WHITE);
 
-                myCanvas.drawArc(loopLeft - radiusExtension, loopTop - radiusExtension, loopRight + radiusExtension, loopBottom + radiusExtension, (float) cutStartAngle, (float) cutStopAngle - this.perspective.loopCutStartAngle, true, paint);
+//                myCanvas.drawArc(loopLeft - radiusExtension, loopTop - radiusExtension, loopRight + radiusExtension, loopBottom + radiusExtension, (float) cutStartAngle, (float) cutStopAngle - this.perspective.loopCutStartAngle, true, paint);
+                myCanvas.drawArc(loopLeft - radiusExtension, loopTop - radiusExtension, loopRight + radiusExtension, loopBottom + radiusExtension, (float) cutStartAngle + loop.getStartAngle(), (float) cutStopAngle - (float) cutStartAngle, true, paint);
 
                 // Draw the loop in the cut
 
@@ -184,13 +186,14 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                 paint.setStrokeWidth(2);
                 paint.setColor(Color.BLACK);
 
-                myCanvas.drawArc(loopLeft - innerLoopRadius, loopTop - innerLoopRadius, loopRight + innerLoopRadius, loopBottom + innerLoopRadius, (float) cutStartAngle, (float) cutStopAngle - this.perspective.loopCutStartAngle, false, paint);
+//                myCanvas.drawArc(loopLeft - innerLoopRadius, loopTop - innerLoopRadius, loopRight + innerLoopRadius, loopBottom + innerLoopRadius, (float) cutStartAngle, (float) cutStopAngle - this.perspective.loopCutStartAngle, false, paint);
+                myCanvas.drawArc(loopLeft - innerLoopRadius, loopTop - innerLoopRadius, loopRight + innerLoopRadius, loopBottom + innerLoopRadius, (float) cutStartAngle + loop.getStartAngle(), (float) cutStopAngle - (float) cutStartAngle, false, paint);
 
                 // Draw the line indicating the start of the cut.
 
                 paint.setStyle(Paint.Style.STROKE);
                 paint.setStrokeWidth(2);
-                paint.setColor(Color.RED);
+                paint.setColor(Color.parseColor("#008080"));
 
                 //myCanvas.drawLine (loop.getPosition().x, loop.getPosition().y, this.perspective.loopCutPoint.x, this.perspective.loopCutPoint.y, paint);
                 myCanvas.drawLine (loop.getPosition().x, loop.getPosition().y, cutStartPoint.x, cutStartPoint.y, paint);
