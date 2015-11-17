@@ -4,11 +4,14 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.PathEffect;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -185,13 +188,65 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
                     } else if (behaviorPlaceholder.getCondition().getType() == BehaviorCondition.Type.SWITCH) {
 
+                        float spacingBeforeArc = 20.0f;
+                        float spacingAfterArc = 20.0f;
+
                         // Set the behavior condition's style
                         paint.setStyle(Paint.Style.STROKE);
                         paint.setStrokeWidth(2);
                         paint.setColor(Color.CYAN);
 
                         // Draw the condition
+                        myCanvas.drawArc(loopLeft, loopTop, loopRight, loopBottom, ((float) previousBehaviorAngle + spacingBeforeArc), (float) behaviorAngle - previousBehaviorAngle - (spacingBeforeArc + spacingAfterArc), false, paint);
+
+                        // Draw arrowhead on loop
+                        myCanvas.save();
+                        myCanvas.rotate(((float) behaviorAngle + 90.0f - spacingAfterArc));
+                        myCanvas.translate(0, -1 * loop.getRadius());
+
+                        // Set the arrowhead's style
+                        paint.setStyle(Paint.Style.STROKE);
+                        paint.setStrokeWidth(2);
+                        paint.setColor(Color.CYAN);
+
+                        // Draw the arrowhead
+                        myCanvas.drawLine(-20, -20, 0, 0, paint);
+                        myCanvas.drawLine(-20, 20, 0, 0, paint);
+
+                        myCanvas.restore();
+
+                    } else if (behaviorPlaceholder.getCondition().getType() == BehaviorCondition.Type.THRESHOLD) {
+
+                        // Set the behavior condition's style
+                        paint.setStyle(Paint.Style.STROKE);
+                        paint.setStrokeWidth(2);
+                        paint.setColor(Color.GREEN);
+
+                        // Draw the condition
                         myCanvas.drawArc(loopLeft, loopTop, loopRight, loopBottom, (float) previousBehaviorAngle, (float) behaviorAngle - previousBehaviorAngle, false, paint);
+
+                    } else if (behaviorPlaceholder.getCondition().getType() == BehaviorCondition.Type.GESTURE) {
+
+                        // Set the behavior condition's style
+                        paint.setStyle(Paint.Style.STROKE);
+                        paint.setStrokeWidth(2);
+                        paint.setColor(Color.MAGENTA);
+
+                        // Draw the condition
+                        myCanvas.drawArc(loopLeft, loopTop, loopRight, loopBottom, (float) previousBehaviorAngle, (float) behaviorAngle - previousBehaviorAngle, false, paint);
+
+                    } else if (behaviorPlaceholder.getCondition().getType() == BehaviorCondition.Type.MESSAGE) {
+
+                        // Set the behavior condition's style
+                        paint.setStyle(Paint.Style.STROKE);
+                        paint.setStrokeWidth(2);
+                        paint.setColor(Color.YELLOW);
+                        paint.setPathEffect(new DashPathEffect(new float[]{10, 20}, 0));
+
+                        // Draw the condition
+                        myCanvas.drawArc(loopLeft, loopTop, loopRight, loopBottom, (float) previousBehaviorAngle, (float) behaviorAngle - previousBehaviorAngle, false, paint);
+
+                        paint.setPathEffect(new PathEffect()); // HACK: This undoes the dash effect! Better way would be to give individual control to drawn elements over their dash stroke (or otherwise).
 
                     }
                 }
@@ -202,6 +257,68 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
             }
 
             myCanvas.restore ();
+
+
+            // TODO: Draw the behaviors ON the loop.
+            myCanvas.save();
+
+            for (BehaviorPlaceholder behaviorPlaceholder : loop.getBehaviors()) {
+//            behaviorStates = behaviorStates + " " + behaviorPlaceholder.state.toString();
+
+                // Set style for behaviorPlaceholder node interior
+                paint.setStyle(Paint.Style.FILL_AND_STROKE);
+                paint.setStrokeWidth(2);
+                paint.setColor(Color.WHITE);
+
+                // Draw behaviorPlaceholder node interior
+                myCanvas.drawCircle(behaviorPlaceholder.getPosition().x, behaviorPlaceholder.getPosition().y, behaviorPlaceholder.getRadius(), paint);
+
+                // Set style for behaviorPlaceholder node border
+                paint.setStyle (Paint.Style.STROKE);
+                paint.setStrokeWidth(2);
+                paint.setColor(Color.BLACK);
+
+                // Draw behaviorPlaceholder node border
+                myCanvas.drawCircle(behaviorPlaceholder.getPosition().x, behaviorPlaceholder.getPosition().y, behaviorPlaceholder.getRadius(), paint);
+
+                // Draw behavior's label
+                //Typeface plain = Typeface.createFromAsset(assetManager, pathToFont);
+//            Typeface plain = Typeface.createFromAsset(getContext().getAssets(), "fonts/comic.TTF");
+//            Typeface bold = Typeface.create(plain, Typeface.DEFAULT_BOLD);
+//            paint.setTypeface(bold);
+
+                paint.setStyle(Paint.Style.FILL);
+                paint.setStrokeWidth(0);
+                paint.setColor(Color.BLACK);
+
+                String name = "None";
+                if (behaviorPlaceholder.hasBehavior ()) {
+                    name = behaviorPlaceholder.getBehavior().getTitle();
+                }
+                Rect textBounds = new Rect();
+                paint.getTextBounds(name, 0, name.length(), textBounds);
+                paint.setTextSize(35);
+                myCanvas.drawText(name, behaviorPlaceholder.getPosition().x - textBounds.exactCenterX(), behaviorPlaceholder.getPosition().y - textBounds.exactCenterY(), paint);
+
+                /* Draw snapping path to nearest loop. */
+
+                // Search for the nearest loop and snap to that one (ongoing).
+                Loop nearestLoop = loop;
+//                double nearestLoopDistance = Double.MAX_VALUE;
+//                for (Loop loop : this.substrate.getLoops()) {
+//                    if (behaviorPlaceholder.getDistanceToLoop(loop) < nearestLoopDistance) {
+//                        nearestLoop = loop;
+//                    }
+//                }
+
+                // Draw snapping path to nearest loop
+                if (behaviorPlaceholder.getDistanceToLoop (nearestLoop) < 250) {
+                    Point nearestPoint = behaviorPlaceholder.getNearestPoint (nearestLoop);
+                    myCanvas.drawLine(behaviorPlaceholder.getPosition().x, behaviorPlaceholder.getPosition().y, nearestPoint.x, nearestPoint.y, paint);
+                }
+            }
+
+            myCanvas.restore();
 
 
 
@@ -266,9 +383,15 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
         // Draw behaviors that represent Clay's current behavior.
         // TODO: Draw the behaviors here that are NOT on a loop. Those are drawn above.
-//        String behaviorStates = "";
+        String behaviorStates = "";
+        //for (BehaviorPlaceholder behaviorPlaceholder : this.substrate.getBehaviors()) {
         for (BehaviorPlaceholder behaviorPlaceholder : this.substrate.getBehaviors()) {
 //            behaviorStates = behaviorStates + " " + behaviorPlaceholder.state.toString();
+
+            // Only draw loops that are NOT on a loop!
+            if (behaviorPlaceholder.hasLoop()) {
+                continue;
+            }
 
             // Set style for behaviorPlaceholder node interior
             paint.setStyle(Paint.Style.FILL_AND_STROKE);
@@ -323,7 +446,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                 myCanvas.drawLine(behaviorPlaceholder.getPosition().x, behaviorPlaceholder.getPosition().y, nearestPoint.x, nearestPoint.y, paint);
             }
         }
-//        Log.v("Clay", behaviorStates);
+        Log.v("Clay", behaviorStates);
 
         // Paint the bitmap to the "primary" canvas
         canvas.drawBitmap (canvasBitmap, identityMatrix, null);

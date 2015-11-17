@@ -461,6 +461,12 @@ public class Interface {
                     if (touchedCondition.getType() == BehaviorCondition.Type.NONE) {
                         touchedCondition.setType(BehaviorCondition.Type.SWITCH);
                     } else if (touchedCondition.getType() == BehaviorCondition.Type.SWITCH) {
+                        touchedCondition.setType(BehaviorCondition.Type.THRESHOLD);
+                    } else if (touchedCondition.getType() == BehaviorCondition.Type.THRESHOLD) {
+                        touchedCondition.setType(BehaviorCondition.Type.GESTURE);
+                    } else if (touchedCondition.getType() == BehaviorCondition.Type.GESTURE) {
+                        touchedCondition.setType(BehaviorCondition.Type.MESSAGE);
+                    } else if (touchedCondition.getType() == BehaviorCondition.Type.MESSAGE) {
                         touchedCondition.setType(BehaviorCondition.Type.NONE);
                     }
 
