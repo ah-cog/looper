@@ -28,14 +28,14 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
     private Substrate substrate = new Substrate ();
     private Perspective perspective = new Perspective (this.substrate);
-    private Gesture gesture = new Gesture (this.substrate, this.perspective);
+    private Interface touchInterface = new Interface(this.substrate, this.perspective);
 
     public AppSurfaceView (Context context) {
         super (context);
 
 //        this.substrate = new Substrate ();
 //        this.perspective = new Perspective (this.substrate);
-//        this.gesture = new Gesture (this.substrate, this.perspective);
+//        this.touchInterface = new Interface (this.substrate, this.perspective);
     }
 
     public AppSurfaceView (Context context, AttributeSet attrs) {
@@ -146,7 +146,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
             myCanvas.translate(0, -1 * loop.getRadius());
 
             // Set the arrowhead's style
-            paint.setStyle (Paint.Style.STROKE);
+            paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(2);
             paint.setColor(Color.LTGRAY);
 
@@ -156,71 +156,11 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
             myCanvas.restore();
 
-            // Draw the sections of the loop
-
-            myCanvas.save();
-
-            if (this.perspective.loopCutPoint != null && this.perspective.loopCutSpanPoint != null) {
-
-                int radiusExtension = 100;
-                int innerLoopRadius = 40; // TODO: Change this dynamically, based on the angular sweep size.
-
-                double cutStartAngle = loop.getStartAngle() + loop.getAngle (this.perspective.loopCutPoint);
-                Point cutStartPoint = loop.getPoint(cutStartAngle, loop.getRadius() + radiusExtension);
-//                double cutStopAngle = loop.getStartAngle() + this.perspective.loopCutStartAngle + this.perspective.loopCutSpan;
-                double cutStopAngle = loop.getStartAngle() + loop.getAngle (this.perspective.loopCutPoint) + this.perspective.loopCutSpan;
-                Point cutStopPoint = loop.getPoint(cutStopAngle, loop.getRadius() + radiusExtension);
-
-                // Draw the filled arc highlighting the perspective's area
-
-                paint.setStyle(Paint.Style.FILL);
-                paint.setStrokeWidth(2);
-                paint.setColor(Color.WHITE);
-
-//                myCanvas.drawArc(loopLeft - radiusExtension, loopTop - radiusExtension, loopRight + radiusExtension, loopBottom + radiusExtension, (float) cutStartAngle, (float) cutStopAngle - this.perspective.loopCutStartAngle, true, paint);
-                myCanvas.drawArc(loopLeft - radiusExtension, loopTop - radiusExtension, loopRight + radiusExtension, loopBottom + radiusExtension, (float) cutStartAngle + loop.getStartAngle(), (float) cutStopAngle - (float) cutStartAngle, true, paint);
-
-                // Draw the loop in the cut
-
-                paint.setStyle(Paint.Style.STROKE);
-                paint.setStrokeWidth(2);
-                paint.setColor(Color.BLACK);
-
-//                myCanvas.drawArc(loopLeft - innerLoopRadius, loopTop - innerLoopRadius, loopRight + innerLoopRadius, loopBottom + innerLoopRadius, (float) cutStartAngle, (float) cutStopAngle - this.perspective.loopCutStartAngle, false, paint);
-                myCanvas.drawArc(loopLeft - innerLoopRadius, loopTop - innerLoopRadius, loopRight + innerLoopRadius, loopBottom + innerLoopRadius, (float) cutStartAngle + loop.getStartAngle(), (float) cutStopAngle - (float) cutStartAngle, false, paint);
-
-                // Draw the line indicating the start of the cut.
-
-                paint.setStyle(Paint.Style.STROKE);
-                paint.setStrokeWidth(2);
-                paint.setColor(Color.parseColor("#008080"));
-
-                //myCanvas.drawLine (loop.getPosition().x, loop.getPosition().y, this.perspective.loopCutPoint.x, this.perspective.loopCutPoint.y, paint);
-                myCanvas.drawLine (loop.getPosition().x, loop.getPosition().y, cutStartPoint.x, cutStartPoint.y, paint);
-//                myCanvas.drawLine (loop.getPosition().x, loop.getPosition().y, cutStartPoint.x, cutStartPoint.y, paint);
-
-                // Draw the line indicating the end of the cut.
-
-                if (this.perspective.loopCutSpan < 0) {
-                    paint.setStyle(Paint.Style.STROKE);
-                    paint.setStrokeWidth(2);
-                    paint.setColor(Color.BLUE);
-                } else {
-                    paint.setStyle(Paint.Style.STROKE);
-                    paint.setStrokeWidth(2);
-                    paint.setColor(Color.GREEN);
-                }
-
-                myCanvas.drawLine(loop.getPosition().x, loop.getPosition().y, cutStopPoint.x, cutStopPoint.y, paint);
-                // myCanvas.drawLine (loop.getPosition().x, loop.getPosition().y, this.loopCutSpanPoint.x, this.loopCutSpanPoint.y, paint);
-
-            }
-
-            myCanvas.restore();
-
             // TODO: Draw the behaviors for each loop
 
             /* Draw conditions for behaviors */
+
+            myCanvas.save ();
 
             float previousBehaviorAngle = -90 + loop.getStartAngle (); // Initialize behavior condition to be the start of the loop.
             for (BehaviorPlaceholder behaviorPlaceholder : loop.getBehaviors()) {
@@ -260,6 +200,66 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                 previousBehaviorAngle = behaviorAngle;
 
             }
+
+            myCanvas.restore ();
+
+
+
+            // Draw the sections of the loop
+
+            myCanvas.save();
+
+            if (this.perspective.loopCutPoint != null && this.perspective.loopCutSpanPoint != null) {
+
+                int radiusExtension = 100;
+                int innerLoopRadius = 40; // TODO: Change this dynamically, based on the angular sweep size.
+
+                double cutStartAngle = loop.getStartAngle() + loop.getAngle (this.perspective.loopCutPoint);
+                Point cutStartPoint = loop.getPoint(cutStartAngle, loop.getRadius() + radiusExtension);
+                double cutStopAngle = loop.getStartAngle() + loop.getAngle (this.perspective.loopCutPoint) + this.perspective.loopCutSpan;
+                Point cutStopPoint = loop.getPoint(cutStopAngle, loop.getRadius() + radiusExtension);
+
+                // Draw the filled arc highlighting the perspective's area
+
+                paint.setStyle(Paint.Style.FILL);
+                paint.setStrokeWidth(2);
+                paint.setColor(Color.WHITE);
+
+                myCanvas.drawArc(loopLeft - radiusExtension, loopTop - radiusExtension, loopRight + radiusExtension, loopBottom + radiusExtension, (float) cutStartAngle + loop.getStartAngle(), (float) cutStopAngle - (float) cutStartAngle, true, paint);
+
+                // Draw the loop in the cut
+
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setStrokeWidth(2);
+                paint.setColor(Color.BLACK);
+
+                myCanvas.drawArc(loopLeft - innerLoopRadius, loopTop - innerLoopRadius, loopRight + innerLoopRadius, loopBottom + innerLoopRadius, (float) cutStartAngle + loop.getStartAngle(), (float) cutStopAngle - (float) cutStartAngle, false, paint);
+
+                // Draw the line indicating the start of the cut.
+
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setStrokeWidth(2);
+                paint.setColor(Color.parseColor("#008080"));
+
+                myCanvas.drawLine (loop.getPosition().x, loop.getPosition().y, cutStartPoint.x, cutStartPoint.y, paint);
+
+                // Draw the line indicating the end of the cut.
+
+                if (this.perspective.loopCutSpan < 0) {
+                    paint.setStyle(Paint.Style.STROKE);
+                    paint.setStrokeWidth(2);
+                    paint.setColor(Color.BLUE);
+                } else {
+                    paint.setStyle(Paint.Style.STROKE);
+                    paint.setStrokeWidth(2);
+                    paint.setColor(Color.GREEN);
+                }
+
+                myCanvas.drawLine(loop.getPosition().x, loop.getPosition().y, cutStopPoint.x, cutStopPoint.y, paint);
+
+            }
+
+            myCanvas.restore();
 
             myCanvas.restore();
         }
@@ -395,7 +395,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 //                    double distanceToTouch = action.getDistance ((int) xTouch[pointerId], (int) yTouch[pointerId]);
 //                    if (distanceToTouch < action.getRadius () + 20) {
 //                        touchedBehaviors.add (action);
-//                        touchingAction = true;  // TODO: Set state of finger
+//                        isPerformingBehaviorGesture = true;  // TODO: Set state of finger
 ////                        action.state = BehaviorPlaceholder.State.MOVING; // Set state of touched action
 //                    }
 //                }
@@ -403,8 +403,8 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                 // Update the state of the touched object based on the current touch interaction state.
                 if (touchAction == MotionEvent.ACTION_DOWN) {
 
-                    gesture.touch (pointerId, xTouches[pointerId], yTouches[pointerId]);
-                    gesture.classify (pointerId);
+                    touchInterface.touch(pointerId, xTouches[pointerId], yTouches[pointerId]);
+                    touchInterface.classify(pointerId);
 
                 } else if (touchAction == MotionEvent.ACTION_POINTER_DOWN) {
 
@@ -412,13 +412,13 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
                 } else if (touchAction == MotionEvent.ACTION_MOVE) {
 
-                    gesture.touch (pointerId, xTouches[pointerId], yTouches[pointerId]);
-                    gesture.classify (pointerId);
+                    touchInterface.touch(pointerId, xTouches[pointerId], yTouches[pointerId]);
+                    touchInterface.classify(pointerId);
 
                 } else if (touchAction == MotionEvent.ACTION_UP) {
 
-                    gesture.untouch (pointerId, xTouches[pointerId], yTouches[pointerId]);
-                    gesture.classify (pointerId);
+                    touchInterface.untouch(pointerId, xTouches[pointerId], yTouches[pointerId]);
+                    touchInterface.classify(pointerId);
 
                 } else if (touchAction == MotionEvent.ACTION_POINTER_UP) {
 

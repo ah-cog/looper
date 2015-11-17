@@ -5,7 +5,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
-public class Gesture {
+public class Interface {
 
     // public enum loopGesture = { };
 
@@ -24,12 +24,8 @@ public class Gesture {
     private double[] xTouch = new double[MAXIMUM_TOUCH_COUNT];
     private double[] yTouch = new double[MAXIMUM_TOUCH_COUNT];
     private boolean[] isTouch = new boolean[MAXIMUM_TOUCH_COUNT];
-    private boolean[] isTouchingAction = new boolean[MAXIMUM_TOUCH_COUNT];
     private boolean[] isDragging = new boolean[MAXIMUM_TOUCH_COUNT];
     private double[] dragDistance = new double[MAXIMUM_TOUCH_COUNT];
-
-    private boolean isPerformingLoopGesture = false;
-    private Loop selectedLoop = null; // TODO: Implement this for each finger.
 
     private double[] xTouchPrevious = new double[MAXIMUM_TOUCH_COUNT];
     private double[] yTouchPrevious = new double[MAXIMUM_TOUCH_COUNT];
@@ -44,13 +40,24 @@ public class Gesture {
     private double[] xTouchStop = new double[MAXIMUM_TOUCH_COUNT];
     private double[] yTouchStop = new double[MAXIMUM_TOUCH_COUNT];
 
+    private boolean[] isTouchingBehavior = new boolean[MAXIMUM_TOUCH_COUNT];
+
+    private boolean isPerformingLoopGesture = false;
+    private Loop selectedLoop = null; // TODO: Implement this for each finger.
+
+    private boolean isPerformingConditionGesture = false;
+
+    private boolean isPerformingSubstrateGesture = false;
+
     double previousDistanceToSelectedLoopCenter = 0.0;
     double distanceToSelectedLoopCenter = 0.0;
 
     BehaviorPlaceholder touchedBehaviorPlaceholder = null;
 
-    boolean touchingAction = false; // True if touching _any_ action.
+    boolean isPerformingBehaviorGesture = false; // True if touching _any_ action.
     ArrayList<BehaviorPlaceholder> touchedBehaviors = new ArrayList<BehaviorPlaceholder> (); // List of the behaviors that are currently being touched.
+
+    BehaviorCondition touchedCondition = null;
 
     boolean isPerformingPerspectiveGesture = false;
     boolean isMovingPerspective = false; // True if not touching an action, but dragging (not just touching) the canvas.
@@ -60,7 +67,7 @@ public class Gesture {
     private Substrate substrate = null;
     private Perspective perspective = null;
 
-    Gesture (Substrate substrate, Perspective perspective) {
+    Interface(Substrate substrate, Perspective perspective) {
 
         this.substrate = substrate;
         this.perspective = perspective;
@@ -86,7 +93,7 @@ public class Gesture {
 //            this.xTouchStart[finger] = this.xTouch[finger];
 //            this.yTouchStart[finger] = this.yTouch[finger];
 //
-//            isTouchingAction[pointerId] = false;
+//            isTouchingBehavior[pointerId] = false;
 //
 //            isDragging[pointerId] = false;
 //            dragDistance[pointerId] = 0;
@@ -155,7 +162,7 @@ public class Gesture {
         // selectedLoop
         // isPerformingLoopGesture
         // isCreatingLoopPerspective
-        // touchingAction
+        // isPerformingBehaviorGesture
         // touchedBehaviors
         // TODO: touchedBehaviorPlaceholder[]
 
@@ -165,59 +172,138 @@ public class Gesture {
 
             Log.v ("Clay", "touch");
 
+            // TODO: Determine what was touched: behavior? condition? substrate?
+
             this.xTouchStart[finger] = this.xTouch[finger];
             this.yTouchStart[finger] = this.yTouch[finger];
 
-            isTouchingAction[finger] = false;
-            isDragging[finger] = false;
-            dragDistance[finger] = 0;
+            this.isTouchingBehavior[finger] = false;
+            this.isDragging[finger] = false;
+            this.dragDistance[finger] = 0;
 
             // Check if touching _any_ behaviors (or loops, or canvas, or perspective). If so, keep the canvas locked, and find the action that's being touched.
             for (BehaviorPlaceholder behaviorPlaceholder : this.substrate.getBehaviors()) {
                 double distanceToTouch = behaviorPlaceholder.getDistance ((int) xTouch[finger], (int) yTouch[finger]);
                 if (distanceToTouch < behaviorPlaceholder.getRadius () + 20) {
 
-//                            isTouchingAction[pointerId] = true; // TODO: Set state of finger
+                    // A behavior gesture is being performed.
+                    if (isPerformingBehaviorGesture != true) {
+                        Log.v("Clay", "starting behavior gesture");
+                        isPerformingBehaviorGesture = true;
+                    }
 
+                    // Update the state of the touched behavior.
+                    isTouchingBehavior[finger] = true; // TODO: Set state of finger
+                    behaviorPlaceholder.state = BehaviorPlaceholder.State.MOVING;
+
+                    // Add the touched behavior to the list of touched behaviors.
                     if (!this.touchedBehaviors.contains(behaviorPlaceholder)) {
                         touchedBehaviors.add (behaviorPlaceholder);
                     }
-
-                    touchingAction = true;  // TODO: Set state of finger
-//                        behaviorPlaceholder.state = BehaviorPlaceholder.State.MOVING; // Set state of touched behaviorPlaceholder
                 }
             }
 
-            // Check if touching an action and set isTouchingAction accordingly.
-            for (BehaviorPlaceholder behaviorPlaceholder : this.substrate.getBehaviors()) {
-                double distanceToAction = behaviorPlaceholder.getDistance ((int) xTouch[finger], (int) yTouch[finger]);
-                if (distanceToAction < behaviorPlaceholder.getRadius ()) {
-                    behaviorPlaceholder.state = BehaviorPlaceholder.State.MOVING;
-                    isTouchingAction[finger] = true; // TODO: Set state of finger
-//                            behaviorPlaceholder.state = BehaviorPlaceholder.State.MOVING; // Set state of touched behaviorPlaceholder
-                    break;
-                }
-            }
+//            // Check if touching an action and set isTouchingBehavior accordingly.
+//            for (BehaviorPlaceholder behaviorPlaceholder : this.substrate.getBehaviors()) {
+//                double distanceToAction = behaviorPlaceholder.getDistance ((int) xTouch[finger], (int) yTouch[finger]);
+//                if (distanceToAction < behaviorPlaceholder.getRadius ()) {
+//                    behaviorPlaceholder.state = BehaviorPlaceholder.State.MOVING;
+//                    isTouchingBehavior[finger] = true; // TODO: Set state of finger
+////                            behaviorPlaceholder.state = BehaviorPlaceholder.State.MOVING; // Set state of touched behaviorPlaceholder
+//                    break;
+//                }
+//            }
 
-            // Check if touching in a loop.
-            for (Loop loop: this.substrate.getLoops()) {
-                double distanceToTouch = loop.getDistance ((int) xTouch[finger], (int) yTouch[finger]);
-                Log.v ("Clay", "distanceToTouch = " + distanceToTouch);
-                if (distanceToTouch < 0.50 * loop.getRadius ()) {
+            if (!isPerformingBehaviorGesture) {
+                // Check if touching in a loop.
+                for (Loop loop : this.substrate.getLoops()) {
+                    double distanceToTouch = loop.getDistance((int) xTouch[finger], (int) yTouch[finger]);
+                    Log.v("Clay", "distanceToTouch = " + distanceToTouch);
+                    if (distanceToTouch < 0.50 * loop.getRadius()) {
 
-                    Log.v ("Clay", "starting loop gesture");
-                    isPerformingLoopGesture = true;
-                    selectedLoop = loop;
+                        Log.v("Clay", "starting loop gesture");
+                        isPerformingLoopGesture = true;
+                        selectedLoop = loop;
 
-//                            isTouchingAction[pointerId] = true; // TODO: Set state of finger
+//                            isTouchingBehavior[pointerId] = true; // TODO: Set state of finger
 
 //                            if (!this.touchedLoops.contains(loop)) {
 //                                touchedLoops.add(loop);
 //                            }
 
-                    touchingAction = true;  // TODO: Set state of finger
+//                        isPerformingBehaviorGesture = true;  // TODO: Set state of finger
 //                        action.state = BehaviorPlaceholder.State.MOVING; // Set state of touched action
+                    }
                 }
+            }
+
+            // Check if a behavior condition gesture is being performed.
+            if (!isPerformingBehaviorGesture && !isPerformingLoopGesture) {
+                // TODO: Check if performing a condition gesture.
+
+                // Declare the distance around arc that will respond to touch
+                float conditionTouchProximity = 100;
+
+                // Get the nearest loop to the touch
+                // TODO: Move this into a new function Perspective.getNearestLoop().
+                Loop nearestLoop = null;
+                float nearestLoopDistance = Float.MAX_VALUE;
+                for (Loop loop : this.substrate.getLoops()) {
+                    double distanceToTouch = loop.getDistance((int) xTouch[finger], (int) yTouch[finger]);
+                    if (distanceToTouch < nearestLoopDistance) {
+                        nearestLoopDistance = (float) distanceToTouch;
+                        nearestLoop = loop;
+                    }
+                }
+
+//                Log.v("Condition", "nearestLoop = " + nearestLoop);
+//                Log.v("Condition", "nearestLoopDistance = " + nearestLoopDistance);
+//                Log.v("Condition", "conditionTouchProximity = " + conditionTouchProximity);
+//                Log.v("Condition", "nearestLoop.getRadius()  = " + nearestLoop.getRadius());
+//                Log.v("Condition", "distanceThreshold = " + (nearestLoop.getRadius() + conditionTouchProximity));
+
+                if (nearestLoopDistance < (nearestLoop.getRadius() + conditionTouchProximity)) {
+                    double touchAngle = nearestLoop.getAngle ((int) xTouch[finger], (int) yTouch[finger]); // i.e., the touch angle relative to the nearest loop
+//                    Log.v ("Condition", "touchAngle = " + touchAngle);
+//                    BehaviorPlaceholder behaviorBeforeAngle = nearestLoop.getBehaviorBeforeAngle(touchAngle);
+//                    Log.v ("Condition", "nearestLoop.getBehaviorBeforeAngle = " + behaviorBeforeAngle);
+//                    if (behaviorBeforeAngle != null) {
+//                        Log.v ("Condition", "nearestLoop.getBehaviorBeforeAngle = " + behaviorBeforeAngle.getBehavior().getTitle());
+//                    }
+//
+//                    BehaviorPlaceholder behaviorAfterAngle = nearestLoop.getBehaviorAfterAngle(touchAngle);
+//                    Log.v ("Condition", "nearestLoop.behaviorAfterAngle = " + behaviorAfterAngle);
+//                    if (behaviorAfterAngle != null) {
+//                        Log.v ("Condition", "nearestLoop.behaviorAfterAngle = " + behaviorAfterAngle.getBehavior().getTitle());
+//                    }
+
+                    BehaviorCondition behaviorCondition = nearestLoop.getBehaviorConditionAtAngle(touchAngle);
+                    if (behaviorCondition != null) {
+                        isPerformingConditionGesture = true;
+//                        Log.v ("Condition", "behaviorCondition.behavior = " + behaviorCondition.getBehaviorPlaceholder().getBehavior().getTitle());
+                        Log.v("Condition", "starting condition gesture");
+                        this.touchedCondition = behaviorCondition;
+                    }
+
+                    // TODO: Loop.getBehaviorBeforeAngle(float angle)
+                    // TODO: Loop.getBehaviorAfterAngle(float angle)
+                    // TODO: Loop.getConditionAtAngle(float angle)
+                }
+
+                // TODO:
+                // - Get the nearest loop (if there's one "near enough" to consider)
+                //   - Get the angle of the touch relative to the nearest loop got in the previous step (if any)
+                //   - Check if the touch angle falls in the sweep range of a condition (i.e., on the space between two behaviors).
+                //     - If so, get the condition.
+                //     - If so, get the set "isPerformingConditionGesture = true".
+                //     - (?) If the touch falls in the sweep range between behaviors, get the behavior associated with the condition.
+            }
+
+            // Check if a substrate gesture is being performed.
+            if (!isPerformingBehaviorGesture && !isPerformingLoopGesture && !isPerformingConditionGesture) {
+                // TODO: Check if performing a substrate/perspective gesture.
+                Log.v("Condition", "starting perspective gesture");
+                isPerformingPerspectiveGesture = true;
             }
 
         } else if (this.isTouch[finger] == true && this.isTouchPrevious[finger] == true) { // ...continue touching...
@@ -240,7 +326,17 @@ public class Gesture {
                 // TODO: Move this into a separate processTouchInteraction() function, and in this event listener, only update the touch interaction state.
 
                 // Check if a loop gesture is being performed.
-                if (isPerformingLoopGesture) {
+                if (isPerformingBehaviorGesture) {
+
+                    Log.v("Condition", "continuing behavior gesture (response)");
+
+                } else if (isPerformingConditionGesture) {
+
+                    Log.v("Condition", "continuing condition gesture (response)");
+
+                } else if (isPerformingLoopGesture) {
+
+                    Log.v("Condition", "continuing loop gesture (response)");
 
                     // Get the distance from the center of the loop "selected" with the gesture.
                     previousDistanceToSelectedLoopCenter = selectedLoop.getDistance ((int) xTouchPrevious[finger], (int) yTouchPrevious[finger]);
@@ -286,11 +382,13 @@ public class Gesture {
                         Log.v ("Clay", "angle = " + this.perspective.loopCutSpan);
                     }
 
-                } else {
+                } else if (isPerformingPerspectiveGesture) {
+
+                    Log.v("Condition", "continuing perspective gesture (response)");
 
                     // If a loop gesture is not being performed, then it must be the case that the perspective is being moved.
-                    if (isTouchingAction[finger] == false) {
-                        isPerformingPerspectiveGesture = true;
+                    if (isTouchingBehavior[finger] == false) {
+//                        isPerformingPerspectiveGesture = true;
                         isMovingPerspective = true;
                     }
                 }
@@ -310,7 +408,7 @@ public class Gesture {
 
                 // TODO: Look for the point on the loop at which the finger crosses the line (i.e., the distance is greater than the loop's radius).
 
-            } else if (isTouchingAction[finger]) {
+            } else if (isTouchingBehavior[finger]) {
                 for (BehaviorPlaceholder behaviorPlaceholder : touchedBehaviors) {
                     behaviorPlaceholder.setPosition ((int) xTouch[finger],(int)  yTouch[finger]);
                 }
@@ -323,13 +421,60 @@ public class Gesture {
             // TODO?: behaviorPlaceholder.state = BehaviorPlaceholder.State.FREE;
 
             // Move the canvas if this is a drag event!
-            if (isPerformingPerspectiveGesture) {
+            if (isPerformingBehaviorGesture) {
 
-                if (isMovingPerspective) {
-                    perspective.moveBy ((int) (xTouch[finger] - xTouchStart[finger]), (int) (yTouch[finger] - yTouchStart[finger]));
+                Log.v("Condition", "stopping behavior gesture");
+
+                // TODO: If moving an action, upon release, call "searchForPosition()" to check the "logical state" of the action in the substrate WRT the other loops, and find it's final position and update its state (e.g., if it's near enough to snap to a loop, to be deleted, etc.).
+
+                Log.v("Clay", "before isTouchingBehavior[pointerId]");
+                if (touchedBehaviors.size() > 0) { // if (isTouchingBehavior[pointerId]) {
+                    Log.v("Clay", "touchedBehaviors.size() = " + touchedBehaviors.size());
+
+                    // Settle position of action.
+                    for (BehaviorPlaceholder behaviorPlaceholder : touchedBehaviors) {
+                        behaviorPlaceholder.settlePosition();
+                    }
+
+                    // HACK: This hack removes _all_ touched behaviors when _any_ finger is lifted up.
+                    touchedBehaviors.clear();
+                    // TODO: Remove specific finger from the list of fingers touching down.
+
+                    // HACK: This hack updates the touch flag that indicates if _any_ finger is touching to false.
+                    isPerformingBehaviorGesture = false;
+                    // TODO: Set state of finger
+
+//                            // Update the gesture state
+//                            isPerformingLoopGesture = false;
+//                            selectedLoop = null;
                 }
 
+            } else if (isPerformingConditionGesture) {
+
+                Log.v ("Condition", "stopping condition gesture");
+                Log.v ("Condition", "touchedCondition = " + touchedCondition);
+
+                if (this.touchedCondition != null) {
+
+                    Log.v ("Condition", "touchedCondition.type = " + this.touchedCondition.getType());
+
+                    if (touchedCondition.getType() == BehaviorCondition.Type.NONE) {
+                        touchedCondition.setType(BehaviorCondition.Type.SWITCH);
+                    } else if (touchedCondition.getType() == BehaviorCondition.Type.SWITCH) {
+                        touchedCondition.setType(BehaviorCondition.Type.NONE);
+                    }
+
+                    touchedCondition = null;
+                }
+
+                // TODO:
+                // - Get the condition associated with this gesture
+                // - Change the condition to the next condition type in the list
+                // - TODO: (in continuing condition gesture) As dragging toward and away from the loop center, cycle through the condition types!
+
             } else if (isPerformingLoopGesture) {
+
+                Log.v ("Condition", "stopping loop gesture");
 
                 if (isCreatingLoopPerspective) {
                     // TODO: Create the loop perspective and associate with the substrate perspective.
@@ -345,42 +490,23 @@ public class Gesture {
                     selectedLoop = null;
                 }
 
-            } else {
+            } else if (isPerformingPerspectiveGesture) {
 
-                // TODO: If moving an action, upon release, call "searchForPosition()" to check the "logical state" of the action in the substrate WRT the other loops, and find it's final position and update its state (e.g., if it's near enough to snap to a loop, to be deleted, etc.).
+                    Log.v ("Condition", "stopping perspecting gesture");
 
-                Log.v("Clay", "before isTouchingAction[pointerId]");
-                if (touchedBehaviors.size() > 0) { // if (isTouchingAction[pointerId]) {
-                    Log.v("Clay", "touchedBehaviors.size() = " + touchedBehaviors.size());
+                    if (isMovingPerspective) {
+                        perspective.moveBy ((int) (xTouch[finger] - xTouchStart[finger]), (int) (yTouch[finger] - yTouchStart[finger]));
+                    } else {
 
-                    // Settle position of action.
-                    for (BehaviorPlaceholder behaviorPlaceholder : touchedBehaviors) {
-                        behaviorPlaceholder.settlePosition();
+                        // Add an action to the substrate.
+                        BehaviorPlaceholder newBehaviorPlaceholder = new BehaviorPlaceholder(this.substrate, (int) xTouch[finger], (int) yTouch[finger]);
+                        this.substrate.addBehavior (newBehaviorPlaceholder);
+                        newBehaviorPlaceholder.settlePosition ();
                     }
 
-                    // HACK: This hack removes _all_ touched behaviors when _any_ finger is lifted up.
-                    touchedBehaviors.clear ();
-                    // TODO: Remove specific finger from the list of fingers touching down.
-
-                    // HACK: This hack updates the touch flag that indicates if _any_ finger is touching to false.
-                    touchingAction = false;
-                    // TODO: Set state of finger
-
-//                            // Update the gesture state
-//                            isPerformingLoopGesture = false;
-//                            selectedLoop = null;
-
-                } else {
-
-                    // Add an action to the substrate.
-                    BehaviorPlaceholder newBehaviorPlaceholder = new BehaviorPlaceholder(this.substrate, (int) xTouch[finger], (int) yTouch[finger]);
-                    this.substrate.addBehavior (newBehaviorPlaceholder);
-                    newBehaviorPlaceholder.settlePosition ();
-                }
-
-//                        if (isTouchingAction[pointerId]) {
+//                        if (isTouchingBehavior[pointerId]) {
 //                            // Settle the action.
-//                            // Check if touching an action and set isTouchingAction accordingly.
+//                            // Check if touching an action and set isTouchingBehavior accordingly.
 //                            for (BehaviorPlaceholder action : this.substrate.getBehaviors()) {
 //                                double distanceToAction = action.getDistance ((int) xTouch[pointerId], (int) yTouch[pointerId]);
 //                                if (distanceToAction < action.getRadius ()) {
@@ -396,16 +522,18 @@ public class Gesture {
 
             /* Reset touch state for the finger. */
 
-            isTouchingAction[finger] = false;
+            isTouchingBehavior[finger] = false;
 
             isDragging[finger] = false;
             dragDistance[finger] = 0;
 
             // TODO: In processTouchInteractions, compute isMovingPerspective and if it is true, move the perspective.
-            isPerformingPerspectiveGesture = false;
-            isMovingPerspective = false;
+            isPerformingBehaviorGesture = false;
             isPerformingLoopGesture = false;
             isCreatingLoopPerspective = false;
+            isPerformingConditionGesture = false;
+            isPerformingPerspectiveGesture = false;
+            isMovingPerspective = false;
 
         }
 

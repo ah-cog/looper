@@ -30,4 +30,8 @@ public class BehaviorCondition { // TODO: Consider renaming this to BehaviorPrec
     public Type getType () {
         return this.type;
     }
+
+    public void setType (Type type) {
+        this.type = type;
+    }
 }

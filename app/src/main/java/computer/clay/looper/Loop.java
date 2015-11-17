@@ -212,4 +212,100 @@ public class Loop {
         point.set ((int) x, (int) y);
         return point;
     }
+
+    /**
+     * Returns the behavior prior to the specified angle. This method assumes that behaviors are
+     * stored in ascending order of their angles on the loop.
+     */
+    public BehaviorPlaceholder getBehaviorBeforeAngle (double angle) {
+
+        // Calculate angles along the loop for each behavior
+//        ArrayList<Double> behaviorAngles = new ArrayList<Double>();
+        String behaviorAngles = "";
+        for (BehaviorPlaceholder behavior : this.behaviors) {
+            Point behaviorPosition = behavior.getPosition();
+            double behaviorAngle = this.getAngle(behaviorPosition);
+            behaviorAngles += behaviorAngle + ", ";
+        }
+//        Log.v ("Condition", "behaviorAngles = " + behaviorAngles);
+
+
+        BehaviorPlaceholder previousBehavior = null;
+        BehaviorPlaceholder behaviorBeforeAngle = null;
+        for (BehaviorPlaceholder behavior : this.behaviors) {
+            Point behaviorPosition = behavior.getPosition();
+            double behaviorAngle = this.getAngle(behaviorPosition);
+
+//            Log.v ("Condition", "angle = " + angle);
+//            Log.v ("Condition", "behaviorAngle = " + behaviorAngle);
+
+            if (behaviorAngle < angle) {
+//                previousBehavior = behavior;
+                behaviorBeforeAngle = behavior;
+            } else {
+//                behaviorBeforeAngle = previousBehavior;
+                break;
+            }
+
+//            Log.v("Condition", "behaviorBeforeAngle.angle = " + behaviorAngle);
+        }
+
+        return behaviorBeforeAngle;
+    }
+
+    /**
+     * Returns the behavior prior to the specified angle. This method assumes that behaviors are
+     * stored in ascending order of their angles on the loop.
+     */
+    public BehaviorPlaceholder getBehaviorAfterAngle (double angle) {
+
+        // Calculate angles along the loop for each behavior
+//        ArrayList<Double> behaviorAngles = new ArrayList<Double>();
+        String behaviorAngles = "";
+        for (BehaviorPlaceholder behavior : this.behaviors) {
+            Point behaviorPosition = behavior.getPosition();
+            double behaviorAngle = this.getAngle(behaviorPosition);
+            behaviorAngles += behaviorAngle + ", ";
+        }
+//        Log.v ("Condition", "behaviorAngles = " + behaviorAngles);
+
+
+        BehaviorPlaceholder behaviorAfterAngle = null;
+        for (BehaviorPlaceholder behavior : this.behaviors) {
+            Point behaviorPosition = behavior.getPosition();
+            double behaviorAngle = this.getAngle(behaviorPosition);
+
+//            Log.v ("Condition", "angle = " + angle);
+//            Log.v ("Condition", "behaviorAngle = " + behaviorAngle);
+
+            if (behaviorAngle < angle) {
+//                previousBehavior = behavior;
+//                behaviorBeforeAngle = behavior;
+            } else {
+                behaviorAfterAngle = behavior;
+//                behaviorBeforeAngle = previousBehavior;
+                break;
+            }
+
+//            Log.v("Condition", "behaviorAfterAngle.angle = " + behaviorAngle);
+        }
+
+        return behaviorAfterAngle;
+    }
+
+    /**
+     * Returns the behavior condition at the specified angle. This method assumes that behaviors
+     * are stored in ascending order of their angles on the loop.
+     */
+    public BehaviorCondition getBehaviorConditionAtAngle (double angle) {
+
+        BehaviorCondition behaviorCondition = null;
+
+        BehaviorPlaceholder behaviorAfterAngle = this.getBehaviorAfterAngle (angle);
+        if (behaviorAfterAngle != null) {
+            behaviorCondition = behaviorAfterAngle.getCondition();
+        }
+
+        return behaviorCondition;
+    }
 }
