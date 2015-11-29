@@ -14,6 +14,10 @@ public class Communication {
 
     // TODO: startUdpServer
 
+    public void startDatagramServer () {
+
+    }
+
     public void sendDatagram (String ipAddress, String message) {
         try {
             // Send UDP packet to the specified address.

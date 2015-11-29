@@ -302,14 +302,8 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
                 /* Draw snapping path to nearest loop. */
 
-                // Search for the nearest loop and snap to that one (ongoing).
+                // Set the nearest loop (the one in which this behavior is contained) and snap to that one (ongoing).
                 Loop nearestLoop = loop;
-//                double nearestLoopDistance = Double.MAX_VALUE;
-//                for (Loop loop : this.substrate.getLoops()) {
-//                    if (behaviorPlaceholder.getDistanceToLoop(loop) < nearestLoopDistance) {
-//                        nearestLoop = loop;
-//                    }
-//                }
 
                 // Draw snapping path to nearest loop
                 if (behaviorPlaceholder.getDistanceToLoop (nearestLoop) < 250) {
@@ -410,10 +404,6 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
             myCanvas.drawCircle(behaviorPlaceholder.getPosition().x, behaviorPlaceholder.getPosition().y, behaviorPlaceholder.getRadius(), paint);
 
             // Draw behavior's label
-            //Typeface plain = Typeface.createFromAsset(assetManager, pathToFont);
-//            Typeface plain = Typeface.createFromAsset(getContext().getAssets(), "fonts/comic.TTF");
-//            Typeface bold = Typeface.create(plain, Typeface.DEFAULT_BOLD);
-//            paint.setTypeface(bold);
 
             paint.setStyle(Paint.Style.FILL);
             paint.setStrokeWidth(0);
@@ -424,7 +414,6 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                 name = behaviorPlaceholder.getBehavior().getTitle();
             }
             Rect textBounds = new Rect();
-//            paint.setTextAlign(Paint.Align.CENTER);
             paint.getTextBounds(name, 0, name.length(), textBounds);
             paint.setTextSize(35);
             myCanvas.drawText(name, behaviorPlaceholder.getPosition().x - textBounds.exactCenterX(), behaviorPlaceholder.getPosition().y - textBounds.exactCenterY(), paint);

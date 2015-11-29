@@ -37,6 +37,8 @@ public class AppActivity extends Activity {
         mySurfaceView.AppSurfaceView_OnPause();
     }
 
+
+
 //    public class HttpRequestTask extends AsyncTask<String, Void, String[]> { // Extend AsyncTask and use void generics (for now)
 //
 //        private final String LOG_TAG = HttpRequestTask.class.getSimpleName();
