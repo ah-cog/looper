@@ -45,6 +45,10 @@ public class Interface {
     private boolean isPerformingLoopGesture = false;
     private Loop selectedLoop = null; // TODO: Implement this for each finger.
 
+    private boolean isPerformingLoopPerspectiveGesture = false;
+    private LoopPerspective selectedLoopPerspective = null; // TODO: Implement this for each finger.
+    private boolean selectedLoopPerspectiveStartBoundary = false;
+
     private boolean isPerformingConditionGesture = false;
 
     private boolean isPerformingSubstrateGesture = false;
@@ -237,8 +241,119 @@ public class Interface {
                 }
             }
 
-            // Check if a behavior condition gesture is being performed.
+            // Check if a loop perspective gesture is being performed
             if (!isPerformingBehaviorGesture && !isPerformingLoopGesture) {
+
+//                if (this.perspective.hasCandidatePerspective(selectedLoop)) {
+////                    if (this.currentLoopPerspective != null) {
+//
+//                    LoopPerspective candidateLoopPerspective = this.perspective.getCandidatePerspective(selectedLoop);
+//
+//                    Point currentTouchPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
+//                    // TODO: Calculate the end angle between the three points (loop center, loopCutPoint, and the current touch point)
+//                    candidateLoopPerspective.loopCutSpan = (int) selectedLoop.getAngle(candidateLoopPerspective.loopCutPoint, currentTouchPoint);
+//                    // double loopCutSpanPselectedLoop.getAngle (currentTouchPoint.x, currentTouchPoint.y);
+//                    Log.v ("Clay", "loopCutStartAngle = " + candidateLoopPerspective.loopCutStartAngle);
+//                    candidateLoopPerspective.loopCutSpanPoint = selectedLoop.getPoint (candidateLoopPerspective.loopCutSpan); // (loopCutStartAngle + loopCutSpan);
+//                    Log.v ("Clay", "angle = " + candidateLoopPerspective.loopCutSpan);
+//
+//                }
+
+//                if (selectedLoop != null) {
+
+                    // TODO: Determine the nearest perspective on the selected loop for the finger (if any).
+
+                    // Declare the distance around arc that will respond to touch
+                    float conditionTouchProximity = 100;
+
+                    // Get the nearest loop to the touch
+                    // TODO: Move this into a new function Perspective.getNearestLoop().
+                    Loop nearestLoop = null;
+                    float nearestLoopDistance = Float.MAX_VALUE;
+                    for (Loop loop : this.substrate.getLoops()) {
+                        double distanceToTouch = loop.getDistance((int) xTouch[finger], (int) yTouch[finger]);
+                        if (distanceToTouch < nearestLoopDistance) {
+                            nearestLoopDistance = (float) distanceToTouch;
+                            nearestLoop = loop;
+                        }
+                    }
+
+                    // Calculate the angle of the touch point relative to the nearest loop.
+                    double touchAngle = nearestLoop.getAngle ((int) xTouch[finger], (int) yTouch[finger]);
+                    Log.v("Clay_Loop_Perspective", "touchAngle = " + touchAngle);
+
+                    // Get the start angle and span of the perspective
+
+                LoopPerspective nearestLoopPerspectiveBoundary = null;
+                double distanceToNearestLoopPerspectiveBoundary = Double.MAX_VALUE;
+                ArrayList<LoopPerspective> nearestLoopPerspectives = this.perspective.getPerspectives (nearestLoop);
+                for (LoopPerspective loopPerspective : nearestLoopPerspectives) {
+                    double startAngle = loopPerspective.loopCutStartAngle;
+                    double stopAngle = loopPerspective.loopCutStartAngle + loopPerspective.loopCutSpan;
+                    Log.v("Clay_Loop_Perspective", "startAngle = " + startAngle);
+                    Log.v("Clay_Loop_Perspective", "stopAngle = " + stopAngle);
+
+                    double distanceToStart = Math.max (touchAngle, startAngle) - Math.min (touchAngle, startAngle);
+                    double distanceToStop = Math.max (touchAngle, stopAngle) - Math.min (touchAngle, stopAngle);
+                    if (distanceToStart < distanceToNearestLoopPerspectiveBoundary) {
+                        distanceToNearestLoopPerspectiveBoundary = distanceToStart;
+                        nearestLoopPerspectiveBoundary = loopPerspective;
+                        selectedLoopPerspectiveStartBoundary = true;
+                        Log.v("Clay_Loop_Perspective", "START boundary is nearest");
+                    }
+
+                    if (distanceToStop < distanceToNearestLoopPerspectiveBoundary) {
+                        distanceToNearestLoopPerspectiveBoundary = distanceToStop;
+                        nearestLoopPerspectiveBoundary = loopPerspective;
+                        selectedLoopPerspectiveStartBoundary = false; // "false" flag means the stop boundary is selected, not the start boundary
+                        Log.v("Clay_Loop_Perspective", "STOP boundary is nearest");
+                    }
+
+//                    if (startAngle < touchAngle && touchAngle < stopAngle) {
+//                        Log.v("Clay_Loop_Perspective", "nearestPerspective FOUND");
+//                        // Select the loop perspective since.
+//                        selectedLoopPerspective = loopPerspective;
+//                        break;
+//                    }
+                }
+
+                int loopPerspectiveBoundaryTouchThreshold = 5;
+                if (distanceToNearestLoopPerspectiveBoundary < loopPerspectiveBoundaryTouchThreshold) {
+                    Log.v("Clay_Loop_Perspective", "PERFORMING loop perspective gesture");
+                    isPerformingLoopPerspectiveGesture = true;
+                    selectedLoopPerspective = nearestLoopPerspectiveBoundary;
+                }
+
+                    // NOTE: This is useful for placing behaviors (when dragging and dropping them).
+//                    LoopPerspective selectedLoopPerspective = null;
+//                    ArrayList<LoopPerspective> nearestLoopPerspectives = this.perspective.getPerspectives (nearestLoop);
+//                    for (LoopPerspective loopPerspective : nearestLoopPerspectives) {
+//                        double startAngle = loopPerspective.loopCutStartAngle;
+//                        double stopAngle = loopPerspective.loopCutStartAngle + loopPerspective.loopCutSpan;
+//                        Log.v("Clay_Loop_Perspective", "startAngle = " + startAngle);
+//                        Log.v("Clay_Loop_Perspective", "stopAngle = " + stopAngle);
+//                        if (startAngle < touchAngle && touchAngle < stopAngle) {
+//                            Log.v("Clay_Loop_Perspective", "nearestPerspective FOUND");
+//                            // Select the loop perspective since.
+//                            selectedLoopPerspective = loopPerspective;
+//                            break;
+//                        }
+//                    }
+
+                    // TODO: Calculate positions of endpoints of a perspective, which will be the target points for touch gestures.
+
+                    // TODO: Get the position of a touch.
+
+                    // TODO: Calculate the distance between the endpoints of the perspective and the touch.
+
+                    // TODO: If the distance is small enough, consider the endpoint touched and update the position of the touched endpoint to the position of the touch.
+
+//                }
+
+            }
+
+            // Check if a condition gesture is being performed on a behavior.
+            if (!isPerformingBehaviorGesture && !isPerformingLoopGesture && !isPerformingLoopPerspectiveGesture) {
                 // TODO: Check if performing a condition gesture.
 
                 // Declare the distance around arc that will respond to touch
@@ -300,7 +415,7 @@ public class Interface {
             }
 
             // Check if a substrate gesture is being performed.
-            if (!isPerformingBehaviorGesture && !isPerformingLoopGesture && !isPerformingConditionGesture) {
+            if (!isPerformingBehaviorGesture && !isPerformingLoopGesture && !isPerformingLoopPerspectiveGesture && !isPerformingConditionGesture) {
                 // TODO: Check if performing a substrate/perspective gesture.
                 Log.v("Condition", "starting perspective gesture");
                 isPerformingPerspectiveGesture = true;
@@ -425,6 +540,10 @@ public class Interface {
 //                        Log.v ("Clay", "angle = " + this.perspective.loopCutSpan);
 //                    }
 
+                } else if (isPerformingLoopPerspectiveGesture) {
+
+                    Log.v("Clay_Loop_Perspective", "long continuing loop perspective gesture (response)");
+
                 } else if (isPerformingPerspectiveGesture) {
 
                     Log.v("Condition", "continuing perspective gesture (response)");
@@ -450,6 +569,35 @@ public class Interface {
                 // TODO: Start constructing a viewing angle model to use to construct a viewing angle.
 
                 // TODO: Look for the point on the loop at which the finger crosses the line (i.e., the distance is greater than the loop's radius).
+
+            } else if (isPerformingLoopPerspectiveGesture) {
+
+                Log.v("Clay_Loop_Perspective", "continuing loop perspective gesture (response)");
+
+                if (selectedLoopPerspective != null) {
+
+                    // TODO: Replace the above conditional with a check for proximity (so can adjust existing loop)?
+//                    LoopPerspective candidateLoopPerspective = new LoopPerspective(selectedLoop);
+//                    candidateLoopPerspective = new LoopPerspective(selectedLoop);
+                    if (selectedLoopPerspectiveStartBoundary == true) {
+                        selectedLoopPerspective.loopCutPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
+                        selectedLoopPerspective.loopCutStartAngle = (int) selectedLoopPerspective.getLoop ().getAngle ((int) xTouch[finger], (int) yTouch[finger]);
+                    } else if (selectedLoopPerspectiveStartBoundary == false) {
+//                        selectedLoopPerspective.loopCutPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
+//                        selectedLoopPerspective.loopCutStartAngle = (int) selectedLoop.getAngle ((int) xTouch[finger], (int) yTouch[finger]);
+
+                        selectedLoopPerspective.loopCutSpanPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
+                        int loopCutAngle = (int) selectedLoopPerspective.getLoop ().getAngle ((int) xTouch[finger], (int) yTouch[finger]);
+
+                        int loopSpanStartAngle = selectedLoopPerspective.getLoop ().getStartAngle () + selectedLoopPerspective.getLoop ().getAngleSpan ();
+
+                        selectedLoopPerspective.loopCutSpan = loopCutAngle - selectedLoopPerspective.loopCutStartAngle;
+
+                    }
+//                    Log.v("Clay", "loopCutStartAngle = " + selectedLoopPerspective.loopCutStartAngle);
+//                    this.perspective.setCandidatePerspective(selectedLoopPerspective);
+
+                }
 
             } else if (isTouchingBehavior[finger]) {
                 for (BehaviorPlaceholder behaviorPlaceholder : touchedBehaviors) {
@@ -549,7 +697,12 @@ public class Interface {
                     selectedLoop = null;
                 }
 
-            } else if (isPerformingPerspectiveGesture) {
+            } else if (isPerformingLoopPerspectiveGesture) {
+
+                Log.v ("Clay_Loop_Perspective", "stopping loop perspective gesture");
+                isPerformingLoopPerspectiveGesture = false;
+
+            } if (isPerformingPerspectiveGesture) {
 
                     Log.v ("Condition", "stopping perspecting gesture");
 
@@ -590,6 +743,7 @@ public class Interface {
             isPerformingBehaviorGesture = false;
             isPerformingLoopGesture = false;
             isCreatingLoopPerspective = false;
+            isPerformingLoopPerspectiveGesture = false;
             isPerformingConditionGesture = false;
             isPerformingPerspectiveGesture = false;
             isMovingPerspective = false;
