@@ -5,7 +5,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
-public class Loop {
+public class Loop { // TODO: Possibly rename to LoopOperation
 
     public static int DEFAULT_RADIUS = 350;
     public static int DEFAULT_START_ANGLE = 15; // i.e., -75

@@ -5,6 +5,11 @@ import java.util.UUID;
 
 public class Clay {
 
+    // Clay
+    // - Placeholder
+    //   - LoopPlaceholder
+    //   - BehaviorPlaceholder
+
     private ArrayList<Unit> units = new ArrayList<Unit> ();
 
     private BehaviorRepository behaviorRepository = new BehaviorRepository (this);

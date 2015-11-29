@@ -1,15 +1,23 @@
 package computer.clay.looper;
 
+import android.graphics.Point;
+
 public class LoopPerspective {
 
+    public Point loopCutPoint = null;
+    public Point loopCutSpanPoint = null;
+    public int loopCutStartAngle = 0;
+    public int loopCutSpan = 0;
+
     private Perspective perspective = null;
+
     private Loop loop = null;
 
     double angle = 0.0; // The starting angle in degrees for this perspective.
 //    double span = 0.0; // The arc length in degrees of this perspective.
 
-    LoopPerspective (Perspective perspective, Loop loop) {
-        this.perspective = perspective;
+    LoopPerspective (Loop loop) { // TODO: LoopPerspective (Perspective perspective, Loop loop) {
+        // TODO: this.perspective = perspective;
         this.loop = loop;
     }
 

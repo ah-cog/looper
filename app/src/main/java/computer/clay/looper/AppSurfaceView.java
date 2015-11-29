@@ -320,55 +320,113 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
             myCanvas.save();
 
-            if (this.perspective.loopCutPoint != null && this.perspective.loopCutSpanPoint != null) {
+            if (this.perspective.hasPerspective(loop)) {
 
-                int radiusExtension = 100;
-                int innerLoopRadius = 40; // TODO: Change this dynamically, based on the angular sweep size.
+                // TODO: Support multiple perspectives per "loop" (loop concept/placeholder)
 
-                double cutStartAngle = loop.getStartAngle() + loop.getAngle (this.perspective.loopCutPoint);
-                Point cutStartPoint = loop.getPoint(cutStartAngle, loop.getRadius() + radiusExtension);
-                double cutStopAngle = loop.getStartAngle() + loop.getAngle (this.perspective.loopCutPoint) + this.perspective.loopCutSpan;
-                Point cutStopPoint = loop.getPoint(cutStopAngle, loop.getRadius() + radiusExtension);
+                LoopPerspective loopPerspective = this.perspective.getPerspective(loop);
 
-                // Draw the filled arc highlighting the perspective's area
+                if (loopPerspective.loopCutPoint != null && loopPerspective.loopCutSpanPoint != null) {
 
-                paint.setStyle(Paint.Style.FILL);
-                paint.setStrokeWidth(2);
-                paint.setColor(Color.WHITE);
+                    int radiusExtension = 100;
+                    int innerLoopRadius = 40; // TODO: Change this dynamically, based on the angular sweep size.
 
-                myCanvas.drawArc(loopLeft - radiusExtension, loopTop - radiusExtension, loopRight + radiusExtension, loopBottom + radiusExtension, (float) cutStartAngle + loop.getStartAngle(), (float) cutStopAngle - (float) cutStartAngle, true, paint);
+                    double cutStartAngle = loop.getStartAngle() + loop.getAngle (loopPerspective.loopCutPoint);
+                    Point cutStartPoint = loop.getPoint(cutStartAngle, loop.getRadius() + radiusExtension);
+                    double cutStopAngle = loop.getStartAngle() + loop.getAngle (loopPerspective.loopCutPoint) + loopPerspective.loopCutSpan;
+                    Point cutStopPoint = loop.getPoint(cutStopAngle, loop.getRadius() + radiusExtension);
 
-                // Draw the loop in the cut
+                    // Draw the filled arc highlighting the perspective's area
 
-                paint.setStyle(Paint.Style.STROKE);
-                paint.setStrokeWidth(2);
-                paint.setColor(Color.BLACK);
+                    paint.setStyle(Paint.Style.FILL);
+                    paint.setStrokeWidth(2);
+                    paint.setColor(Color.WHITE);
 
-                myCanvas.drawArc(loopLeft - innerLoopRadius, loopTop - innerLoopRadius, loopRight + innerLoopRadius, loopBottom + innerLoopRadius, (float) cutStartAngle + loop.getStartAngle(), (float) cutStopAngle - (float) cutStartAngle, false, paint);
+                    myCanvas.drawArc(loopLeft - radiusExtension, loopTop - radiusExtension, loopRight + radiusExtension, loopBottom + radiusExtension, (float) cutStartAngle + loop.getStartAngle(), (float) cutStopAngle - (float) cutStartAngle, true, paint);
 
-                // Draw the line indicating the start of the cut.
+                    // Draw the loop in the cut
 
-                paint.setStyle(Paint.Style.STROKE);
-                paint.setStrokeWidth(2);
-                paint.setColor(Color.parseColor("#008080"));
-
-                myCanvas.drawLine (loop.getPosition().x, loop.getPosition().y, cutStartPoint.x, cutStartPoint.y, paint);
-
-                // Draw the line indicating the end of the cut.
-
-                if (this.perspective.loopCutSpan < 0) {
                     paint.setStyle(Paint.Style.STROKE);
                     paint.setStrokeWidth(2);
-                    paint.setColor(Color.BLUE);
-                } else {
+                    paint.setColor(Color.BLACK);
+
+                    myCanvas.drawArc(loopLeft - innerLoopRadius, loopTop - innerLoopRadius, loopRight + innerLoopRadius, loopBottom + innerLoopRadius, (float) cutStartAngle + loop.getStartAngle(), (float) cutStopAngle - (float) cutStartAngle, false, paint);
+
+                    // Draw the line indicating the start of the cut.
+
                     paint.setStyle(Paint.Style.STROKE);
                     paint.setStrokeWidth(2);
-                    paint.setColor(Color.GREEN);
+                    paint.setColor(Color.parseColor("#008080"));
+
+                    myCanvas.drawLine (loop.getPosition().x, loop.getPosition().y, cutStartPoint.x, cutStartPoint.y, paint);
+
+                    // Draw the line indicating the end of the cut.
+
+                    if (loopPerspective.loopCutSpan < 0) {
+                        paint.setStyle(Paint.Style.STROKE);
+                        paint.setStrokeWidth(2);
+                        paint.setColor(Color.BLUE);
+                    } else {
+                        paint.setStyle(Paint.Style.STROKE);
+                        paint.setStrokeWidth(2);
+                        paint.setColor(Color.GREEN);
+                    }
+
+                    myCanvas.drawLine(loop.getPosition().x, loop.getPosition().y, cutStopPoint.x, cutStopPoint.y, paint);
+
                 }
 
-                myCanvas.drawLine(loop.getPosition().x, loop.getPosition().y, cutStopPoint.x, cutStopPoint.y, paint);
-
             }
+
+//            if (this.perspective.loopCutPoint != null && this.perspective.loopCutSpanPoint != null) {
+//
+//                int radiusExtension = 100;
+//                int innerLoopRadius = 40; // TODO: Change this dynamically, based on the angular sweep size.
+//
+//                double cutStartAngle = loop.getStartAngle() + loop.getAngle (this.perspective.loopCutPoint);
+//                Point cutStartPoint = loop.getPoint(cutStartAngle, loop.getRadius() + radiusExtension);
+//                double cutStopAngle = loop.getStartAngle() + loop.getAngle (this.perspective.loopCutPoint) + this.perspective.loopCutSpan;
+//                Point cutStopPoint = loop.getPoint(cutStopAngle, loop.getRadius() + radiusExtension);
+//
+//                // Draw the filled arc highlighting the perspective's area
+//
+//                paint.setStyle(Paint.Style.FILL);
+//                paint.setStrokeWidth(2);
+//                paint.setColor(Color.WHITE);
+//
+//                myCanvas.drawArc(loopLeft - radiusExtension, loopTop - radiusExtension, loopRight + radiusExtension, loopBottom + radiusExtension, (float) cutStartAngle + loop.getStartAngle(), (float) cutStopAngle - (float) cutStartAngle, true, paint);
+//
+//                // Draw the loop in the cut
+//
+//                paint.setStyle(Paint.Style.STROKE);
+//                paint.setStrokeWidth(2);
+//                paint.setColor(Color.BLACK);
+//
+//                myCanvas.drawArc(loopLeft - innerLoopRadius, loopTop - innerLoopRadius, loopRight + innerLoopRadius, loopBottom + innerLoopRadius, (float) cutStartAngle + loop.getStartAngle(), (float) cutStopAngle - (float) cutStartAngle, false, paint);
+//
+//                // Draw the line indicating the start of the cut.
+//
+//                paint.setStyle(Paint.Style.STROKE);
+//                paint.setStrokeWidth(2);
+//                paint.setColor(Color.parseColor("#008080"));
+//
+//                myCanvas.drawLine (loop.getPosition().x, loop.getPosition().y, cutStartPoint.x, cutStartPoint.y, paint);
+//
+//                // Draw the line indicating the end of the cut.
+//
+//                if (this.perspective.loopCutSpan < 0) {
+//                    paint.setStyle(Paint.Style.STROKE);
+//                    paint.setStrokeWidth(2);
+//                    paint.setColor(Color.BLUE);
+//                } else {
+//                    paint.setStyle(Paint.Style.STROKE);
+//                    paint.setStrokeWidth(2);
+//                    paint.setColor(Color.GREEN);
+//                }
+//
+//                myCanvas.drawLine(loop.getPosition().x, loop.getPosition().y, cutStopPoint.x, cutStopPoint.y, paint);
+//
+//            }
 
             myCanvas.restore();
 
