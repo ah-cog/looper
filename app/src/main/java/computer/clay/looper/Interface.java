@@ -349,12 +349,15 @@ public class Interface {
                         isCreatingLoopPerspective = true;
 
                         // TODO: Get the angle and (x,y) coordinate at which the loop was crossed (exited).
-                        if (!this.perspective.hasPerspective (selectedLoop)) {
-                            LoopPerspective loopPerspective = new LoopPerspective(selectedLoop);
-                            loopPerspective.loopCutPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
-                            loopPerspective.loopCutStartAngle = (int) selectedLoop.getAngle((int) xTouch[finger], (int) yTouch[finger]);
-                            Log.v ("Clay", "loopCutStartAngle = " + loopPerspective.loopCutStartAngle);
-                            this.perspective.addPerspective (loopPerspective);
+                        if (!this.perspective.hasCandidatePerspective (selectedLoop)) {
+//                        if (this.currentLoopPerspective == null) {
+                        // TODO: Replace the above conditional with a check for proximity (so can adjust existing loop)?
+                            LoopPerspective candidateLoopPerspective = new LoopPerspective(selectedLoop);
+                            candidateLoopPerspective = new LoopPerspective(selectedLoop);
+                            candidateLoopPerspective.loopCutPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
+                            candidateLoopPerspective.loopCutStartAngle = (int) selectedLoop.getAngle((int) xTouch[finger], (int) yTouch[finger]);
+                            Log.v("Clay", "loopCutStartAngle = " + candidateLoopPerspective.loopCutStartAngle);
+                            this.perspective.setCandidatePerspective(candidateLoopPerspective);
                         }
 
 //                        if (this.perspective.loopCutPoint == null) {
@@ -376,9 +379,13 @@ public class Interface {
                         // the result of the gesture (i.e., the result of crossing to the outside
                         // of the loop from the inside of the loop in a single drag gesture).
 
-                        if (this.perspective.hasPerspective(selectedLoop)) {
-                            this.perspective.removePerspective(selectedLoop);
+                        if (this.perspective.hasCandidatePerspective(selectedLoop)) {
+                            this.perspective.removeCandidatePerspective(selectedLoop);
                         }
+
+//                        if (this.perspective.hasPerspectives(selectedLoop)) {
+//                            this.perspective.removePerspective(selectedLoop);
+//                        }
 
 //                        // Clear the angle and (x,y) coordinate at which the loop was crossed (entered).
 //                        if (this.perspective.loopCutPoint != null) {
@@ -391,17 +398,18 @@ public class Interface {
                     }
 
                     // If started cutting the loop, then calculate the angle offset of the cut in degrees.
-                    if (this.perspective.hasPerspective (selectedLoop)) {
+                    if (this.perspective.hasCandidatePerspective(selectedLoop)) {
+//                    if (this.currentLoopPerspective != null) {
 
-                        LoopPerspective loopPerspective = this.perspective.getPerspective(selectedLoop);
+                        LoopPerspective candidateLoopPerspective = this.perspective.getCandidatePerspective(selectedLoop);
 
                         Point currentTouchPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
                         // TODO: Calculate the end angle between the three points (loop center, loopCutPoint, and the current touch point)
-                        loopPerspective.loopCutSpan = (int) selectedLoop.getAngle(loopPerspective.loopCutPoint, currentTouchPoint);
+                        candidateLoopPerspective.loopCutSpan = (int) selectedLoop.getAngle(candidateLoopPerspective.loopCutPoint, currentTouchPoint);
                         // double loopCutSpanPselectedLoop.getAngle (currentTouchPoint.x, currentTouchPoint.y);
-                        Log.v ("Clay", "loopCutStartAngle = " + loopPerspective.loopCutStartAngle);
-                        loopPerspective.loopCutSpanPoint = selectedLoop.getPoint (loopPerspective.loopCutSpan); // (loopCutStartAngle + loopCutSpan);
-                        Log.v ("Clay", "angle = " + loopPerspective.loopCutSpan);
+                        Log.v ("Clay", "loopCutStartAngle = " + candidateLoopPerspective.loopCutStartAngle);
+                        candidateLoopPerspective.loopCutSpanPoint = selectedLoop.getPoint (candidateLoopPerspective.loopCutSpan); // (loopCutStartAngle + loopCutSpan);
+                        Log.v ("Clay", "angle = " + candidateLoopPerspective.loopCutSpan);
 
                     }
 
@@ -518,7 +526,17 @@ public class Interface {
                 Log.v ("Condition", "stopping loop gesture");
 
                 if (isCreatingLoopPerspective) {
-                    // TODO: Create the loop perspective and associate with the substrate perspective.
+
+                    // Create the loop perspective and associate with the substrate perspective.
+                    LoopPerspective candidateLoopPerspective = this.perspective.getCandidatePerspective(this.selectedLoop);
+                    this.perspective.addPerspective(candidateLoopPerspective);
+
+                    // Reset the "live action" state in the current perspective to prepare for
+                    // future "live action" gestures.
+//                    this.currentLoopPerspective = null;
+                    this.perspective.removeCandidatePerspective(this.selectedLoop);
+                    candidateLoopPerspective = this.perspective.getCandidatePerspective(this.selectedLoop);
+                    Log.v("Clay", "candidatePerspective = " + candidateLoopPerspective);
 
 //                    this.perspective.loopCutPoint = null;
 //                    this.perspective.loopCutSpanPoint = null;
