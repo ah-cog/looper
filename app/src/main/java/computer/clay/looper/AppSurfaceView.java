@@ -22,23 +22,22 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
     private SurfaceHolder surfaceHolder;
 
+    // Canvas
     private int canvasWidth, canvasHeight;
     private Bitmap canvasBitmap = null;
     private Canvas myCanvas = null;
     private Matrix identityMatrix;
-
     private Paint paint = new Paint (Paint.ANTI_ALIAS_FLAG);
 
-    private Substrate substrate = new Substrate ();
-    private Perspective perspective = new Perspective (this.substrate);
-    private Interface touchInterface = new Interface(this.substrate, this.perspective);
+    // Clay
+    private Clay clay = new Clay ();
 
     public AppSurfaceView (Context context) {
         super (context);
 
-//        this.substrate = new Substrate ();
-//        this.perspective = new Perspective (this.substrate);
-//        this.touchInterface = new Interface (this.substrate, this.perspective);
+//        this.system = new System ();
+//        this.perspective = new Perspective (this.system);
+//        this.touchPerson = new Person (this.system, this.perspective);
     }
 
     public AppSurfaceView (Context context, AttributeSet attrs) {
@@ -57,16 +56,16 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
     @Override
     public void surfaceCreated (SurfaceHolder holder) {
 
-        canvasWidth = getWidth();
-        canvasHeight = getHeight();
-        canvasBitmap = Bitmap.createBitmap(canvasWidth, canvasHeight, Bitmap.Config.ARGB_8888);
-        myCanvas = new Canvas();
+        canvasWidth = getWidth ();
+        canvasHeight = getHeight ();
+        canvasBitmap = Bitmap.createBitmap (canvasWidth, canvasHeight, Bitmap.Config.ARGB_8888);
+        myCanvas = new Canvas ();
         myCanvas.setBitmap (canvasBitmap);
 
         // TODO: Move setPosition to a better location!
-        perspective.setPosition (myCanvas.getWidth() / 2, myCanvas.getHeight() / 2);
+        clay.getPerspective ().setPosition (myCanvas.getWidth () / 2, myCanvas.getHeight () / 2);
 
-        identityMatrix = new Matrix();
+        identityMatrix = new Matrix ();
     }
 
     @Override
@@ -74,7 +73,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
         // TODO Auto-generated method stub
     }
 
-    public void AppSurfaceView_OnResume() {
+    public void AppSurfaceView_OnResume () {
 
         surfaceHolder = getHolder ();
         getHolder ().addCallback (this);
@@ -82,11 +81,11 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
         // Create and start background Thread
         appRenderingThread = new AppRenderingThread (this);
         appRenderingThread.setRunning (true);
-        appRenderingThread.start();
+        appRenderingThread.start ();
 
     }
 
-    public void AppSurfaceView_OnPause() {
+    public void AppSurfaceView_OnPause () {
 
         // Kill the background Thread
         boolean retry = true;
@@ -105,475 +104,645 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
     @Override
     protected void onDraw (Canvas canvas) {
 
+        // TODO: Draw the text messaging output area (that shows the most recent message). It should float over the top of the perspective.
+
         // Move the perspective
-        myCanvas.save();
-        myCanvas.translate(perspective.getPosition().x, perspective.getPosition().y);
-        myCanvas.scale(perspective.getScaleFactor(), perspective.getScaleFactor());
+        myCanvas.save ();
+        myCanvas.translate (clay.getPerspective ().getPosition ().x, clay.getPerspective ().getPosition ().y);
+        myCanvas.scale (clay.getPerspective ().getScaleFactor (), clay.getPerspective ().getScaleFactor ());
 
         // Draw the background
-        myCanvas.drawColor(Color.WHITE);
+        myCanvas.drawColor (Color.WHITE);
 
-        // Define base coordinate system
-        float xOrigin = 0;
-        float yOrigin = 0;
+//        // Define base coordinate system
+//        float xOrigin = 0;
+//        float yOrigin = 0;
 
         // Create the default, empty loop if none exist.
-        if (this.substrate.loops.size () == 0) {
+        if (this.clay.getSystem ().loops.size () == 0) {
 
-            // Create a loop on the substrate if one doesn't exist.
-            Loop defaultLoop = new Loop (this.substrate);
-            this.substrate.addLoop(defaultLoop);
+            // Create a loop on the system if one doesn't exist.
+            Loop defaultLoop = new Loop (this.clay.getSystem ());
+            this.clay.getSystem ().addLoop (defaultLoop);
+
         }
 
         // Draw the loops
-        for (Loop loop : this.substrate.getLoops ()) {
+        for (Loop loop : this.clay.getSystem ().getLoops ()) {
 
-            myCanvas.save();
+            // Prepare for drawing. Check if the specified loop has a perspective. If not, add one for it, so it can be rendered.
+            // TODO: Put this in the constructor for the LoopConstruct, so it will create itself as a default construct if there's not already a construct for the specified Loop.
+            prepareLoopConstruct (loop);
 
-            // Set the loop's style
-            paint.setStyle (Paint.Style.STROKE);
-            paint.setStrokeWidth (2);
-            paint.setColor (Color.LTGRAY);
-
-            // Draw the loop
-            float loopLeft   = xOrigin +      loop.getPosition ().x - loop.getRadius ();
-            float loopTop    = yOrigin + -1 * loop.getPosition ().y - loop.getRadius ();
-            float loopRight  = xOrigin +      loop.getPosition ().x + loop.getRadius ();
-            float loopBottom = yOrigin + -1 * loop.getPosition ().y + loop.getRadius ();
-            myCanvas.drawArc(loopLeft, loopTop, loopRight, loopBottom, -90 + loop.getStartAngle(), loop.getAngleSpan(), false, paint);
-
-            // Draw arrowhead on loop
-            myCanvas.save();
-//            myCanvas.translate(perspective.getPosition().x, perspective.getPosition().y);
-            myCanvas.rotate(-1 * (360 - (loop.getStartAngle() + loop.getAngleSpan())));
-            myCanvas.translate(0, -1 * loop.getRadius());
-
-            // Set the arrowhead's style
-            paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeWidth(2);
-            paint.setColor(Color.LTGRAY);
-
-            // Draw the arrowhead
-            myCanvas.drawLine(-20, -20, 0, 0, paint);
-            myCanvas.drawLine(-20, 20, 0, 0, paint);
-
-            myCanvas.restore();
-
-            // TODO: Draw the behaviors for each loop
-
-            /* Draw conditions for behaviors */
-
-            myCanvas.save ();
-
-            float previousBehaviorAngle = -90 + loop.getStartAngle (); // Initialize behavior condition to be the start of the loop.
-            for (BehaviorPlaceholder behaviorPlaceholder : loop.getBehaviors()) {
-
-                // TODO: Get condition type and render the condition according to its type (e.g., for "switch" type, draw an arrowhead).
-
-                // Draw the behavior conditions
-                float behaviorAngle = (float) loop.getAngle (behaviorPlaceholder.getPosition()) + (2 * loop.getStartAngle ());
-//                Log.v("Clay", "behaviorAngle = " + behaviorAngle);
-//                Log.v("Clay", "loop.getStartAngle() = " + loop.getStartAngle());
-
-                if (behaviorPlaceholder.hasCondition()) { // TODO: Move this to out to a larger scope...
-                    if (behaviorPlaceholder.getCondition().getType() == BehaviorCondition.Type.NONE) {
-
-                        // Set the behavior condition's style
-                        paint.setStyle(Paint.Style.STROKE);
-                        paint.setStrokeWidth(2);
-                        paint.setColor(Color.BLACK);
-
-                        // Draw the condition
-                        myCanvas.drawArc(loopLeft, loopTop, loopRight, loopBottom, (float) previousBehaviorAngle, (float) behaviorAngle - previousBehaviorAngle, false, paint);
-
-                    } else if (behaviorPlaceholder.getCondition().getType() == BehaviorCondition.Type.SWITCH) {
-
-                        float spacingBeforeArc = 20.0f;
-                        float spacingAfterArc = 20.0f;
-
-                        // Set the behavior condition's style
-                        paint.setStyle(Paint.Style.STROKE);
-                        paint.setStrokeWidth(2);
-                        paint.setColor(Color.CYAN);
-
-                        // Draw the condition
-                        myCanvas.drawArc(loopLeft, loopTop, loopRight, loopBottom, ((float) previousBehaviorAngle + spacingBeforeArc), (float) behaviorAngle - previousBehaviorAngle - (spacingBeforeArc + spacingAfterArc), false, paint);
-
-                        // Draw arrowhead on loop
-                        myCanvas.save();
-                        myCanvas.rotate(((float) behaviorAngle + 90.0f - spacingAfterArc));
-                        myCanvas.translate(0, -1 * loop.getRadius());
-
-                        // Set the arrowhead's style
-                        paint.setStyle(Paint.Style.STROKE);
-                        paint.setStrokeWidth(2);
-                        paint.setColor(Color.CYAN);
-
-                        // Draw the arrowhead
-                        myCanvas.drawLine(-20, -20, 0, 0, paint);
-                        myCanvas.drawLine(-20, 20, 0, 0, paint);
-
-                        myCanvas.restore();
-
-                    } else if (behaviorPlaceholder.getCondition().getType() == BehaviorCondition.Type.THRESHOLD) {
-
-                        // Set the behavior condition's style
-                        paint.setStyle(Paint.Style.STROKE);
-                        paint.setStrokeWidth(2);
-                        paint.setColor(Color.GREEN);
-
-                        // Draw the condition
-                        myCanvas.drawArc(loopLeft, loopTop, loopRight, loopBottom, (float) previousBehaviorAngle, (float) behaviorAngle - previousBehaviorAngle, false, paint);
-
-                    } else if (behaviorPlaceholder.getCondition().getType() == BehaviorCondition.Type.GESTURE) {
-
-                        // Set the behavior condition's style
-                        paint.setStyle(Paint.Style.STROKE);
-                        paint.setStrokeWidth(2);
-                        paint.setColor(Color.MAGENTA);
-
-                        // Draw the condition
-                        myCanvas.drawArc(loopLeft, loopTop, loopRight, loopBottom, (float) previousBehaviorAngle, (float) behaviorAngle - previousBehaviorAngle, false, paint);
-
-                    } else if (behaviorPlaceholder.getCondition().getType() == BehaviorCondition.Type.MESSAGE) {
-
-                        // Set the behavior condition's style
-                        paint.setStyle(Paint.Style.STROKE);
-                        paint.setStrokeWidth(2);
-                        paint.setColor(Color.YELLOW);
-                        paint.setPathEffect(new DashPathEffect(new float[]{10, 20}, 0));
-
-                        // Draw the condition
-                        myCanvas.drawArc(loopLeft, loopTop, loopRight, loopBottom, (float) previousBehaviorAngle, (float) behaviorAngle - previousBehaviorAngle, false, paint);
-
-                        paint.setPathEffect(new PathEffect()); // HACK: This undoes the dash effect! Better way would be to give individual control to drawn elements over their dash stroke (or otherwise).
-
-                    }
-                }
-
-                // Store the current behavior's angle for calculating the geometry for the subsequent behavior's condition.
-                previousBehaviorAngle = behaviorAngle;
-
-            }
+            // Draw loops and behaviors.
+            drawLoopConstruct (myCanvas, loop); // Draw the loop's construct.
+            drawLoopConstructPerspectives (myCanvas, loop); // Draw perspectives on the loop
+            drawBehaviorConditions (myCanvas, loop); // Draw behavior conditions
+            drawBehaviorConstructs (myCanvas, loop); // Draw behaviors on the loop.
+            drawCandidatePerspectives (myCanvas, loop); // Draw the candidate perspective(s) of the loop (if any).
 
             myCanvas.restore ();
 
-
-            // TODO: Draw the behaviors ON the loop.
-            myCanvas.save();
-
-            for (BehaviorPlaceholder behaviorPlaceholder : loop.getBehaviors()) {
-//            behaviorStates = behaviorStates + " " + behaviorPlaceholder.state.toString();
-
-                // Set style for behaviorPlaceholder node interior
-                paint.setStyle(Paint.Style.FILL_AND_STROKE);
-                paint.setStrokeWidth(2);
-                paint.setColor(Color.WHITE);
-
-                // Draw behaviorPlaceholder node interior
-                myCanvas.drawCircle(behaviorPlaceholder.getPosition().x, behaviorPlaceholder.getPosition().y, behaviorPlaceholder.getRadius(), paint);
-
-                // Set style for behaviorPlaceholder node border
-                paint.setStyle (Paint.Style.STROKE);
-                paint.setStrokeWidth(2);
-                paint.setColor(Color.BLACK);
-
-                // Draw behaviorPlaceholder node border
-                myCanvas.drawCircle(behaviorPlaceholder.getPosition().x, behaviorPlaceholder.getPosition().y, behaviorPlaceholder.getRadius(), paint);
-
-                // Draw behavior's label
-                //Typeface plain = Typeface.createFromAsset(assetManager, pathToFont);
-//            Typeface plain = Typeface.createFromAsset(getContext().getAssets(), "fonts/comic.TTF");
-//            Typeface bold = Typeface.create(plain, Typeface.DEFAULT_BOLD);
-//            paint.setTypeface(bold);
-
-                paint.setStyle(Paint.Style.FILL);
-                paint.setStrokeWidth(0);
-                paint.setColor(Color.BLACK);
-
-                String name = "None";
-                if (behaviorPlaceholder.hasBehavior ()) {
-                    name = behaviorPlaceholder.getBehavior().getTitle();
-                }
-                Rect textBounds = new Rect();
-                paint.getTextBounds(name, 0, name.length(), textBounds);
-                paint.setTextSize(35);
-                myCanvas.drawText(name, behaviorPlaceholder.getPosition().x - textBounds.exactCenterX(), behaviorPlaceholder.getPosition().y - textBounds.exactCenterY(), paint);
-
-                /* Draw snapping path to nearest loop. */
-
-                // Set the nearest loop (the one in which this behavior is contained) and snap to that one (ongoing).
-                Loop nearestLoop = loop;
-
-                // Draw snapping path to nearest loop
-                if (behaviorPlaceholder.getDistanceToLoop (nearestLoop) < 250) {
-                    Point nearestPoint = behaviorPlaceholder.getNearestPoint (nearestLoop);
-                    myCanvas.drawLine(behaviorPlaceholder.getPosition().x, behaviorPlaceholder.getPosition().y, nearestPoint.x, nearestPoint.y, paint);
-                }
-            }
-
-            myCanvas.restore();
-
-
-
-            // Draw the perspectives of the loop
-
-            myCanvas.save();
-
-            if (this.perspective.hasPerspectives(loop)) {
-
-                // TODO: Support multiple perspectives per "loop" (loop concept/placeholder)
-
-                for (LoopPerspective loopPerspective : this.perspective.getPerspectives(loop)) {
-
-//                LoopPerspective loopPerspective = this.perspective.getPerspective(loop);
-
-                    if (loopPerspective.loopCutPoint != null && loopPerspective.loopCutSpanPoint != null) {
-
-                        int radiusExtension = 100;
-                        int innerLoopRadius = 40; // TODO: Change this dynamically, based on the angular sweep size.
-
-                        double cutStartAngle = loop.getStartAngle() + loop.getAngle(loopPerspective.loopCutPoint);
-                        Point cutStartPoint = loop.getPoint(cutStartAngle, loop.getRadius() + radiusExtension);
-                        double cutStopAngle = loop.getStartAngle() + loop.getAngle(loopPerspective.loopCutPoint) + loopPerspective.loopCutSpan;
-                        Point cutStopPoint = loop.getPoint(cutStopAngle, loop.getRadius() + radiusExtension);
-
-                        // Draw the filled arc highlighting the perspective's area
-
-                        paint.setStyle(Paint.Style.FILL);
-                        paint.setStrokeWidth(2);
-                        paint.setColor(Color.WHITE);
-
-                        myCanvas.drawArc(loopLeft - radiusExtension, loopTop - radiusExtension, loopRight + radiusExtension, loopBottom + radiusExtension, (float) cutStartAngle + loop.getStartAngle(), (float) cutStopAngle - (float) cutStartAngle, true, paint);
-
-                        // Draw the loop in the cut
-
-                        paint.setStyle(Paint.Style.STROKE);
-                        paint.setStrokeWidth(2);
-                        paint.setColor(Color.BLACK);
-
-                        myCanvas.drawArc(loopLeft - innerLoopRadius, loopTop - innerLoopRadius, loopRight + innerLoopRadius, loopBottom + innerLoopRadius, (float) cutStartAngle + loop.getStartAngle(), (float) cutStopAngle - (float) cutStartAngle, false, paint);
-
-                        // Draw the line indicating the start of the cut.
-
-                        paint.setStyle(Paint.Style.STROKE);
-                        paint.setStrokeWidth(2);
-                        paint.setColor(Color.parseColor("#008080"));
-
-                        myCanvas.drawLine(loop.getPosition().x, loop.getPosition().y, cutStartPoint.x, cutStartPoint.y, paint);
-
-                        // Draw the line indicating the end of the cut.
-
-                        if (loopPerspective.loopCutSpan < 0) {
-                            paint.setStyle(Paint.Style.STROKE);
-                            paint.setStrokeWidth(2);
-                            paint.setColor(Color.BLUE);
-                        } else {
-                            paint.setStyle(Paint.Style.STROKE);
-                            paint.setStrokeWidth(2);
-                            paint.setColor(Color.GREEN);
-                        }
-
-                        myCanvas.drawLine(loop.getPosition().x, loop.getPosition().y, cutStopPoint.x, cutStopPoint.y, paint);
-
-                    }
-                }
-
-            }
-
-            myCanvas.restore();
-
-            // Draw the candidate perspective(s) of the loop (if any)
-
-            myCanvas.save();
-
-            if (this.perspective.hasCandidatePerspective(loop)) {
-
-                LoopPerspective candidateLoopPerspective = this.perspective.getCandidatePerspective(loop);
-
-                if (candidateLoopPerspective.loopCutPoint != null && candidateLoopPerspective.loopCutSpanPoint != null) {
-
-                    int radiusExtension = 100;
-                    int innerLoopRadius = 40; // TODO: Change this dynamically, based on the angular sweep size.
-
-                    double cutStartAngle = loop.getStartAngle() + loop.getAngle(candidateLoopPerspective.loopCutPoint);
-                    Point cutStartPoint = loop.getPoint(cutStartAngle, loop.getRadius() + radiusExtension);
-                    double cutStopAngle = loop.getStartAngle() + loop.getAngle(candidateLoopPerspective.loopCutPoint) + candidateLoopPerspective.loopCutSpan;
-                    Point cutStopPoint = loop.getPoint(cutStopAngle, loop.getRadius() + radiusExtension);
-
-                    // Draw the filled arc highlighting the perspective's area
-
-                    paint.setStyle(Paint.Style.FILL);
-                    paint.setStrokeWidth(2);
-                    paint.setColor(Color.WHITE);
-
-                    myCanvas.drawArc(loopLeft - radiusExtension, loopTop - radiusExtension, loopRight + radiusExtension, loopBottom + radiusExtension, (float) cutStartAngle + loop.getStartAngle(), (float) cutStopAngle - (float) cutStartAngle, true, paint);
-
-                    // Draw the loop in the cut
-
-                    paint.setStyle(Paint.Style.STROKE);
-                    paint.setStrokeWidth(2);
-                    paint.setColor(Color.BLACK);
-
-                    myCanvas.drawArc(loopLeft - innerLoopRadius, loopTop - innerLoopRadius, loopRight + innerLoopRadius, loopBottom + innerLoopRadius, (float) cutStartAngle + loop.getStartAngle(), (float) cutStopAngle - (float) cutStartAngle, false, paint);
-
-                    // Draw the line indicating the start of the cut.
-
-                    paint.setStyle(Paint.Style.STROKE);
-                    paint.setStrokeWidth(2);
-                    paint.setColor(Color.parseColor("#008080"));
-
-                    myCanvas.drawLine(loop.getPosition().x, loop.getPosition().y, cutStartPoint.x, cutStartPoint.y, paint);
-
-                    // Draw the line indicating the end of the cut.
-
-                    if (candidateLoopPerspective.loopCutSpan < 0) {
-                        paint.setStyle(Paint.Style.STROKE);
-                        paint.setStrokeWidth(2);
-                        paint.setColor(Color.BLUE);
-                    } else {
-                        paint.setStyle(Paint.Style.STROKE);
-                        paint.setStrokeWidth(2);
-                        paint.setColor(Color.GREEN);
-                    }
-
-                    myCanvas.drawLine(loop.getPosition().x, loop.getPosition().y, cutStopPoint.x, cutStopPoint.y, paint);
-
-                }
-            }
-
-//            if (this.perspective.loopCutPoint != null && this.perspective.loopCutSpanPoint != null) {
-//
-//                int radiusExtension = 100;
-//                int innerLoopRadius = 40; // TODO: Change this dynamically, based on the angular sweep size.
-//
-//                double cutStartAngle = loop.getStartAngle() + loop.getAngle (this.perspective.loopCutPoint);
-//                Point cutStartPoint = loop.getPoint(cutStartAngle, loop.getRadius() + radiusExtension);
-//                double cutStopAngle = loop.getStartAngle() + loop.getAngle (this.perspective.loopCutPoint) + this.perspective.loopCutSpan;
-//                Point cutStopPoint = loop.getPoint(cutStopAngle, loop.getRadius() + radiusExtension);
-//
-//                // Draw the filled arc highlighting the perspective's area
-//
-//                paint.setStyle(Paint.Style.FILL);
-//                paint.setStrokeWidth(2);
-//                paint.setColor(Color.WHITE);
-//
-//                myCanvas.drawArc(loopLeft - radiusExtension, loopTop - radiusExtension, loopRight + radiusExtension, loopBottom + radiusExtension, (float) cutStartAngle + loop.getStartAngle(), (float) cutStopAngle - (float) cutStartAngle, true, paint);
-//
-//                // Draw the loop in the cut
-//
-//                paint.setStyle(Paint.Style.STROKE);
-//                paint.setStrokeWidth(2);
-//                paint.setColor(Color.BLACK);
-//
-//                myCanvas.drawArc(loopLeft - innerLoopRadius, loopTop - innerLoopRadius, loopRight + innerLoopRadius, loopBottom + innerLoopRadius, (float) cutStartAngle + loop.getStartAngle(), (float) cutStopAngle - (float) cutStartAngle, false, paint);
-//
-//                // Draw the line indicating the start of the cut.
-//
-//                paint.setStyle(Paint.Style.STROKE);
-//                paint.setStrokeWidth(2);
-//                paint.setColor(Color.parseColor("#008080"));
-//
-//                myCanvas.drawLine (loop.getPosition().x, loop.getPosition().y, cutStartPoint.x, cutStartPoint.y, paint);
-//
-//                // Draw the line indicating the end of the cut.
-//
-//                if (this.perspective.loopCutSpan < 0) {
-//                    paint.setStyle(Paint.Style.STROKE);
-//                    paint.setStrokeWidth(2);
-//                    paint.setColor(Color.BLUE);
-//                } else {
-//                    paint.setStyle(Paint.Style.STROKE);
-//                    paint.setStrokeWidth(2);
-//                    paint.setColor(Color.GREEN);
-//                }
-//
-//                myCanvas.drawLine(loop.getPosition().x, loop.getPosition().y, cutStopPoint.x, cutStopPoint.y, paint);
-//
-//            }
-
-            myCanvas.restore();
-
-            myCanvas.restore();
         }
 
-        // Draw behaviors that represent Clay's current behavior.
-        // TODO: Draw the behaviors here that are NOT on a loop. Those are drawn above.
-        String behaviorStates = "";
-        //for (BehaviorPlaceholder behaviorPlaceholder : this.substrate.getBehaviors()) {
-        for (BehaviorPlaceholder behaviorPlaceholder : this.substrate.getBehaviors()) {
-//            behaviorStates = behaviorStates + " " + behaviorPlaceholder.state.toString();
-
-            // Only draw loops that are NOT on a loop!
-            if (behaviorPlaceholder.hasLoop()) {
-                continue;
-            }
-
-            // Set style for behaviorPlaceholder node interior
-            paint.setStyle(Paint.Style.FILL_AND_STROKE);
-            paint.setStrokeWidth(2);
-            paint.setColor(Color.WHITE);
-
-            // Draw behaviorPlaceholder node interior
-            myCanvas.drawCircle(behaviorPlaceholder.getPosition().x, behaviorPlaceholder.getPosition().y, behaviorPlaceholder.getRadius(), paint);
-
-            // Set style for behaviorPlaceholder node border
-            paint.setStyle (Paint.Style.STROKE);
-            paint.setStrokeWidth(2);
-            paint.setColor(Color.BLACK);
-
-            // Draw behaviorPlaceholder node border
-            myCanvas.drawCircle(behaviorPlaceholder.getPosition().x, behaviorPlaceholder.getPosition().y, behaviorPlaceholder.getRadius(), paint);
-
-            // Draw behavior's label
-
-            paint.setStyle(Paint.Style.FILL);
-            paint.setStrokeWidth(0);
-            paint.setColor(Color.BLACK);
-
-            String name = "None";
-            if (behaviorPlaceholder.hasBehavior ()) {
-                name = behaviorPlaceholder.getBehavior().getTitle();
-            }
-            Rect textBounds = new Rect();
-            paint.getTextBounds(name, 0, name.length(), textBounds);
-            paint.setTextSize(35);
-            myCanvas.drawText(name, behaviorPlaceholder.getPosition().x - textBounds.exactCenterX(), behaviorPlaceholder.getPosition().y - textBounds.exactCenterY(), paint);
-
-            /* Draw snapping path to nearest loop. */
-
-            // Search for the nearest loop and snap to that one (ongoing).
-            Loop nearestLoop = null;
-            double nearestLoopDistance = Double.MAX_VALUE;
-            for (Loop loop : this.substrate.getLoops()) {
-                if (behaviorPlaceholder.getDistanceToLoop(loop) < nearestLoopDistance) {
-                    nearestLoop = loop;
-                }
-            }
-
-            // Draw snapping path to nearest loop
-            if (behaviorPlaceholder.getDistanceToLoop (nearestLoop) < 250) {
-                Point nearestPoint = behaviorPlaceholder.getNearestPoint (nearestLoop);
-                myCanvas.drawLine(behaviorPlaceholder.getPosition().x, behaviorPlaceholder.getPosition().y, nearestPoint.x, nearestPoint.y, paint);
-            }
-        }
-        Log.v("Clay", behaviorStates);
+        // Draw behavior constructs that are NOT on a loop. Behavior constructs on a loop are drawn above.
+        drawBehaviorConstructs (myCanvas, this.clay.getSystem ());
 
         // Paint the bitmap to the "primary" canvas
         canvas.drawBitmap (canvasBitmap, identityMatrix, null);
 
         // Restore the perspective translation.
-        myCanvas.restore();
+        myCanvas.restore ();
 
 
-        // HACK: TODO: Move this to a separate "behavior execution thread"
-        for (Loop loop : this.substrate.getLoops()) {
-            for (BehaviorPlaceholder behaviorPlaceholder : loop.getBehaviors()) {
-                Behavior behavior = behaviorPlaceholder.getBehavior();
-                behavior.perform();
+        // HACK: TODO: Move this to a separate "behavior execution thread" that performs the behavior and updates the behavior/construct states.
+        for (Loop loop : this.clay.getSystem ().getLoops ()) {
+            for (BehaviorConstruct behaviorConstruct : loop.getBehaviors ()) {
+                Behavior behavior = behaviorConstruct.getBehavior ();
+                behavior.perform ();
             }
         }
 
+    }
+
+    /**
+     * Prepare a loop construct for the specified loop.
+     *
+     * @param loop
+     */
+    void prepareLoopConstruct (Loop loop) {
+        // Check if the specified loop has a perspective. If not, add one for it, so it can be rendered.
+        // TODO: Put this in the constructor for the LoopConstruct, so it will create itself as a default construct if there's not already a construct for the specified Loop.
+        if (!this.clay.getPerspective ().hasConstruct (loop)) {
+
+            // Create default loop construct
+            // TODO: Move this into the Perspective class (maybe in getConstruct and remove hasConstruct since it will always be true)
+            this.clay.getPerspective ().addConstruct (loop);
+
+            if (!this.clay.getPerspective ().getConstruct (loop).hasPerspectives (loop)) {
+
+                LoopConstruct loopConstruct = this.clay.getPerspective ().getConstruct (loop);
+
+                Log.v ("Clay_Loop_Perspective", "A loop has no perspectives. Creating one.");
+                LoopPerspective defaultLoopPerspective = new LoopPerspective (loopConstruct);
+//                defaultLoopPerspective.loopCutPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
+
+                defaultLoopPerspective.loopCutStartAngle = -105; //loop.getStartAngle ();
+                defaultLoopPerspective.loopCutSpan = 330; // defaultLoopPerspective.loopCutStartAngle + loop.getAngleSpan ();
+
+                defaultLoopPerspective.loopCutPoint = new Point (120, -463);
+                defaultLoopPerspective.loopCutSpanPoint = new Point (-154, -563);
+//                int radiusExtension = 100;
+//                defaultLoopPerspective.loopCutPoint = loop.getPoint (loop.getStartAngle (), loop.getRadius() + radiusExtension);
+//                defaultLoopPerspective.loopCutSpanPoint = loop.getPoint (loop.getStartAngle () + loop.getAngleSpan (), loop.getRadius() + radiusExtension);
+//                double cutStartAngle = loop.getStartAngle() + loop.getAngle(loopPerspective.loopCutPoint);
+//                Point cutStartPoint = loop.getPoint(cutStartAngle, loop.getRadius() + radiusExtension);
+//                double cutStopAngle = loop.getStartAngle() + loop.getAngle(loopPerspective.loopCutPoint) + loopPerspective.getSpan ();
+//                Point cutStopPoint = loop.getPoint(cutStopAngle, loop.getRadius() + radiusExtension);
+
+                Log.v ("Clay_Loop_Perspective", "\tStart angle: " + defaultLoopPerspective.getStartAngle ());
+                Log.v ("Clay_Loop_Perspective", "\tStop angle: " + defaultLoopPerspective.getStopAngle ());
+                Log.v ("Clay_Loop_Perspective", "\tStart point: " + defaultLoopPerspective.loopCutPoint);
+                Log.v ("Clay_Loop_Perspective", "\tStop point: " + defaultLoopPerspective.loopCutSpanPoint);
+
+                this.clay.getPerspective ().getConstruct (loop).addPerspective (defaultLoopPerspective);
+
+            }
+        }
+    }
+
+    /**
+     * Draws the specified loop construct.
+     *
+     * @param canvas
+     * @param loop
+     */
+    void drawLoopConstruct (Canvas canvas, Loop loop) {
+
+        LoopConstruct loopConstruct = this.clay.getPerspective ().getConstruct (loop);
+
+        // Define base coordinate system
+        float xOrigin = 0;
+        float yOrigin = 0;
+
+        // Draw the loop
+        float loopLeft = xOrigin + loopConstruct.getPosition ().x - loopConstruct.getRadius ();
+        float loopTop = yOrigin + -1 * loopConstruct.getPosition ().y - loopConstruct.getRadius ();
+        float loopRight = xOrigin + loopConstruct.getPosition ().x + loopConstruct.getRadius ();
+        float loopBottom = yOrigin + -1 * loopConstruct.getPosition ().y + loopConstruct.getRadius ();
+
+        canvas.save ();
+
+        // Set the loop's style
+        paint.setStyle (Paint.Style.STROKE);
+        paint.setStrokeWidth (2);
+        paint.setColor (Color.LTGRAY);
+
+        // Draw the loop
+        canvas.drawArc (loopLeft, loopTop, loopRight, loopBottom, -90 + loopConstruct.getStartAngle (), loopConstruct.getAngleSpan (), false, paint);
+
+        // Draw arrowhead on loop
+        canvas.save ();
+//            myCanvas.translate(perspective.getPosition().x, perspective.getPosition().y);
+        canvas.rotate (-1 * (360 - (loopConstruct.getStartAngle () + loopConstruct.getAngleSpan ())));
+        canvas.translate (0, -1 * loopConstruct.getRadius ());
+
+        // Set the arrowhead's style
+        paint.setStyle (Paint.Style.STROKE);
+        paint.setStrokeWidth (2);
+        paint.setColor (Color.LTGRAY);
+
+        // Draw the arrowhead
+        canvas.drawLine (-20, -20, 0, 0, paint);
+        canvas.drawLine (-20, 20, 0, 0, paint);
+
+        canvas.restore ();
+    }
+
+    /**
+     * Draw the specified loop construct's perspectives.
+     *
+     * @param canvas
+     * @param loop
+     */
+    void drawLoopConstructPerspectives (Canvas canvas, Loop loop) {
+
+        LoopConstruct loopConstruct = this.clay.getPerspective ().getConstruct (loop);
+
+        // Define base coordinate system
+        float xOrigin = 0;
+        float yOrigin = 0;
+
+        canvas.save ();
+
+        if (this.clay.getPerspective ().hasConstruct (loop)) {
+
+            if (this.clay.getPerspective ().getConstruct (loop).hasPerspectives (loop)) {
+
+                // TODO: Support multiple perspectives per "loop" (loop concept/placeholder)
+
+                for (LoopPerspective loopPerspective : this.clay.getPerspective ().getConstruct (loop).getPerspectives (loop)) {
+
+                    // Draw the loop
+                    float loopLeft = xOrigin + loopConstruct.getPosition ().x - loopPerspective.getRadius ();
+                    float loopTop = yOrigin + -1 * loopConstruct.getPosition ().y - loopPerspective.getRadius ();
+                    float loopRight = xOrigin + loopConstruct.getPosition ().x + loopPerspective.getRadius ();
+                    float loopBottom = yOrigin + -1 * loopConstruct.getPosition ().y + loopPerspective.getRadius ();
+
+                    //                LoopPerspective loopPerspective = this.perspective.getPerspective(loop);
+
+                    if (loopPerspective.loopCutPoint != null && loopPerspective.loopCutSpanPoint != null) {
+
+                        paint.setStyle (Paint.Style.FILL);
+                        paint.setStrokeWidth (2);
+                        paint.setColor (Color.RED);
+
+                        canvas.drawCircle (loopPerspective.loopCutPoint.x, loopPerspective.loopCutPoint.y, 10, paint);
+                        canvas.drawCircle (loopPerspective.loopCutSpanPoint.x, loopPerspective.loopCutSpanPoint.y, 10, paint);
+
+                        //                        Log.v ("Clay_Loop_Perspective", "\tsweep: " + loopPerspective.loopCutSpan);
+                        //                        Log.v ("Clay_Loop_Perspective", "\tStart point: " + loopPerspective.loopCutPoint);
+                        //                        Log.v ("Clay_Loop_Perspective", "\tStop point: " + loopPerspective.loopCutSpanPoint);
+
+                        int radiusExtension = 100;
+                        int innerLoopRadius = 0; // TODO: Change this dynamically, based on the angular sweep size.
+
+                        double cutStartAngle = loopConstruct.getStartAngle () + loopConstruct.getAngle (loopPerspective.loopCutPoint);
+                        Point cutStartPoint = loopConstruct.getPoint (cutStartAngle, loopPerspective.getRadius () + radiusExtension); // Point cutStartPoint = loop.getPoint (cutStartAngle, loop.getRadius () + radiusExtension);
+                        double cutStopAngle = loopConstruct.getStartAngle () + loopConstruct.getAngle (loopPerspective.loopCutPoint) + loopPerspective.getSpan ();
+                        Point cutStopPoint = loopConstruct.getPoint (cutStopAngle, loopPerspective.getRadius () + radiusExtension); // Point cutStopPoint = loop.getPoint (cutStopAngle, loop.getRadius () + radiusExtension);
+
+                        // Draw the loop
+                        float perspectiveLoopLeft = xOrigin + loopConstruct.getPosition ().x - loopPerspective.getRadius ();
+                        float perspectiveLoopTop = yOrigin + -1 * loopConstruct.getPosition ().y - loopPerspective.getRadius ();
+                        float perspectiveLoopRight = xOrigin + loopConstruct.getPosition ().x + loopPerspective.getRadius ();
+                        float perspectiveLoopBottom = yOrigin + -1 * loopConstruct.getPosition ().y + loopPerspective.getRadius ();
+
+                        // Draw the filled arc highlighting the perspective's area
+                        paint.setStyle (Paint.Style.FILL);
+                        paint.setStrokeWidth (2);
+                        paint.setColor (Color.WHITE);
+
+                        canvas.drawArc (perspectiveLoopLeft - radiusExtension, perspectiveLoopTop - radiusExtension, perspectiveLoopRight + radiusExtension, perspectiveLoopBottom + radiusExtension, (float) cutStartAngle + loopConstruct.getStartAngle (), (float) cutStopAngle - (float) cutStartAngle, true, paint);
+
+                        // Draw the loop in the cut
+                        paint.setStyle (Paint.Style.STROKE);
+                        paint.setStrokeWidth (2);
+                        paint.setColor (Color.BLACK);
+
+                        canvas.drawArc (perspectiveLoopLeft - innerLoopRadius, perspectiveLoopTop - innerLoopRadius, perspectiveLoopRight + innerLoopRadius, perspectiveLoopBottom + innerLoopRadius, (float) cutStartAngle + loopConstruct.getStartAngle (), (float) cutStopAngle - (float) cutStartAngle, false, paint);
+
+                        // Draw the line indicating the start of the cut.
+                        paint.setStyle (Paint.Style.STROKE);
+                        paint.setStrokeWidth (2);
+                        paint.setColor (Color.parseColor ("#008080"));
+
+                        canvas.drawLine (loopConstruct.getPosition ().x, loopConstruct.getPosition ().y, cutStartPoint.x, cutStartPoint.y, paint);
+
+                        // Draw the line indicating the end of the cut.
+                        if (loopPerspective.getSpan () < 0) {
+                            paint.setStyle (Paint.Style.STROKE);
+                            paint.setStrokeWidth (2);
+                            paint.setColor (Color.BLUE);
+                        } else {
+                            paint.setStyle (Paint.Style.STROKE);
+                            paint.setStrokeWidth (2);
+                            paint.setColor (Color.GREEN);
+                        }
+
+                        canvas.drawLine (loopConstruct.getPosition ().x, loopConstruct.getPosition ().y, cutStopPoint.x, cutStopPoint.y, paint);
+
+                    }
+                }
+
+            }
+        }
+
+        canvas.restore ();
+    }
+
+    /**
+     * Draw behavior condition constructs for the specified loop.
+     *
+     * @param canvas
+     * @param loop
+     */
+    void drawBehaviorConditions (Canvas canvas, Loop loop) {
+
+        LoopConstruct loopConstruct = this.clay.getPerspective ().getConstruct (loop);
+
+        // Define base coordinate system
+        float xOrigin = 0;
+        float yOrigin = 0;
+
+        canvas.save ();
+
+        float previousBehaviorAngle = -90 + loopConstruct.getStartAngle (); // Initialize behavior condition to be the start of the loop.
+        for (BehaviorConstruct behaviorConstruct : loop.getBehaviors ()) {
+
+            // TODO: Get condition type and render the condition according to its type (e.g., for "switch" type, draw an arrowhead).
+
+            // Draw the behavior conditions
+            float behaviorAngle = (float) loopConstruct.getAngle (behaviorConstruct.getPosition ()) + (2 * loopConstruct.getStartAngle ());
+            //                Log.v("Clay", "behaviorAngle = " + behaviorAngle);
+            //                Log.v("Clay", "loop.getStartAngle() = " + loop.getStartAngle());
+
+            LoopPerspective loopPerspective = loopConstruct.getPerspective (behaviorAngle);
+
+            // Draw the loop
+            float loopLeft = xOrigin + loopConstruct.getPosition ().x - loopPerspective.getRadius ();
+            float loopTop = yOrigin + -1 * loopConstruct.getPosition ().y - loopPerspective.getRadius ();
+            float loopRight = xOrigin + loopConstruct.getPosition ().x + loopPerspective.getRadius ();
+            float loopBottom = yOrigin + -1 * loopConstruct.getPosition ().y + loopPerspective.getRadius ();
+
+            if (behaviorConstruct.hasCondition ()) { // TODO: Move this to out to a larger scope...
+                if (behaviorConstruct.getCondition ().getType () == BehaviorCondition.Type.NONE) {
+
+                    // Set the behavior condition's style
+                    paint.setStyle (Paint.Style.STROKE);
+                    paint.setStrokeWidth (2);
+                    paint.setColor (Color.BLACK);
+
+                    // Draw the condition
+                    canvas.drawArc (loopLeft, loopTop, loopRight, loopBottom, (float) previousBehaviorAngle, (float) behaviorAngle - previousBehaviorAngle, false, paint);
+
+                } else if (behaviorConstruct.getCondition ().getType () == BehaviorCondition.Type.SWITCH) {
+
+                    float spacingBeforeArc = 20.0f;
+                    float spacingAfterArc = 20.0f;
+
+                    // Set the behavior condition's style
+                    paint.setStyle (Paint.Style.STROKE);
+                    paint.setStrokeWidth (2);
+                    paint.setColor (Color.CYAN);
+
+                    // Draw the condition
+                    canvas.drawArc (loopLeft, loopTop, loopRight, loopBottom, ((float) previousBehaviorAngle + spacingBeforeArc), (float) behaviorAngle - previousBehaviorAngle - (spacingBeforeArc + spacingAfterArc), false, paint);
+
+                    // Draw arrowhead on loop
+                    canvas.save ();
+                    canvas.rotate (((float) behaviorAngle + 90.0f - spacingAfterArc));
+                    canvas.translate (0, -1 * loopPerspective.getRadius ());
+
+                    // Set the arrowhead's style
+                    paint.setStyle (Paint.Style.STROKE);
+                    paint.setStrokeWidth (2);
+                    paint.setColor (Color.CYAN);
+
+                    // Draw the arrowhead
+                    canvas.drawLine (-20, -20, 0, 0, paint);
+                    canvas.drawLine (-20, 20, 0, 0, paint);
+
+                    canvas.restore ();
+
+                } else if (behaviorConstruct.getCondition ().getType () == BehaviorCondition.Type.THRESHOLD) {
+
+                    // Set the behavior condition's style
+                    paint.setStyle (Paint.Style.STROKE);
+                    paint.setStrokeWidth (2);
+                    paint.setColor (Color.GREEN);
+
+                    // Draw the condition
+                    canvas.drawArc (loopLeft, loopTop, loopRight, loopBottom, (float) previousBehaviorAngle, (float) behaviorAngle - previousBehaviorAngle, false, paint);
+
+                } else if (behaviorConstruct.getCondition ().getType () == BehaviorCondition.Type.GESTURE) {
+
+                    // Set the behavior condition's style
+                    paint.setStyle (Paint.Style.STROKE);
+                    paint.setStrokeWidth (2);
+                    paint.setColor (Color.MAGENTA);
+
+                    // Draw the condition
+                    canvas.drawArc (loopLeft, loopTop, loopRight, loopBottom, (float) previousBehaviorAngle, (float) behaviorAngle - previousBehaviorAngle, false, paint);
+
+                } else if (behaviorConstruct.getCondition ().getType () == BehaviorCondition.Type.MESSAGE) {
+
+                    // Set the behavior condition's style
+                    paint.setStyle (Paint.Style.STROKE);
+                    paint.setStrokeWidth (2);
+                    paint.setColor (Color.YELLOW);
+                    paint.setPathEffect (new DashPathEffect (new float[] { 10, 20 }, 0));
+
+                    // Draw the condition
+                    canvas.drawArc (loopLeft, loopTop, loopRight, loopBottom, (float) previousBehaviorAngle, (float) behaviorAngle - previousBehaviorAngle, false, paint);
+
+                    paint.setPathEffect (new PathEffect ()); // HACK: This undoes the dash effect! Better way would be to give individual control to drawn elements over their dash stroke (or otherwise).
+
+                }
+            }
+
+            // Store the current behavior's angle for calculating the geometry for the subsequent behavior's condition.
+            previousBehaviorAngle = behaviorAngle;
+
+        }
+
+        canvas.restore ();
+    }
+
+    /**
+     * Draw the behavior constructs on the specified loop.
+     *
+     * @param canvas
+     * @param loop
+     */
+    void drawBehaviorConstructs (Canvas canvas, Loop loop) {
+
+        canvas.save ();
+
+        for (BehaviorConstruct behaviorConstruct : loop.getBehaviors ()) {
+
+            // Set style for behaviorConstruct node interior
+            paint.setStyle (Paint.Style.FILL_AND_STROKE);
+            paint.setStrokeWidth (2);
+            paint.setColor (Color.WHITE);
+
+            // Draw behaviorConstruct node interior
+            canvas.drawCircle (behaviorConstruct.getPosition ().x, behaviorConstruct.getPosition ().y, behaviorConstruct.getRadius (), paint);
+
+            // Set style for behaviorConstruct node border
+            paint.setStyle (Paint.Style.STROKE);
+            paint.setStrokeWidth (2);
+            paint.setColor (Color.BLACK);
+
+            // Draw behaviorConstruct node border
+            canvas.drawCircle (behaviorConstruct.getPosition ().x, behaviorConstruct.getPosition ().y, behaviorConstruct.getRadius (), paint);
+
+            // Set style for behavior's label
+            paint.setStyle (Paint.Style.FILL);
+            paint.setStrokeWidth (0);
+            paint.setColor (Color.BLACK);
+
+            // Set style for behavior's label
+            String name = "None";
+            if (behaviorConstruct.hasBehavior ()) {
+                name = behaviorConstruct.getBehavior ().getTitle ();
+            }
+            Rect textBounds = new Rect ();
+            paint.getTextBounds (name, 0, name.length (), textBounds);
+            paint.setTextSize (35);
+            canvas.drawText (name, behaviorConstruct.getPosition ().x - textBounds.exactCenterX (), behaviorConstruct.getPosition ().y - textBounds.exactCenterY (), paint);
+
+            /* Draw snapping path to nearest loop. */
+
+            // Set the nearest loop (the one in which this behavior is contained) and snap to that one (ongoing).
+            Loop nearestLoop = loop; // TODO: Replace with nearestLoopConstruct
+
+            // Get the loop construct associated with the loop.
+            LoopConstruct nearestLoopConstruct = this.clay.getPerspective ().getConstruct (loop);
+
+            // TODO: behaviorConstruct.isTouched
+            // TODO: behaviorConstruct.getTouchAngle -OR- behaviorConstruct.getTouchPoint
+
+            // TODO: get nearestLoopPerspective
+//                LoopPerspective nearestLoopPerspective = nearestLoopConstruct.getPerspective (this.clay.getPerson ().getTouch ());
+
+
+
+
+            // TODO: Get the angle of the behavior WRT the nearest loop construct (may not be this loop construct, if it is moved!)
+            double behaviorConstructAngle = nearestLoopConstruct.getAngle (behaviorConstruct.getPosition ());
+
+            // TODO: Get the perspective at the behavior's angle
+
+            LoopPerspective nearestLoopConstructPerspective = nearestLoopConstruct.getPerspective (behaviorConstructAngle);
+
+            // TODO: Get the radius of the perspective
+
+            // Draw snapping path to nearest loop
+//                if (behaviorConstruct.getDistanceToLoop (nearestLoop) < nearestLoopPerspective.getRadius ()) {
+            if (behaviorConstruct.getDistanceToLoopPerspective (nearestLoopConstructPerspective) < nearestLoopConstructPerspective.getRadius ()) {
+                Point nearestPoint = behaviorConstruct.getNearestPoint (nearestLoopConstructPerspective);
+                //Point nearestPoint = nearestLoopConstructPerspective.getNearestPoint (nearestLoopConstruct);
+                canvas.drawLine (behaviorConstruct.getPosition ().x, behaviorConstruct.getPosition ().y, nearestPoint.x, nearestPoint.y, paint);
+            }
+        }
+
+        canvas.restore ();
+    }
+
+    /**
+     * Draw behavior constructs in the specified system that are not on a loop.
+     *
+     * @param canvas
+     * @param system
+     */
+    void drawBehaviorConstructs (Canvas canvas, System system) {
+        //        String behaviorStates = "";
+        for (BehaviorConstruct behaviorConstruct : this.clay.getSystem ().getBehaviors ()) {
+            //            behaviorStates = behaviorStates + " " + behaviorConstruct.state.toString();
+
+            // Only draw loops that are NOT on a loop!
+            if (behaviorConstruct.hasLoop ()) {
+                continue;
+            }
+
+            // Set style for behaviorConstruct node interior
+            paint.setStyle (Paint.Style.FILL_AND_STROKE);
+            paint.setStrokeWidth (2);
+            paint.setColor (Color.WHITE);
+
+            // Draw behaviorConstruct node interior
+            myCanvas.drawCircle (behaviorConstruct.getPosition ().x, behaviorConstruct.getPosition ().y, behaviorConstruct.getRadius (), paint);
+
+            // Set style for behaviorConstruct node border
+            paint.setStyle (Paint.Style.STROKE);
+            paint.setStrokeWidth (2);
+            paint.setColor (Color.BLACK);
+
+            // Draw behaviorConstruct node border
+            myCanvas.drawCircle (behaviorConstruct.getPosition ().x, behaviorConstruct.getPosition ().y, behaviorConstruct.getRadius (), paint);
+
+            // Draw behavior's label
+
+            paint.setStyle (Paint.Style.FILL);
+            paint.setStrokeWidth (0);
+            paint.setColor (Color.BLACK);
+
+            String name = "None";
+            if (behaviorConstruct.hasBehavior ()) {
+                name = behaviorConstruct.getBehavior ().getTitle ();
+            }
+            Rect textBounds = new Rect ();
+            paint.getTextBounds (name, 0, name.length (), textBounds);
+            paint.setTextSize (35);
+            myCanvas.drawText (name, behaviorConstruct.getPosition ().x - textBounds.exactCenterX (), behaviorConstruct.getPosition ().y - textBounds.exactCenterY (), paint);
+
+                /* Draw snapping path to nearest loop. */
+
+            // Search for the nearest loop and snap to that one (ongoing).
+            LoopConstruct nearestLoopConstruct = this.clay.getPerspective ().getNearestLoopConstruct (behaviorConstruct);
+            //            double nearestLoopDistance = Double.POSITIVE_INFINITY;
+            //            for (Loop loop : this.system.getLoops()) {
+            //                if (behaviorConstruct.getDistanceToLoop(loop) < nearestLoopDistance) {
+            //                    nearestLoop = loop;
+            //                }
+            //            }
+
+
+            // TODO: Get nearest perspective.
+            //            this.touchPerson.getTouch (i)
+            // TODO: Iterate through gesture's touches. Check if any touch is holding a behavior. For those, check if they are near enough to the perspective's radius and then snap it on!
+
+            // TODO: Get relative position in nearest perspective based on start angle, first behavior visible, stop angle, and last behavior visible.
+
+            // TODO: Get radius of nearest perspective.
+
+            // Get the loop construct associated with the loop.
+//            LoopConstruct nearestLoopConstruct = this.clay.getPerspective ().getConstruct (loop);
+
+            // TODO: behaviorConstruct.isTouched
+            // TODO: behaviorConstruct.getTouchAngle -OR- behaviorConstruct.getTouchPoint
+
+            // TODO: get nearestLoopPerspective
+//                LoopPerspective nearestLoopPerspective = nearestLoopConstruct.getPerspective (this.clay.getPerson ().getTouch ());
+
+
+
+
+            // TODO: Get the angle of the behavior WRT the nearest loop construct (may not be this loop construct, if it is moved!)
+            double behaviorConstructAngle = nearestLoopConstruct.getAngle (behaviorConstruct.getPosition ());
+
+            // TODO: Get the perspective at the behavior's angle
+
+            LoopPerspective nearestLoopConstructPerspective = nearestLoopConstruct.getPerspective (behaviorConstructAngle);
+
+            // TODO: Get the radius of the perspective
+
+            // Draw snapping path to nearest loop
+//                if (behaviorConstruct.getDistanceToLoop (nearestLoop) < nearestLoopPerspective.getRadius ()) {
+            if (behaviorConstruct.getDistanceToLoopPerspective (nearestLoopConstructPerspective) < 250) {
+                Point nearestPoint = behaviorConstruct.getNearestPoint (nearestLoopConstructPerspective);
+                //Point nearestPoint = nearestLoopConstructPerspective.getNearestPoint (nearestLoopConstruct);
+                canvas.drawLine (behaviorConstruct.getPosition ().x, behaviorConstruct.getPosition ().y, nearestPoint.x, nearestPoint.y, paint);
+            }
+
+
+            // Draw snapping path to nearest loop
+//            if (behaviorConstruct.getDistanceToLoop (nearestLoopConstruct) < 250) {
+//                Point nearestPoint = behaviorConstruct.getNearestPoint (nearestLoopConstruct);
+//                myCanvas.drawLine (behaviorConstruct.getPosition ().x, behaviorConstruct.getPosition ().y, nearestPoint.x, nearestPoint.y, paint);
+//            }
+        }
+        //        Log.v("Clay", behaviorStates);
+    }
+
+    void drawCandidatePerspectives (Canvas canvas, Loop loop) {
+
+        LoopConstruct loopConstruct = this.clay.getPerspective ().getConstruct (loop);
+
+        myCanvas.save ();
+
+        if (this.clay.getPerspective ().hasConstruct (loop)) {
+
+            if (this.clay.getPerspective ().getConstruct (loop).hasCandidatePerspective (loop)) {
+
+                LoopPerspective candidateLoopPerspective = this.clay.getPerspective ().getConstruct (loop).getCandidatePerspective (loop);
+
+                if (candidateLoopPerspective.loopCutPoint != null && candidateLoopPerspective.loopCutSpanPoint != null) {
+
+                    int radiusExtension = candidateLoopPerspective.getRadius ();
+                    int innerLoopRadius = 40; // TODO: Change this dynamically, based on the angular sweep size.
+
+                    double cutStartAngle = loopConstruct.getStartAngle () + loopConstruct.getAngle (candidateLoopPerspective.loopCutPoint);
+                    Point cutStartPoint = loopConstruct.getPoint (cutStartAngle, candidateLoopPerspective.getRadius ()); // Point cutStartPoint = loop.getPoint (cutStartAngle, loop.getRadius () + radiusExtension);
+                    double cutStopAngle = loopConstruct.getStartAngle () + loopConstruct.getAngle (candidateLoopPerspective.loopCutPoint) + candidateLoopPerspective.getSpan ();
+                    Point cutStopPoint = loopConstruct.getPoint (cutStopAngle, candidateLoopPerspective.getRadius ()); // Point cutStopPoint = loop.getPoint (cutStopAngle, loop.getRadius () + radiusExtension);
+
+                    // Define base coordinate system
+                    float xOrigin = 0;
+                    float yOrigin = 0;
+
+                    // Draw the loop
+                    float perspectiveLoopLeft = xOrigin + loopConstruct.getPosition ().x - candidateLoopPerspective.getRadius ();
+                    float perspectiveLoopTop = yOrigin + -1 * loopConstruct.getPosition ().y - candidateLoopPerspective.getRadius ();
+                    float perspectiveLoopRight = xOrigin + loopConstruct.getPosition ().x + candidateLoopPerspective.getRadius ();
+                    float perspectiveLoopBottom = yOrigin + -1 * loopConstruct.getPosition ().y + candidateLoopPerspective.getRadius ();
+
+                    // Draw the filled arc highlighting the perspective's area
+
+                    paint.setStyle (Paint.Style.FILL);
+                    paint.setStrokeWidth (2);
+                    paint.setColor (Color.WHITE);
+
+                    myCanvas.drawArc (perspectiveLoopLeft - radiusExtension, perspectiveLoopTop - radiusExtension, perspectiveLoopRight + radiusExtension, perspectiveLoopBottom + radiusExtension, (float) cutStartAngle + loopConstruct.getStartAngle (), (float) cutStopAngle - (float) cutStartAngle, true, paint);
+
+                    // Draw the loop in the cut
+
+                    paint.setStyle (Paint.Style.STROKE);
+                    paint.setStrokeWidth (2);
+                    paint.setColor (Color.BLACK);
+
+                    // TODO: Calculate loopLeft, etc.
+
+                    myCanvas.drawArc (perspectiveLoopLeft - innerLoopRadius, perspectiveLoopTop - innerLoopRadius, perspectiveLoopRight + innerLoopRadius, perspectiveLoopBottom + innerLoopRadius, (float) cutStartAngle + loopConstruct.getStartAngle (), (float) cutStopAngle - (float) cutStartAngle, false, paint);
+
+                    // Draw the line indicating the start of the cut.
+
+                    paint.setStyle (Paint.Style.STROKE);
+                    paint.setStrokeWidth (2);
+                    paint.setColor (Color.parseColor ("#008080"));
+
+                    myCanvas.drawLine (loopConstruct.getPosition ().x, loopConstruct.getPosition ().y, cutStartPoint.x, cutStartPoint.y, paint);
+
+                    // Draw the line indicating the end of the cut.
+
+                    if (candidateLoopPerspective.getSpan () < 0) {
+                        paint.setStyle (Paint.Style.STROKE);
+                        paint.setStrokeWidth (2);
+                        paint.setColor (Color.BLUE);
+                    } else {
+                        paint.setStyle (Paint.Style.STROKE);
+                        paint.setStrokeWidth (2);
+                        paint.setColor (Color.GREEN);
+                    }
+
+                    myCanvas.drawLine (loopConstruct.getPosition ().x, loopConstruct.getPosition ().y, cutStopPoint.x, cutStopPoint.y, paint);
+
+                }
+            }
+        }
+
+        myCanvas.restore ();
     }
 
     public void updateStates () {
@@ -620,25 +789,25 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                 // Update touch action state with the raw touch information provided by the operating platform (i.e., Android).
                 for (int i = 0; i < pointCount; i++) {
                     int id = motionEvent.getPointerId (i);
-                    xTouches[id] = (motionEvent.getX (i) - perspective.getPosition ().x) / perspective.getScaleFactor (); // HACK: TODO: Get x position directly!
-                    yTouches[id] = (motionEvent.getY (i) - perspective.getPosition ().y) / perspective.getScaleFactor (); // HACK: TODO: Get y position directly!
+                    xTouches[id] = (motionEvent.getX (i) - clay.getPerspective ().getPosition ().x) / clay.getPerspective ().getScaleFactor (); // HACK: TODO: Get x position directly!
+                    yTouches[id] = (motionEvent.getY (i) - clay.getPerspective ().getPosition ().y) / clay.getPerspective ().getScaleFactor (); // HACK: TODO: Get y position directly!
                 }
 
 //                // Check if touching _any_ behaviors (or loops, or canvas, or perspective). If so, keep the canvas locked, and find the action that's being touched.
-//                for (BehaviorPlaceholder action : this.substrate.getBehaviors ()) {
+//                for (BehaviorConstruct action : this.system.getBehaviors ()) {
 //                    double distanceToTouch = action.getDistance ((int) xTouch[pointerId], (int) yTouch[pointerId]);
 //                    if (distanceToTouch < action.getRadius () + 20) {
 //                        touchedBehaviors.add (action);
 //                        isPerformingBehaviorGesture = true;  // TODO: Set state of finger
-////                        action.state = BehaviorPlaceholder.State.MOVING; // Set state of touched action
+////                        action.state = BehaviorConstruct.State.MOVING; // Set state of touched action
 //                    }
 //                }
 
                 // Update the state of the touched object based on the current touch interaction state.
                 if (touchAction == MotionEvent.ACTION_DOWN) {
 
-                    touchInterface.touch(pointerId, xTouches[pointerId], yTouches[pointerId]);
-                    touchInterface.classify(pointerId);
+                    clay.getPerson ().touch (pointerId, xTouches[pointerId], yTouches[pointerId]);
+                    clay.getPerson ().classify (pointerId);
 
                 } else if (touchAction == MotionEvent.ACTION_POINTER_DOWN) {
 
@@ -646,13 +815,13 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
                 } else if (touchAction == MotionEvent.ACTION_MOVE) {
 
-                    touchInterface.touch(pointerId, xTouches[pointerId], yTouches[pointerId]);
-                    touchInterface.classify(pointerId);
+                    clay.getPerson ().touch (pointerId, xTouches[pointerId], yTouches[pointerId]);
+                    clay.getPerson ().classify (pointerId);
 
                 } else if (touchAction == MotionEvent.ACTION_UP) {
 
-                    touchInterface.untouch(pointerId, xTouches[pointerId], yTouches[pointerId]);
-                    touchInterface.classify(pointerId);
+                    clay.getPerson ().untouch (pointerId, xTouches[pointerId], yTouches[pointerId]);
+                    clay.getPerson ().classify(pointerId);
 
                 } else if (touchAction == MotionEvent.ACTION_POINTER_UP) {
 

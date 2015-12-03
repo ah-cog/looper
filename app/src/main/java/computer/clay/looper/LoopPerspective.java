@@ -4,6 +4,17 @@ import android.graphics.Point;
 
 public class LoopPerspective {
 
+    public static int DEFAULT_RADIUS = 350;
+    public static int DEFAULT_RADIUS_EXTENSION = 100;
+    public static int DEFAULT_START_ANGLE = 15; // i.e., -75
+    public static int DEFAULT_ANGLE_SPAN = 330;
+
+    private int radius = DEFAULT_RADIUS;
+
+    public int getRadius () {
+        return this.radius + (DEFAULT_RADIUS_EXTENSION - (int) ((this.getSpan () / 360.0) * DEFAULT_RADIUS_EXTENSION));
+    }
+
     public Point loopCutPoint = null;
     public Point loopCutSpanPoint = null;
     public int loopCutStartAngle = 0;
@@ -11,14 +22,16 @@ public class LoopPerspective {
 
     private Perspective perspective = null;
 
-    private Loop loop = null;
+    private LoopConstruct loopConstruct = null;
 
-    double angle = 0.0; // The starting angle in degrees for this perspective.
+    private BehaviorConstruct firstBehaviorConstruct = null; // The first behavior construct displayed in the perspective's span
+
+//    double angle = 0.0; // The starting angle in degrees for this perspective.
 //    double span = 0.0; // The arc length in degrees of this perspective.
 
-    LoopPerspective (Loop loop) { // TODO: LoopPerspective (Perspective perspective, Loop loop) {
+    LoopPerspective (LoopConstruct loopConstruct) { // TODO: LoopPerspective (Perspective perspective, Loop loop) {
         // TODO: this.perspective = perspective;
-        this.loop = loop;
+        this.loopConstruct = loopConstruct;
     }
 
     /**
@@ -31,8 +44,8 @@ public class LoopPerspective {
     /**
      * Returns the loop for which this perspective applies.
      */
-    Loop getLoop () {
-        return this.loop;
+    LoopConstruct getLoopConstruct () {
+        return this.loopConstruct;
     }
 
 //    void set (double angle, double span) {
@@ -40,13 +53,33 @@ public class LoopPerspective {
 //        this.span = span;
 //    }
 
-    void setAngle (double angle) {
-        this.angle = angle % 360;
+    public int getStartAngle () {
+        return this.loopCutStartAngle;
     }
 
-    double getAngle () {
-        return this.angle;
+    public void setStartAngle (int angle) {
+        this.loopCutStartAngle = angle;
     }
+
+    public int getSpan () {
+        return this.loopCutSpan;
+    }
+
+    public void setSpan (int span) {
+        this.loopCutSpan = loopCutSpan;
+    }
+
+    public int getStopAngle () {
+        return this.loopCutStartAngle + this.loopCutSpan;
+    }
+
+//    void setAngle (double angle) {
+//        this.angle = angle % 360;
+//    }
+//
+//    double getAngle () {
+//        return this.angle;
+//    }
 
 //    void setSpan (double span) {
 //        this.span = span % 360;

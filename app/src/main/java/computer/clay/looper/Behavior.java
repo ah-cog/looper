@@ -11,26 +11,28 @@ public class Behavior {
     private String title;
     private UUID uuid;
 
-    private BehaviorPlaceholder behaviorPlaceholder;
+    private BehaviorConstruct behaviorConstruct;
 
     Behavior(String title) {
-        this.behaviorPlaceholder = null;
+        this.behaviorConstruct = null;
 
         this.uuid = UUID.randomUUID();
 
         this.title = title;
     }
 
-    Behavior(BehaviorPlaceholder behaviorPlaceholder) {
-        this.behaviorPlaceholder = behaviorPlaceholder;
+    // TODO: Remove this!
+    Behavior (BehaviorConstruct behaviorConstruct) {
+        this.behaviorConstruct = behaviorConstruct;
     }
 
-    public void setBehaviorPlaceholder(BehaviorPlaceholder behaviorPlaceholder) {
-        this.behaviorPlaceholder = behaviorPlaceholder;
+    // TODO: Remove this!
+    public void setBehaviorConstruct (BehaviorConstruct behaviorConstruct) {
+        this.behaviorConstruct = behaviorConstruct;
     }
 
-    public BehaviorPlaceholder getBehaviorPlaceholder() {
-        return this.behaviorPlaceholder;
+    public BehaviorConstruct getBehaviorConstruct () {
+        return this.behaviorConstruct;
     }
 
     public UUID getUuid () {

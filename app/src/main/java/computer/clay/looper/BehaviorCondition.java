@@ -2,7 +2,7 @@ package computer.clay.looper;
 
 public class BehaviorCondition { // TODO: Consider renaming this to BehaviorPrecursor
 
-    private BehaviorPlaceholder behaviorPlaceholder;
+    private BehaviorConstruct behaviorConstruct;
 
     public enum Type {
         NONE,
@@ -14,17 +14,17 @@ public class BehaviorCondition { // TODO: Consider renaming this to BehaviorPrec
 
     private Type type = Type.NONE;
 
-    BehaviorCondition (BehaviorPlaceholder behaviorPlaceholder, Type type) {
-        this.behaviorPlaceholder = behaviorPlaceholder;
+    BehaviorCondition (BehaviorConstruct behaviorConstruct, Type type) {
+        this.behaviorConstruct = behaviorConstruct;
         this.type = type;
     }
 
-    public void setBehaviorPlaceholder (BehaviorPlaceholder behaviorPlaceholder) {
-        this.behaviorPlaceholder = behaviorPlaceholder;
+    public void setBehaviorConstruct (BehaviorConstruct behaviorConstruct) {
+        this.behaviorConstruct = behaviorConstruct;
     }
 
-    public BehaviorPlaceholder getBehaviorPlaceholder () {
-        return this.behaviorPlaceholder;
+    public BehaviorConstruct getBehaviorConstruct () {
+        return this.behaviorConstruct;
     }
 
     public Type getType () {

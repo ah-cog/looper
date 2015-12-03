@@ -26,11 +26,11 @@ public class AppRenderingThread extends Thread {
 
         while (running) {
 
-            startTime = System.currentTimeMillis ();
+            startTime = java.lang.System.currentTimeMillis ();
             view.updateSurfaceView ();
 
             // Sleep until the time remaining in the frame's allocated draw time (for the specified FPS) is reached.
-            sleepTime = ticksPS - (System.currentTimeMillis () - startTime);
+            sleepTime = ticksPS - (java.lang.System.currentTimeMillis () - startTime);
             try {
                 if (sleepTime > 0) {
                     sleep(sleepTime);

@@ -3,7 +3,7 @@ package computer.clay.looper;
 import android.graphics.Point;
 import android.util.Log;
 
-public class BehaviorPlaceholder { // TODO: Consdier renaming to BehaviorScaffold or BehaviorForm
+public class BehaviorConstruct { // TODO: Consdier renaming to BehaviorScaffold or BehaviorForm
 
     public static int DEFAULT_RADIUS = 80; // 60
 
@@ -23,9 +23,25 @@ public class BehaviorPlaceholder { // TODO: Consdier renaming to BehaviorScaffol
         SEQUENCED // The action is in a sequence (i.e., on a loop).
     }
 
+    // Touch state
+    private boolean isTouched = false;
+    // TODO: touchStartTime
+    // TODO: touchStopTime
+    // TODO: startPoint
+    // TODO: currentPoint
+    // TODO: stopPoint
+
+    public boolean isTouched () {
+        return this.isTouched;
+    }
+
+    public void setTouched (boolean isTouched) {
+        this.isTouched = isTouched;
+    }
+
     public State state;
 
-    private Substrate substrate = null;
+    private Perspective perspective = null;
 
     // TODO: Title
     // TODO: Graphical representation and layout
@@ -33,12 +49,12 @@ public class BehaviorPlaceholder { // TODO: Consdier renaming to BehaviorScaffol
     // TODO: Associate with command (action's behavior tree/graph structure)
     // TODO: Associate with cloud object
 
-    public BehaviorPlaceholder (Substrate substrate, int xPosition, int yPosition) {
+    public BehaviorConstruct (Perspective perspective, int xPosition, int yPosition) {
         super();
 
         this.state = State.FREE;
 
-        this.substrate = substrate;
+        this.perspective = perspective;
 
         position.set (xPosition, yPosition);
         radius = DEFAULT_RADIUS;
@@ -62,7 +78,7 @@ public class BehaviorPlaceholder { // TODO: Consdier renaming to BehaviorScaffol
      *
      * @param loop
      */
-    public void setLoop (Loop loop) {
+    public void attach (Loop loop) {
 
         // Add this placeholder to the loop.
         this.loop = loop;
@@ -70,6 +86,21 @@ public class BehaviorPlaceholder { // TODO: Consdier renaming to BehaviorScaffol
 
         // Update state of this placeholder
         this.state = State.SEQUENCED;
+    }
+
+    /**
+     * Removes this behavior placeholder from the loop it's associated with, if any, and update
+     * the state accordingly.
+     */
+    public void detach () {
+        if (this.loop != null) {
+            // Remove this placeholder from the loop.
+            this.loop.removeBehavior(this);
+            this.loop = null;
+
+            // Update state of the this placeholder
+            this.state = State.FREE;
+        }
     }
 
     /**
@@ -84,21 +115,6 @@ public class BehaviorPlaceholder { // TODO: Consdier renaming to BehaviorScaffol
 
     public boolean hasLoop () {
         return (this.loop != null);
-    }
-
-    /**
-     * Removes this behavior placeholder from the loop it's associated with, if any, and update
-     * the state accordingly.
-     */
-    public void unsetLoop () {
-        if (this.loop != null) {
-            // Remove this placeholder from the loop.
-            this.loop.removeBehavior(this);
-            this.loop = null;
-
-            // Update state of the this placeholder
-            this.state = State.FREE;
-        }
     }
 
     public void setBehavior (Behavior behavior) {
@@ -144,27 +160,36 @@ public class BehaviorPlaceholder { // TODO: Consdier renaming to BehaviorScaffol
         /* Check if the action is entangled. */
 
         // Search for the nearest loop and snap to that one (ongoing).
-        Loop nearestLoop = null;
-        double nearestLoopDistance = Double.MAX_VALUE;
-        for (Loop loop : this.substrate.getLoops ()) {
-            if (this.getDistanceToLoop (loop) < nearestLoopDistance) {
-                nearestLoop = loop; // Update the nearest loop.
-                nearestLoopDistance = this.getDistanceToLoop (loop); // Update the nearest loop distance.
-            }
-        }
+        LoopConstruct nearestLoopConstruct = this.perspective.getNearestLoopConstruct (this);
+//        double nearestLoopConstructDistance = this.getDistanceToLoop (nearestLoopConstruct);
+//        double nearestLoopDistance = Double.MAX_VALUE;
+//        for (Loop loop : this.perspective.getLoops ()) {
+//            if (this.getDistanceToLoop (loop) < nearestLoopDistance) {
+//                nearestLoop = loop; // Update the nearest loop.
+//                nearestLoopDistance = this.getDistanceToLoop (loop); // Update the nearest loop distance.
+//            }
+//        }
+
+        double behaviorConstructAngle = nearestLoopConstruct.getAngle (this.getPosition ());
+
+        // TODO: Get the perspective at the behavior's angle
+
+        LoopPerspective nearestLoopConstructPerspective = nearestLoopConstruct.getPerspective (behaviorConstructAngle);
+        double nearestLoopConstructPerspectiveDistance = this.getDistanceToLoopPerspective (nearestLoopConstructPerspective);
 
         // Snap to the loop if within snapping range
-        if (nearestLoop != null) {
-            if (nearestLoopDistance < 250) { // TODO: Replace magic number with a static class variable.
+        if (nearestLoopConstruct != null) {
+            if (nearestLoopConstructPerspectiveDistance < 250) { // TODO: Replace magic number with a static class variable.
 
-                Point nearestPoint = this.getNearestPoint (nearestLoop);
+                Point nearestPoint = this.getNearestPoint (nearestLoopConstructPerspective);
                 setPosition (nearestPoint.x, nearestPoint.y);
-                setLoop (nearestLoop);
+
+                attach (nearestLoopConstruct.getLoop ()); // TODO: Move this into Behavior.attach();
 
             } else { // The behavior was positioned outside the snapping boundary of the loop.
 
                 if (this.hasLoop ()) { // Check if this behavior placeholder is in a loop sequence.
-                    unsetLoop();
+                    detach ();
                 } else {
                     // NOTE: This happens when a free behavior is moved, but not onto a loop (it remains free after being moved).
                     Log.v ("Clay", "UNHANGLED CONDITION MET. HANDLE THIS CONDITION!");
@@ -214,24 +239,48 @@ public class BehaviorPlaceholder { // TODO: Consdier renaming to BehaviorScaffol
         return distance;
     }
 
-    public Point getNearestPoint (Loop loop) {
+//    public Point getNearestPoint (LoopConstruct loopConstruct) {
+//
+//        Point nearestPoint = new Point();
+//
+//        double deltaX = this.position.x - loopConstruct.getPosition().x;
+//        double deltaY = this.position.y - loopConstruct.getPosition().y;
+//        double angleInDegrees = Math.atan2(deltaY, deltaX);
+//
+//        int nearestX = (int) ((0) + (loopConstruct.getRadius()) * Math.cos (angleInDegrees));
+//        int nearestY = (int) ((0) + (loopConstruct.getRadius()) * Math.sin (angleInDegrees));
+//
+//        nearestPoint.set (nearestX, nearestY);
+//
+//        return nearestPoint;
+//    }
+
+    public Point getNearestPoint (LoopPerspective loopPerspective) {
 
         Point nearestPoint = new Point();
 
-        double deltaX = this.position.x - loop.getPosition().x;
-        double deltaY = this.position.y - loop.getPosition().y;
+        double deltaX = this.position.x - loopPerspective.getLoopConstruct ().getPosition ().x;
+        double deltaY = this.position.y - loopPerspective.getLoopConstruct ().getPosition ().y;
         double angleInDegrees = Math.atan2(deltaY, deltaX);
 
-        int nearestX = (int) ((0) + (loop.getRadius()) * Math.cos (angleInDegrees));
-        int nearestY = (int) ((0) + (loop.getRadius()) * Math.sin (angleInDegrees));
+        int nearestX = (int) ((0) + (loopPerspective.getRadius()) * Math.cos (angleInDegrees));
+        int nearestY = (int) ((0) + (loopPerspective.getRadius()) * Math.sin (angleInDegrees));
 
         nearestPoint.set (nearestX, nearestY);
 
         return nearestPoint;
     }
 
-    public double getDistanceToLoop (Loop loop) {
-        Point nearestPoint = this.getNearestPoint(loop);
-        return this.getDistance (nearestPoint.x, nearestPoint.y);
+    public double getDistanceToLoopPerspective (LoopPerspective loopPerspective) {
+
+        Point nearestPoint = this.getNearestPoint (loopPerspective);
+
+        double distance = this.getDistance (nearestPoint.x, nearestPoint.y);
+
+        return distance;
+    }
+
+    public double getDistanceToLoop (LoopConstruct loopConstruct) {
+        return this.getDistance (this.position.x, this.position.y);
     }
 }

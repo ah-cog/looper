@@ -1,33 +1,44 @@
 package computer.clay.looper;
 
-import java.util.ArrayList;
-import java.util.UUID;
-
 public class Clay {
 
     // Clay
     // - Placeholder
-    //   - LoopPlaceholder
-    //   - BehaviorPlaceholder
+    //   - LoopConstruct
+    //   - BehaviorConstruct
 
-    private ArrayList<Unit> units = new ArrayList<Unit> ();
+//    private ArrayList<Unit> units = new ArrayList<Unit> (); // TODO: Move this to the System class!
 
     private BehaviorRepository behaviorRepository = new BehaviorRepository (this);
 
-    private Substrate substrate = new Substrate();
+    private System system = new System (this); // i.e., like the "model"
+    private Perspective perspective = new Perspective (system); // ie., like the "view"
+    private Person person = new Person (system, perspective); // i.e., like the "controller"
 
     Clay () {
 
         // HACK: Uses fake test units to prototype Looper!
-        this.setupTestUnits(); // TODO: Replace this with the actual discovered units!
+//        this.setupTestUnits(); // TODO: Replace this with the actual discovered units!
     }
 
-    private void setupTestUnits () {
-        Unit unit = new Unit (UUID.randomUUID());
-        this.units.add(unit);
-
-        // TODO: Make a "core loop" for each unit that is the "main" loop of the unit!
+    public System getSystem () {
+        return this.system;
     }
+
+    public Perspective getPerspective () {
+        return this.perspective;
+    }
+
+    public Person getPerson () {
+        return this.person;
+    }
+
+//    private void setupTestUnits () {
+//        Unit unit = new Unit (UUID.randomUUID());
+//        this.units.add(unit);
+//
+//        // TODO: Make a "core loop" for each unit that is the "main" loop of the unit!
+//    }
 
     // TODO: discoverUnits() : Discover devices via UDP (maybe TCP).
     // TODO: discoverNetwork() : Discover and model the communications network between the units.
