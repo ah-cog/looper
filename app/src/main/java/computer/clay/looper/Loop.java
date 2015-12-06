@@ -9,7 +9,7 @@ public class Loop { // TODO: Possibly rename to LoopOperation
 
     private System system = null;
 
-    private ArrayList<BehaviorConstruct> behaviors = new ArrayList<BehaviorConstruct> ();
+    private ArrayList<Behavior> behaviors = new ArrayList<Behavior> ();
 
     public Loop (System system) {
         super();
@@ -21,11 +21,11 @@ public class Loop { // TODO: Possibly rename to LoopOperation
         return this.system;
     }
 
-    public void addBehavior (BehaviorConstruct behaviorConstruct) {
+    public void addBehavior (Behavior behavior) {
 
         // Add behavior to the list of behaviors in the loop sequence
-        if (!this.behaviors.contains(behaviorConstruct)) {
-            this.behaviors.add(behaviorConstruct);
+        if (!this.behaviors.contains(behavior)) {
+            this.behaviors.add(behavior);
         }
 
         // Re-order the behaviors based on their position along the loop
@@ -33,17 +33,21 @@ public class Loop { // TODO: Possibly rename to LoopOperation
 
     }
 
-    public boolean hasBehavior (BehaviorConstruct behaviorConstruct) {
-        return this.behaviors.contains (behaviorConstruct);
+    public boolean hasBehaviors () {
+        return (this.behaviors.size () > 0);
+    }
+
+    public boolean hasBehavior (Behavior behavior) {
+        return this.behaviors.contains (behavior);
     }
 
     // TODO: Remove behavior from a sequence, not from by the specified angle. Do that in LoopConstruct.
-    public void removeBehavior (BehaviorConstruct behaviorConstruct) {
-        if (behaviorConstruct != null) {
+    public void removeBehavior (Behavior behavior) {
+        if (behavior != null) {
 
             // Remove the specified behavior from the loop (if it is present)
-            if (this.behaviors.contains (behaviorConstruct)) {
-                this.behaviors.remove(behaviorConstruct);
+            if (this.behaviors.contains (behavior)) {
+                this.behaviors.remove(behavior);
             }
 
             // Re-order the behaviors based on their position along the loop
@@ -53,11 +57,11 @@ public class Loop { // TODO: Possibly rename to LoopOperation
 
     // TODO: Intelligently compute adjustments to behavior position on loop and update the position, showing it clearly as automatically being updated by Clay.
 
-    public ArrayList<BehaviorConstruct> getBehaviors() {
+    public ArrayList<Behavior> getBehaviors () {
         return this.behaviors;
     }
 
-    public BehaviorConstruct getAction (int index) {
+    public Behavior getBehavior (int index) {
         if (0 < index && index < this.behaviors.size()) {
             return this.behaviors.get(index);
         } else {

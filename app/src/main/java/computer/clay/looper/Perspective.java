@@ -2,6 +2,7 @@ package computer.clay.looper;
 
 import android.graphics.Point;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class Perspective {
@@ -14,11 +15,12 @@ public class Perspective {
     private float scaleFactor = DEFAULT_SCALE_FACTOR;
 
     private ArrayList<LoopConstruct> loopConstructs = new ArrayList<LoopConstruct> ();
+    private ArrayList<BehaviorConstruct> behaviorConstructs = new ArrayList<BehaviorConstruct> ();
 
-//    public Point loopCutPoint = null;
-//    public Point loopCutSpanPoint = null;
-//    public int loopCutStartAngle = 0;
-//    public int loopCutSpan = 0;
+//    public Point startAnglePoint = null;
+//    public Point spanPoint = null;
+//    public int startAngle = 0;
+//    public int span = 0;
 
     public Perspective (System system) {
         super();
@@ -68,6 +70,18 @@ public class Perspective {
     public void addConstruct (Loop loop) {
         LoopConstruct loopConstruct = new LoopConstruct (loop);
         this.loopConstructs.add (loopConstruct);
+    }
+
+    public ArrayList<LoopConstruct> getLoopConstructs () {
+        return this.loopConstructs;
+    }
+
+    public void addBehaviorConstruct (BehaviorConstruct behaviorConstruct) {
+        this.behaviorConstructs.add (behaviorConstruct);
+    }
+
+    public ArrayList<BehaviorConstruct> getBehaviorConstructs () {
+        return this.behaviorConstructs;
     }
 
     // TODO: createConstruct to hide the creation of constructs.

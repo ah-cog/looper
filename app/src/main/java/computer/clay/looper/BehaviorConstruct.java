@@ -3,18 +3,18 @@ package computer.clay.looper;
 import android.graphics.Point;
 import android.util.Log;
 
-public class BehaviorConstruct { // TODO: Consdier renaming to BehaviorScaffold or BehaviorForm
+public class BehaviorConstruct {
 
-    public static int DEFAULT_RADIUS = 80; // 60
+    public static int DEFAULT_RADIUS = 80;
 
-    private Behavior behavior = null; // TODO: private ArrayList<Behavior> behaviors = new ArrayList<Behavior>();
+    private Behavior behavior = null;
 
     private BehaviorCondition condition = null;
 
     private Point position = new Point ();
     private int radius;
 
-    private Loop loop = null; // The loop associated with this behavior placeholder, if any.
+    private LoopConstruct loopConstruct = null; // The loop associated with this behavior placeholder, if any.
 
     public enum State {
         FREE, // The action is not on a loop.
@@ -24,20 +24,12 @@ public class BehaviorConstruct { // TODO: Consdier renaming to BehaviorScaffold 
     }
 
     // Touch state
-    private boolean isTouched = false;
+    // TODO: isTouched
     // TODO: touchStartTime
     // TODO: touchStopTime
     // TODO: startPoint
     // TODO: currentPoint
     // TODO: stopPoint
-
-    public boolean isTouched () {
-        return this.isTouched;
-    }
-
-    public void setTouched (boolean isTouched) {
-        this.isTouched = isTouched;
-    }
 
     public State state;
 
@@ -72,49 +64,54 @@ public class BehaviorConstruct { // TODO: Consdier renaming to BehaviorScaffold 
         }
     }
 
+    public boolean hasLoopConstruct () {
+        return (this.loopConstruct != null);
+    }
+
+    public LoopConstruct getLoopConstruct () {
+        return this.loopConstruct;
+    }
+
     /**
-     * Adds this behavior placeholder to the specified loop sequence and updates the state
+     * Adds this behavior construct to the specified loop sequence and updates the state
      * accordingly.
      *
-     * @param loop
+     * @param loopConstruct The loop construct to which the behavior construct will be added.
      */
-    public void attach (Loop loop) {
+    public void setLoopConstruct (LoopConstruct loopConstruct) {
 
-        // Add this placeholder to the loop.
-        this.loop = loop;
-        this.loop.addBehavior(this);
+        // Associate the specified loop construct with this behavior construct...
+        this.loopConstruct = loopConstruct;
 
-        // Update state of this placeholder
+        // ...then add this behavior construct to the loop...
+        this.loopConstruct.addBehaviorConstruct (this);
+
+        // ...and update state of this behavior construct.
         this.state = State.SEQUENCED;
+
     }
 
     /**
      * Removes this behavior placeholder from the loop it's associated with, if any, and update
      * the state accordingly.
      */
-    public void detach () {
-        if (this.loop != null) {
+    public void removeLoopConstruct () {
+
+        if (this.hasLoopConstruct ()) {
+
             // Remove this placeholder from the loop.
-            this.loop.removeBehavior(this);
-            this.loop = null;
+            this.loopConstruct.removeBehaviorConstruct (this);
+
+            this.loopConstruct = null;
 
             // Update state of the this placeholder
             this.state = State.FREE;
+
+//            LoopConstruct nearestLoopConstruct = this.perspective.getNearestLoopConstruct (this);
+//            nearestLoopConstruct.reorderBehaviors();
+//            this.getLoopConstruct ().reorderBehaviors ();
+
         }
-    }
-
-    /**
-     * Returns the loop associated with this behavior placeholder. Returns null if there is no loop
-     * associated with this behavior placeholder.
-     *
-     * @return
-     */
-    public Loop getLoop () {
-        return this.loop;
-    }
-
-    public boolean hasLoop () {
-        return (this.loop != null);
     }
 
     public void setBehavior (Behavior behavior) {
@@ -150,46 +147,34 @@ public class BehaviorConstruct { // TODO: Consdier renaming to BehaviorScaffold 
     /**
      * "Settling" the position means computing the position based on the state of the action.
      */
-    public Point settlePosition () { // TODO: Implement continuous flow-based call: "public Point settlePosition (Point currentActionPosition) {"
+    public Point settlePosition () {
         Log.v("Clay", "settlePosition");
 
         Point resolvedPoint = new Point ();
-
-        // TODO: If the action is entangled with the nearest loop, then snap it onto the nearest position on that loop.
 
         /* Check if the action is entangled. */
 
         // Search for the nearest loop and snap to that one (ongoing).
         LoopConstruct nearestLoopConstruct = this.perspective.getNearestLoopConstruct (this);
-//        double nearestLoopConstructDistance = this.getDistanceToLoop (nearestLoopConstruct);
-//        double nearestLoopDistance = Double.MAX_VALUE;
-//        for (Loop loop : this.perspective.getLoops ()) {
-//            if (this.getDistanceToLoop (loop) < nearestLoopDistance) {
-//                nearestLoop = loop; // Update the nearest loop.
-//                nearestLoopDistance = this.getDistanceToLoop (loop); // Update the nearest loop distance.
-//            }
-//        }
-
         double behaviorConstructAngle = nearestLoopConstruct.getAngle (this.getPosition ());
 
-        // TODO: Get the perspective at the behavior's angle
-
+        // Get the perspective at the behavior's angle
         LoopPerspective nearestLoopConstructPerspective = nearestLoopConstruct.getPerspective (behaviorConstructAngle);
         double nearestLoopConstructPerspectiveDistance = this.getDistanceToLoopPerspective (nearestLoopConstructPerspective);
 
         // Snap to the loop if within snapping range
         if (nearestLoopConstruct != null) {
-            if (nearestLoopConstructPerspectiveDistance < 250) { // TODO: Replace magic number with a static class variable.
+            if (nearestLoopConstructPerspectiveDistance < nearestLoopConstructPerspective.getSnapDistance ()) { // TODO: Replace magic number with a static class variable.
 
                 Point nearestPoint = this.getNearestPoint (nearestLoopConstructPerspective);
-                setPosition (nearestPoint.x, nearestPoint.y);
+                this.setPosition (nearestPoint.x, nearestPoint.y);
 
-                attach (nearestLoopConstruct.getLoop ()); // TODO: Move this into Behavior.attach();
+                nearestLoopConstruct.addBehaviorConstruct (this);
 
             } else { // The behavior was positioned outside the snapping boundary of the loop.
 
-                if (this.hasLoop ()) { // Check if this behavior placeholder is in a loop sequence.
-                    detach ();
+                if (this.hasLoopConstruct ()) { // Check if this behavior placeholder is in a loop sequence.
+                    this.removeLoopConstruct ();
                 } else {
                     // NOTE: This happens when a free behavior is moved, but not onto a loop (it remains free after being moved).
                     Log.v ("Clay", "UNHANGLED CONDITION MET. HANDLE THIS CONDITION!");
@@ -238,22 +223,6 @@ public class BehaviorConstruct { // TODO: Consdier renaming to BehaviorScaffold 
         double distance = Math.sqrt(distanceSquare);
         return distance;
     }
-
-//    public Point getNearestPoint (LoopConstruct loopConstruct) {
-//
-//        Point nearestPoint = new Point();
-//
-//        double deltaX = this.position.x - loopConstruct.getPosition().x;
-//        double deltaY = this.position.y - loopConstruct.getPosition().y;
-//        double angleInDegrees = Math.atan2(deltaY, deltaX);
-//
-//        int nearestX = (int) ((0) + (loopConstruct.getRadius()) * Math.cos (angleInDegrees));
-//        int nearestY = (int) ((0) + (loopConstruct.getRadius()) * Math.sin (angleInDegrees));
-//
-//        nearestPoint.set (nearestX, nearestY);
-//
-//        return nearestPoint;
-//    }
 
     public Point getNearestPoint (LoopPerspective loopPerspective) {
 

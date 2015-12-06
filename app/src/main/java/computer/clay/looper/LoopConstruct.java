@@ -25,6 +25,38 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
     private ArrayList<LoopPerspective> candidateLoopPerspectives = new ArrayList<LoopPerspective>();
     private ArrayList<LoopPerspective> loopPerspectives = new ArrayList<LoopPerspective>();
 
+    private ArrayList<BehaviorConstruct> behaviorConstructs = new ArrayList<BehaviorConstruct> ();
+
+    public void addBehaviorConstruct (BehaviorConstruct behaviorConstruct) {
+
+        // Add the behavior construct to the loop construct...
+        this.behaviorConstructs.add (behaviorConstruct);
+
+        // ...then add the behavior to the loop.
+        this.getLoop().addBehavior (behaviorConstruct.getBehavior());
+    }
+
+    public void removeBehaviorConstruct (BehaviorConstruct behaviorConstruct) {
+
+        // Remove the behavior from the loop...
+        this.getLoop ().removeBehavior (behaviorConstruct.getBehavior ());
+
+        // ...then remove the behavior construct from the loop construct.
+        if (this.behaviorConstructs.contains (behaviorConstruct)) {
+            this.behaviorConstructs.remove (behaviorConstruct);
+
+//            // Update state of the this placeholder
+//            behaviorConstruct.state = BehaviorConstruct.State.FREE;
+
+            if (behaviorConstruct.hasLoopConstruct ()) {
+                behaviorConstruct.removeLoopConstruct ();
+            }
+
+            // Update the sequence order of behaviors based on the orientation of the behavior constructs on the loop construct.
+            this.reorderBehaviors();
+        }
+    }
+
     public ArrayList<LoopPerspective> getLoopPerspectives() {
         return loopPerspectives;
     }
@@ -103,14 +135,14 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
 //        LoopPerspective nearestLoopPerspective = null;
 //        Log.v ("Clay_Loop_Perspective", "# PERSPECTIVES FOR NEAREST LOOP = " + this.perspective.getConstruct (nearestLoop).getPerspectives (nearestLoop).size ());
         for (LoopPerspective loopPerspective : this.loopPerspectives) {
-            double startAngle = loopPerspective.loopCutStartAngle;
-            double stopAngle = loopPerspective.loopCutStartAngle + loopPerspective.loopCutSpan;
+            double startAngle = loopPerspective.startAngle;
+            double stopAngle = loopPerspective.startAngle + loopPerspective.span;
             Log.v("Clay_Loop_Perspective", "startAngle = " + startAngle);
             Log.v("Clay_Loop_Perspective", "stopAngle = " + stopAngle);
 
             // Check which perspective the behavior is in range of.
             if (startAngle < angle && angle < stopAngle) {
-                Log.v("Clay_Loop_Perspective", "nearestPerspective FOUND");
+//                Log.v("Clay_Loop_Perspective", "nearestPerspective FOUND");
 
                 // Select the loop perspective since.
                 return true;
@@ -127,14 +159,14 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
 //        LoopPerspective nearestLoopPerspective = null;
 //        Log.v ("Clay_Loop_Perspective", "# PERSPECTIVES FOR NEAREST LOOP = " + this.perspective.getConstruct (nearestLoop).getPerspectives (nearestLoop).size ());
         for (LoopPerspective loopPerspective : this.loopPerspectives) {
-            double startAngle = loopPerspective.loopCutStartAngle;
-            double stopAngle = loopPerspective.loopCutStartAngle + loopPerspective.loopCutSpan;
-            Log.v("Clay_Loop_Perspective", "startAngle = " + startAngle);
-            Log.v("Clay_Loop_Perspective", "stopAngle = " + stopAngle);
+            double startAngle = loopPerspective.startAngle;
+            double stopAngle = loopPerspective.startAngle + loopPerspective.span;
+//            Log.v("Clay_Loop_Perspective", "startAngle = " + startAngle);
+//            Log.v("Clay_Loop_Perspective", "stopAngle = " + stopAngle);
 
             // Check which perspective the behavior is in range of.
             if (startAngle < angle && angle < stopAngle) {
-                Log.v("Clay_Loop_Perspective", "nearestPerspective FOUND");
+//                Log.v("Clay_Loop_Perspective", "nearestPerspective FOUND");
 
                 // Select the loop perspective since.
                 return loopPerspective;
@@ -153,7 +185,68 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
     // TODO: Replace with createPerspective
     public void addPerspective (LoopPerspective loopPerspective) {
         // TODO: Create new perspectives as needed!
-        this.loopPerspectives.add(loopPerspective);
+
+        // --- becomes --- + --- + ---
+
+        Log.v ("Clay_New_Perspectives", "loopPerspectives.size() = " + this.loopPerspectives.size ());
+
+        if (this.loopPerspectives.size() == 0) {
+
+            this.loopPerspectives.add (loopPerspective);
+
+        } else if (this.loopPerspectives.size() == 1) {
+
+            LoopPerspective existingLoopPerspective = this.loopPerspectives.get(0);
+
+            // Add "complementary" loop perspective after the newly-created perspective.
+            LoopPerspective complementaryLoopPerspective = new LoopPerspective(this);
+            complementaryLoopPerspective.setStartAngle(loopPerspective.getStopAngle());
+            complementaryLoopPerspective.setSpan(existingLoopPerspective.getStopAngle() - loopPerspective.getStopAngle());
+
+            // Update existing loop perspective to span the range before the newly-created perspective.
+            existingLoopPerspective.setSpan(loopPerspective.getStartAngle() - existingLoopPerspective.getStartAngle());
+
+            // Link the perspectives together.
+            loopPerspective.setPreviousPerspective(existingLoopPerspective); // Previous
+            existingLoopPerspective.setNextPerspective(loopPerspective);
+            loopPerspective.setNextPerspective (complementaryLoopPerspective); // Next
+            complementaryLoopPerspective.setPreviousPerspective(loopPerspective);
+
+            // Add the new loop perspectives to the loop construct.
+            this.loopPerspectives.add(loopPerspective);
+            this.loopPerspectives.add(complementaryLoopPerspective);
+
+        } else {
+
+            // TODO: Get all the existing perspectives that are partially (at the beginning or end) or entirely enclosed in the new perspective.
+            LoopPerspective existingLoopPerspective = this.getPerspective (loopPerspective.getStartAngle());
+
+            // Add "complementary" loop perspective after the newly-created perspective.
+            LoopPerspective complementaryLoopPerspective = new LoopPerspective(this);
+            complementaryLoopPerspective.setStartAngle(loopPerspective.getStopAngle());
+            complementaryLoopPerspective.setSpan(existingLoopPerspective.getStopAngle() - loopPerspective.getStopAngle());
+
+            // Update existing loop perspective to span the range before the newly-created perspective.
+            existingLoopPerspective.setSpan(loopPerspective.getStartAngle() - existingLoopPerspective.getStartAngle());
+
+            // Link the perspectives together.
+            loopPerspective.setPreviousPerspective(existingLoopPerspective); // Previous
+            existingLoopPerspective.setNextPerspective(loopPerspective);
+            loopPerspective.setNextPerspective (complementaryLoopPerspective); // Next
+            complementaryLoopPerspective.setPreviousPerspective(loopPerspective);
+
+            // Add the new loop perspectives to the loop construct.
+            this.loopPerspectives.add(loopPerspective);
+            this.loopPerspectives.add(complementaryLoopPerspective);
+
+        }
+//        else {
+//
+//            this.loopPerspectives.add(loopPerspective);
+//
+//        }
+
+        // TODO: Sort the list of perspectives by their order
     }
 
     public ArrayList<LoopPerspective> getPerspectives (Loop loop) {
@@ -214,7 +307,7 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
     public double getAngle (int x, int y) {
         Point startAngle = this.getPoint (this.startAngle);
         Point stopAngle = new Point (x, y);
-        double angle = this.getAngle (startAngle, stopAngle);
+        double angle = this.getAngle(startAngle, stopAngle);
         return angle;
     }
 
@@ -247,9 +340,9 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
         double d = endingPoint.y - p1.y;
 
         double atanA = Math.atan2 (a, b);
-        double atanB = Math.atan2 (c, d);
+        double atanB = Math.atan2(c, d);
 
-        double result = Math.toDegrees (atanA - atanB);
+        double result = Math.toDegrees(atanA - atanB);
 
         return result;
     }
@@ -259,7 +352,7 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
      */
     public Point getPoint (double angle) {
         Point point = new Point ();
-        double angleInRadians = Math.toRadians (this.startAngle + angle); // ((90.0 - angle) + angle);
+        double angleInRadians = Math.toRadians(this.startAngle + angle); // ((90.0 - angle) + angle);
         double x = this.getPosition ().x + this.getRadius () * Math.cos (angleInRadians);
         double y = this.getPosition ().y + this.getRadius () * Math.sin (angleInRadians);
         point.set ((int) x, (int) y);
@@ -278,6 +371,10 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
         return point;
     }
 
+    public ArrayList<BehaviorConstruct> getBehaviorConstructs () {
+        return this.behaviorConstructs;
+    }
+
     /**
      * Returns the behavior prior to the specified angle. This method assumes that behaviors are
      * stored in ascending order of their angles on the loop.
@@ -287,8 +384,8 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
         // Calculate angles along the loop for each behavior
 //        ArrayList<Double> behaviorAngles = new ArrayList<Double>();
         String behaviorAngles = "";
-        for (BehaviorConstruct behavior : this.getLoop ().getBehaviors ()) {
-            Point behaviorPosition = behavior.getPosition();
+        for (BehaviorConstruct behaviorConstruct : this.getBehaviorConstructs ()) {
+            Point behaviorPosition = behaviorConstruct.getPosition();
             double behaviorAngle = this.getAngle(behaviorPosition);
             behaviorAngles += behaviorAngle + ", ";
         }
@@ -297,16 +394,16 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
 
         BehaviorConstruct previousBehavior = null;
         BehaviorConstruct behaviorBeforeAngle = null;
-        for (BehaviorConstruct behavior : this.getLoop ().getBehaviors ()) {
-            Point behaviorPosition = behavior.getPosition();
-            double behaviorAngle = this.getAngle(behaviorPosition);
+        for (BehaviorConstruct behaviorConstruct : this.getBehaviorConstructs()) {
+            Point behaviorPosition = behaviorConstruct.getPosition ();
+            double behaviorAngle = this.getAngle (behaviorPosition);
 
 //            Log.v ("Condition", "angle = " + angle);
 //            Log.v ("Condition", "behaviorAngle = " + behaviorAngle);
 
             if (behaviorAngle < angle) {
 //                previousBehavior = behavior;
-                behaviorBeforeAngle = behavior;
+                behaviorBeforeAngle = behaviorConstruct;
             } else {
 //                behaviorBeforeAngle = previousBehavior;
                 break;
@@ -327,18 +424,18 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
         // Calculate angles along the loop for each behavior
 //        ArrayList<Double> behaviorAngles = new ArrayList<Double>();
         String behaviorAngles = "";
-        for (BehaviorConstruct behavior : this.getLoop ().getBehaviors ()) {
-            Point behaviorPosition = behavior.getPosition();
-            double behaviorAngle = this.getAngle(behaviorPosition);
+        for (BehaviorConstruct behaviorConstruct : this.getBehaviorConstructs ()) {
+            Point behaviorPosition = behaviorConstruct.getPosition ();
+            double behaviorAngle = this.getAngle (behaviorPosition);
             behaviorAngles += behaviorAngle + ", ";
         }
 //        Log.v ("Condition", "behaviorAngles = " + behaviorAngles);
 
 
         BehaviorConstruct behaviorAfterAngle = null;
-        for (BehaviorConstruct behavior : this.getLoop ().getBehaviors ()) {
-            Point behaviorPosition = behavior.getPosition();
-            double behaviorAngle = this.getAngle(behaviorPosition);
+        for (BehaviorConstruct behaviorConstruct : this.getBehaviorConstructs()) {
+            Point behaviorPosition = behaviorConstruct.getPosition ();
+            double behaviorAngle = this.getAngle (behaviorPosition);
 
 //            Log.v ("Condition", "angle = " + angle);
 //            Log.v ("Condition", "behaviorAngle = " + behaviorAngle);
@@ -347,7 +444,7 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
 //                previousBehavior = behavior;
 //                behaviorBeforeAngle = behavior;
             } else {
-                behaviorAfterAngle = behavior;
+                behaviorAfterAngle = behaviorConstruct;
 //                behaviorBeforeAngle = previousBehavior;
                 break;
             }
@@ -381,18 +478,18 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
         // Re-order the behaviors based on their sequence ordering
 
         // Calculate angles along the loop for each behavior
-        ArrayList<Double> behaviorAngles = new ArrayList<Double>();
-        for (BehaviorConstruct behavior : this.getLoop ().getBehaviors ()) {
-            Point behaviorPosition = behavior.getPosition();
-            double behaviorAngle = this.getAngle(behaviorPosition);
-            behaviorAngles.add(behaviorAngle);
+        ArrayList<Double> behaviorAngles = new ArrayList<Double> ();
+        for (BehaviorConstruct behaviorConstruct : this.getBehaviorConstructs ()) {
+            Point behaviorPosition = behaviorConstruct.getPosition ();
+            double behaviorAngle = this.getAngle (behaviorPosition);
+            behaviorAngles.add (behaviorAngle);
             Log.v("Clay", "Behavior " + behaviorAngle + " = " + behaviorAngle);
         }
 
         // Sort the list of behaviors based on the sort manipulations done to sort the angles in ascending order.
-        for (int i = 0; i < this.getLoop ().getBehaviors ().size(); i++) {
-            for (int j = 0; j < this.getLoop ().getBehaviors ().size () - 1; j++) {
-                if (behaviorAngles.get(j) > behaviorAngles.get(j + 1)) {
+        for (int i = 0; i < this.getBehaviorConstructs ().size (); i++) { // for (int i = 0; i < this.getLoop ().getBehaviors ().size (); i++) {
+            for (int j = 0; j < this.getBehaviorConstructs().size () - 1; j++) { // for (int j = 0; j < this.getLoop ().getBehaviors ().size () - 1; j++) {
+                if (behaviorAngles.get (j) > behaviorAngles.get (j + 1)) {
 
                     // Swap angle
                     double angleToSwap = behaviorAngles.get(j);
@@ -400,16 +497,16 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
                     behaviorAngles.set(j + 1, angleToSwap);
 
                     // Swap behavior
-                    BehaviorConstruct behaviorToSwap = this.getLoop ().getBehaviors ().get (j);
-                    this.getLoop ().getBehaviors ().set (j, getLoop ().getBehaviors ().get (j + 1));
-                    this.getLoop ().getBehaviors ().set (j + 1, behaviorToSwap);
+                    BehaviorConstruct behaviorToSwap = this.getBehaviorConstructs ().get(j); // BehaviorConstruct behaviorToSwap = this.getLoop ().getBehaviors ().get (j);
+                    this.getBehaviorConstructs ().set(j, this.getBehaviorConstructs().get(j + 1)); // this.getLoop ().getBehaviors ().set (j, getLoop ().getBehaviors ().get (j + 1));
+                    this.getBehaviorConstructs ().set(j + 1, behaviorToSwap); // this.getLoop ().getBehaviors ().set (j + 1, behaviorToSwap);
                 }
             }
         }
 
         String loopSequence = "";
-        for (BehaviorConstruct behavior : this.getLoop ().getBehaviors ()) {
-            loopSequence += behavior.getBehavior().getTitle() + " ";
+        for (BehaviorConstruct behaviorConstruct : this.getBehaviorConstructs ()) { // for (BehaviorConstruct behavior : this.getLoop ().getBehaviors ()) {
+            loopSequence += behaviorConstruct.getBehavior ().getTitle () + " "; // loopSequence += behavior.getBehavior().getTitle() + " ";
         }
         Log.v ("Clay", loopSequence);
     }

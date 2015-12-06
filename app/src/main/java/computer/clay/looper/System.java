@@ -6,8 +6,8 @@ public class System {
 
     private Clay clay = null;
 
-    ArrayList<Loop> loops = new ArrayList<Loop>();
-    ArrayList<BehaviorConstruct> behaviors = new ArrayList<BehaviorConstruct>();
+    private ArrayList<Loop> loops = new ArrayList<Loop>();
+//    ArrayList<BehaviorConstruct> behaviors = new ArrayList<BehaviorConstruct>();
 
     // TODO: Include Operator/People/Agents/Actors/Robots/Intelligence
 
@@ -31,13 +31,13 @@ public class System {
     }
 
     // TODO: Replace with createBehavior and return the Behavior
-    public void addBehavior (BehaviorConstruct behaviorConstruct) {
-        this.behaviors.add (behaviorConstruct);
-    }
+//    public void addBehavior (BehaviorConstruct behaviorConstruct) {
+//        this.behaviors.add (behaviorConstruct);
+//    }
 
-    public ArrayList<BehaviorConstruct> getBehaviors() {
-        return this.behaviors;
-    }
+//    public ArrayList<BehaviorConstruct> getBehaviors() {
+//        return this.behaviors;
+//    }
 
     // TODO: attachBehaviorToLoop
 

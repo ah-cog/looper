@@ -178,6 +178,7 @@ public class Person {
 
             // TODO: Determine what was touched: behavior? condition? system?
 
+            // Set the first point of touch.
             this.xTouchStart[finger] = this.xTouch[finger];
             this.yTouchStart[finger] = this.yTouch[finger];
 
@@ -186,7 +187,7 @@ public class Person {
             this.dragDistance[finger] = 0;
 
             // Check if touching _any_ behaviors (or loops, or canvas, or perspective). If so, keep the canvas locked, and find the action that's being touched.
-            for (BehaviorConstruct behaviorConstruct : this.system.getBehaviors()) {
+            for (BehaviorConstruct behaviorConstruct : this.perspective.getBehaviorConstructs ()) {
                 double distanceToTouch = behaviorConstruct.getDistance ((int) xTouch[finger], (int) yTouch[finger]);
                 if (distanceToTouch < behaviorConstruct.getRadius () + 20) {
 
@@ -219,15 +220,13 @@ public class Person {
 //            }
 
             if (!isPerformingBehaviorGesture) {
-                // Check if touching in a loop.
+
+                // Check if a loop is being touched.
                 for (Loop loop : this.system.getLoops()) {
 
                     LoopConstruct loopConstruct = this.perspective.getConstruct (loop);
 
-//                    Point touchPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
-//                    LoopPerspective loopPerspective = loopConstruct.getPerspective (touchPoint);
-
-                    double distanceToTouch = loopConstruct.getDistance((int) xTouch[finger], (int) yTouch[finger]);
+                    double distanceToTouch = loopConstruct.getDistance ((int) xTouch[finger], (int) yTouch[finger]);
                     Log.v("Clay", "distanceToTouch = " + distanceToTouch);
                     if (distanceToTouch < 0.50 * loopConstruct.getRadius()) {
 
@@ -256,12 +255,12 @@ public class Person {
 //                    LoopPerspective candidateLoopPerspective = this.perspective.getCandidatePerspective(selectedLoop);
 //
 //                    Point currentTouchPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
-//                    // TODO: Calculate the end angle between the three points (loop center, loopCutPoint, and the current touch point)
-//                    candidateLoopPerspective.loopCutSpan = (int) selectedLoop.getAngle(candidateLoopPerspective.loopCutPoint, currentTouchPoint);
+//                    // TODO: Calculate the end angle between the three points (loop center, startAnglePoint, and the current touch point)
+//                    candidateLoopPerspective.span = (int) selectedLoop.getAngle(candidateLoopPerspective.startAnglePoint, currentTouchPoint);
 //                    // double loopCutSpanPselectedLoop.getAngle (currentTouchPoint.x, currentTouchPoint.y);
-//                    Log.v ("Clay", "loopCutStartAngle = " + candidateLoopPerspective.loopCutStartAngle);
-//                    candidateLoopPerspective.loopCutSpanPoint = selectedLoop.getPoint (candidateLoopPerspective.loopCutSpan); // (loopCutStartAngle + loopCutSpan);
-//                    Log.v ("Clay", "angle = " + candidateLoopPerspective.loopCutSpan);
+//                    Log.v ("Clay", "startAngle = " + candidateLoopPerspective.startAngle);
+//                    candidateLoopPerspective.spanPoint = selectedLoop.getPoint (candidateLoopPerspective.span); // (startAngle + span);
+//                    Log.v ("Clay", "angle = " + candidateLoopPerspective.span);
 //
 //                }
 
@@ -298,8 +297,8 @@ public class Person {
                 ArrayList<LoopPerspective> nearestLoopPerspectives = nearestLoopConstruct.getPerspectives (nearestLoopConstruct.getLoop ());
 //                ArrayList<LoopPerspective> nearestLoopPerspectives = this.perspective.getConstruct (nearestLoop).getPerspectives (nearestLoop);
                 for (LoopPerspective loopPerspective : nearestLoopPerspectives) {
-                    double startAngle = loopPerspective.loopCutStartAngle;
-                    double stopAngle = loopPerspective.loopCutStartAngle + loopPerspective.loopCutSpan;
+                    double startAngle = loopPerspective.startAngle;
+                    double stopAngle = loopPerspective.startAngle + loopPerspective.span;
                     Log.v("Clay_Loop_Perspective", "startAngle = " + startAngle);
                     Log.v("Clay_Loop_Perspective", "stopAngle = " + stopAngle);
 
@@ -338,8 +337,8 @@ public class Person {
 //                    LoopPerspective selectedLoopPerspective = null;
 //                    ArrayList<LoopPerspective> nearestLoopPerspectives = this.perspective.getPerspectives (nearestLoop);
 //                    for (LoopPerspective loopPerspective : nearestLoopPerspectives) {
-//                        double startAngle = loopPerspective.loopCutStartAngle;
-//                        double stopAngle = loopPerspective.loopCutStartAngle + loopPerspective.loopCutSpan;
+//                        double startAngle = loopPerspective.startAngle;
+//                        double stopAngle = loopPerspective.startAngle + loopPerspective.span;
 //                        Log.v("Clay_Loop_Perspective", "startAngle = " + startAngle);
 //                        Log.v("Clay_Loop_Perspective", "stopAngle = " + stopAngle);
 //                        if (startAngle < touchAngle && touchAngle < stopAngle) {
@@ -489,19 +488,19 @@ public class Person {
 //                        if (this.currentLoopPerspective == null) {
                         // TODO: Replace the above conditional with a check for proximity (so can adjust existing loop)?
                             LoopPerspective candidateLoopPerspective = new LoopPerspective(selectedLoopConstruct);
-                            candidateLoopPerspective.loopCutPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
-                            candidateLoopPerspective.loopCutStartAngle = (int) selectedLoopConstruct.getAngle((int) xTouch[finger], (int) yTouch[finger]);
-                            Log.v("Clay", "loopCutStartAngle = " + candidateLoopPerspective.loopCutStartAngle);
+                            candidateLoopPerspective.startAnglePoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
+                            candidateLoopPerspective.startAngle = (int) selectedLoopConstruct.getAngle((int) xTouch[finger], (int) yTouch[finger]);
+                            Log.v("Clay", "startAngle = " + candidateLoopPerspective.startAngle);
                             this.perspective.getConstruct (selectedLoop).setCandidatePerspective(candidateLoopPerspective);
                         }
 
-//                        if (this.perspective.loopCutPoint == null) {
-//                            this.perspective.loopCutPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
-//                            this.perspective.loopCutStartAngle = (int) selectedLoop.getAngle((int) xTouch[finger], (int) yTouch[finger]);
-//                            Log.v ("Clay", "loopCutStartAngle = " + this.perspective.loopCutStartAngle);
+//                        if (this.perspective.startAnglePoint == null) {
+//                            this.perspective.startAnglePoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
+//                            this.perspective.startAngle = (int) selectedLoop.getAngle((int) xTouch[finger], (int) yTouch[finger]);
+//                            Log.v ("Clay", "startAngle = " + this.perspective.startAngle);
 //                        }
 
-                        // TODO: Calculate loopCutStartAngle
+                        // TODO: Calculate startAngle
 
                     } else if (previousDistanceToSelectedLoopCenter > selectedLoopPerspective.getRadius () && distanceToSelectedLoopCenter < selectedLoopPerspective.getRadius ()) {
                         Log.v ("Clay", "Uncut the loop.");
@@ -523,11 +522,11 @@ public class Person {
 //                        }
 
 //                        // Clear the angle and (x,y) coordinate at which the loop was crossed (entered).
-//                        if (this.perspective.loopCutPoint != null) {
-//                            this.perspective.loopCutPoint = null;
-//                            this.perspective.loopCutSpanPoint = null;
-//                            this.perspective.loopCutStartAngle = 0;
-//                            this.perspective.loopCutSpan = 0;
+//                        if (this.perspective.startAnglePoint != null) {
+//                            this.perspective.startAnglePoint = null;
+//                            this.perspective.spanPoint = null;
+//                            this.perspective.startAngle = 0;
+//                            this.perspective.span = 0;
 //                        }
 
                     }
@@ -539,25 +538,25 @@ public class Person {
                         LoopPerspective candidateLoopPerspective = this.perspective.getConstruct (selectedLoop).getCandidatePerspective(selectedLoop);
 
                         Point currentTouchPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
-                        // TODO: Calculate the end angle between the three points (loop center, loopCutPoint, and the current touch point)
-                        candidateLoopPerspective.loopCutSpan = (int) selectedLoopConstruct.getAngle(candidateLoopPerspective.loopCutPoint, currentTouchPoint);
+                        // TODO: Calculate the end angle between the three points (loop center, startAnglePoint, and the current touch point)
+                        candidateLoopPerspective.span = (int) selectedLoopConstruct.getAngle(candidateLoopPerspective.startAnglePoint, currentTouchPoint);
                         // double loopCutSpanPselectedLoop.getAngle (currentTouchPoint.x, currentTouchPoint.y);
-                        Log.v ("Clay", "loopCutStartAngle = " + candidateLoopPerspective.loopCutStartAngle);
-                        candidateLoopPerspective.loopCutSpanPoint = selectedLoopConstruct.getPoint (candidateLoopPerspective.loopCutSpan); // (loopCutStartAngle + loopCutSpan);
-                        Log.v ("Clay", "angle = " + candidateLoopPerspective.loopCutSpan);
+                        Log.v ("Clay", "startAngle = " + candidateLoopPerspective.startAngle);
+                        candidateLoopPerspective.spanPoint = selectedLoopConstruct.getPoint (candidateLoopPerspective.span); // (startAngle + span);
+                        Log.v ("Clay", "angle = " + candidateLoopPerspective.span);
 
                     }
 
 //                    // If started cutting the loop, then calculate the angle offset of the cut in degrees.
-//                    if (this.perspective.loopCutPoint != null) {
+//                    if (this.perspective.startAnglePoint != null) {
 //
 //                        Point currentTouchPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
-//                        // TODO: Calculate the end angle between the three points (loop center, loopCutPoint, and the current touch point)
-//                        this.perspective.loopCutSpan = (int) selectedLoop.getAngle(this.perspective.loopCutPoint, currentTouchPoint);
+//                        // TODO: Calculate the end angle between the three points (loop center, startAnglePoint, and the current touch point)
+//                        this.perspective.span = (int) selectedLoop.getAngle(this.perspective.startAnglePoint, currentTouchPoint);
 //                        // double loopCutSpanPselectedLoop.getAngle (currentTouchPoint.x, currentTouchPoint.y);
-//                        Log.v ("Clay", "loopCutStartAngle = " + this.perspective.loopCutStartAngle);
-//                        this.perspective.loopCutSpanPoint = selectedLoop.getPoint (this.perspective.loopCutSpan); // (loopCutStartAngle + loopCutSpan);
-//                        Log.v ("Clay", "angle = " + this.perspective.loopCutSpan);
+//                        Log.v ("Clay", "startAngle = " + this.perspective.startAngle);
+//                        this.perspective.spanPoint = selectedLoop.getPoint (this.perspective.span); // (startAngle + span);
+//                        Log.v ("Clay", "angle = " + this.perspective.span);
 //                    }
 
                 } else if (isPerformingLoopPerspectiveGesture) {
@@ -600,21 +599,24 @@ public class Person {
 //                    LoopPerspective candidateLoopPerspective = new LoopPerspective(selectedLoop);
 //                    candidateLoopPerspective = new LoopPerspective(selectedLoop);
                     if (selectedLoopPerspectiveStartBoundary == true) {
-                        selectedLoopPerspective.loopCutPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
-                        selectedLoopPerspective.loopCutStartAngle = (int) selectedLoopPerspective.getLoopConstruct ().getAngle ((int) xTouch[finger], (int) yTouch[finger]);
+                        selectedLoopPerspective.startAnglePoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
+//                        selectedLoopPerspective.startAngle = (int) selectedLoopPerspective.getLoopConstruct ().getAngle ((int) xTouch[finger], (int) yTouch[finger]);
+                        selectedLoopPerspective.setStartAngle((int) selectedLoopPerspective.getLoopConstruct ().getAngle ((int) xTouch[finger], (int) yTouch[finger]));
                     } else if (selectedLoopPerspectiveStartBoundary == false) {
-//                        selectedLoopPerspective.loopCutPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
-//                        selectedLoopPerspective.loopCutStartAngle = (int) selectedLoop.getAngle ((int) xTouch[finger], (int) yTouch[finger]);
+//                        selectedLoopPerspective.startAnglePoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
+//                        selectedLoopPerspective.startAngle = (int) selectedLoop.getAngle ((int) xTouch[finger], (int) yTouch[finger]);
 
-                        selectedLoopPerspective.loopCutSpanPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
+                        selectedLoopPerspective.spanPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
                         int loopCutAngle = (int) selectedLoopPerspective.getLoopConstruct ().getAngle ((int) xTouch[finger], (int) yTouch[finger]);
 
                         int loopSpanStartAngle = selectedLoopPerspective.getLoopConstruct ().getStartAngle () + selectedLoopPerspective.getLoopConstruct ().getAngleSpan ();
 
-                        selectedLoopPerspective.loopCutSpan = loopCutAngle - selectedLoopPerspective.loopCutStartAngle;
-
+//                        selectedLoopPerspective.span = loopCutAngle - selectedLoopPerspective.startAngle;
+                        selectedLoopPerspective.setSpan(loopCutAngle - selectedLoopPerspective.startAngle);
                     }
-//                    Log.v("Clay", "loopCutStartAngle = " + selectedLoopPerspective.loopCutStartAngle);
+
+                    selectedLoopPerspective.updatePerspectives();
+//                    Log.v("Clay", "startAngle = " + selectedLoopPerspective.startAngle);
 //                    this.perspective.setCandidatePerspective(selectedLoopPerspective);
 
                 }
@@ -639,7 +641,7 @@ public class Person {
                     }
                 }
 
-                Log.v("Clay_Loop_Perspective", "NEAREST LOOP = " + nearestLoopConstruct);
+//                Log.v("Clay_Loop_Perspective", "NEAREST LOOP = " + nearestLoopConstruct);
 
 
                 // TODO: Get nearest loop to the touch point (where the behavior is being dragged)
@@ -651,16 +653,16 @@ public class Person {
 
                 // NOTE: This is useful for placing behaviors (when dragging and dropping them).
                 LoopPerspective nearestLoopPerspective = null;
-                Log.v ("Clay_Loop_Perspective", "# PERSPECTIVES FOR NEAREST LOOP = " + nearestLoopConstruct.getPerspectives (nearestLoopConstruct.getLoop ()).size ());
+//                Log.v ("Clay_Loop_Perspective", "# PERSPECTIVES FOR NEAREST LOOP = " + nearestLoopConstruct.getPerspectives (nearestLoopConstruct.getLoop ()).size ());
                 for (LoopPerspective loopPerspective : nearestLoopConstruct.getPerspectives (nearestLoopConstruct.getLoop ())) {
-                    double startAngle = loopPerspective.loopCutStartAngle;
-                    double stopAngle = loopPerspective.loopCutStartAngle + loopPerspective.loopCutSpan;
-                    Log.v("Clay_Loop_Perspective", "startAngle = " + startAngle);
-                    Log.v("Clay_Loop_Perspective", "stopAngle = " + stopAngle);
+                    double startAngle = loopPerspective.startAngle;
+                    double stopAngle = loopPerspective.startAngle + loopPerspective.span;
+//                    Log.v("Clay_Loop_Perspective", "startAngle = " + startAngle);
+//                    Log.v("Clay_Loop_Perspective", "stopAngle = " + stopAngle);
 
                     // Check which perspective the behavior is in range of.
                     if (startAngle < touchAngle && touchAngle < stopAngle) {
-                        Log.v("Clay_Loop_Perspective", "nearestPerspective FOUND");
+//                        Log.v("Clay_Loop_Perspective", "nearestPerspective FOUND");
 
                         // Select the loop perspective since.
                         nearestLoopPerspective = loopPerspective;
@@ -670,9 +672,9 @@ public class Person {
 
                 // TODO: Get the loop placeholder associated with the nearest perspective
 
-                Log.v("Clay_Loop_Perspective", "NEAREST PERSPECTIVE = " + nearestLoopPerspective);
+//                Log.v("Clay_Loop_Perspective", "NEAREST PERSPECTIVE = " + nearestLoopPerspective);
                 LoopConstruct nearestLoopConstructPerspective = nearestLoopPerspective.getLoopConstruct ();
-                Log.v("Clay_Loop_Perspective", "NEAREST PERSPECTIVE LOOP = " + nearestLoopConstructPerspective);
+//                Log.v("Clay_Loop_Perspective", "NEAREST PERSPECTIVE LOOP = " + nearestLoopConstructPerspective);
 
 //                // TODO: Update the behavior's loop (based on the loop in the placeholder). (TODO: Shift removed behaviors into place in perspectives observing the segment where the removed behavior was.)
 //
@@ -692,11 +694,7 @@ public class Person {
 //
 //                // TODO: Calculate the relative point of the touched behavior on the loop segment
 
-
-
-
-
-
+                // Update the position of the behavior construct to the touched point.
                 for (BehaviorConstruct behaviorConstruct : touchedBehaviors) {
                     behaviorConstruct.setPosition ((int) xTouch[finger],(int)  yTouch[finger]);
                 }
@@ -706,8 +704,6 @@ public class Person {
 
             Log.v ("Clay", "untouch");
 
-            // TODO?: behaviorPlaceholder.state = BehaviorConstruct.State.FREE;
-
             // Move the canvas if this is a drag event!
             if (isPerformingBehaviorGesture) {
 
@@ -716,7 +712,7 @@ public class Person {
                 // TODO: If moving an action, upon release, call "searchForPosition()" to check the "logical state" of the action in the system WRT the other loops, and find it's final position and update its state (e.g., if it's near enough to snap to a loop, to be deleted, etc.).
 
                 Log.v("Clay", "before isTouchingBehavior[pointerId]");
-                if (touchedBehaviors.size() > 0) { // if (isTouchingBehavior[pointerId]) {
+                if (touchedBehaviors.size() > 0) {
                     Log.v("Clay", "touchedBehaviors.size() = " + touchedBehaviors.size());
 
                     // Settle position of action.
@@ -783,11 +779,11 @@ public class Person {
                     candidateLoopPerspective = this.perspective.getConstruct (selectedLoop).getCandidatePerspective(this.selectedLoop);
                     Log.v("Clay", "candidatePerspective = " + candidateLoopPerspective);
 
-//                    this.perspective.loopCutPoint = null;
-//                    this.perspective.loopCutSpanPoint = null;
+//                    this.perspective.startAnglePoint = null;
+//                    this.perspective.spanPoint = null;
 //
-//                    this.perspective.loopCutStartAngle = 0;
-//                    this.perspective.loopCutSpan = 0;
+//                    this.perspective.startAngle = 0;
+//                    this.perspective.span = 0;
 
                     // Update the gesture state
                     isPerformingLoopGesture = false;
@@ -800,7 +796,7 @@ public class Person {
 
                 // Check if the perspective is small enough to delete.
                 if (selectedLoopPerspective != null) {
-                    if (selectedLoopPerspective.loopCutSpan < 20) {
+                    if (selectedLoopPerspective.span < 20) {
                         this.perspective.getConstruct (selectedLoop).removePerspective (selectedLoopPerspective);
                     }
                 }
@@ -819,7 +815,15 @@ public class Person {
 
                         // Add an action to the system.
                         BehaviorConstruct newBehaviorConstruct = new BehaviorConstruct (this.perspective, (int) xTouch[finger], (int) yTouch[finger]);
-                        this.system.addBehavior (newBehaviorConstruct);
+                        LoopConstruct nearestLoopConstruct = this.perspective.getNearestLoopConstruct(newBehaviorConstruct);
+                        newBehaviorConstruct.setLoopConstruct(nearestLoopConstruct); // newBehaviorConstruct.attach(selectedLoop);
+                        this.perspective.addBehaviorConstruct (newBehaviorConstruct);
+//                        this.system.addBehavior (newBehaviorConstruct);
+//                        LoopConstruct nearestLoopConstruct = this.perspective.getNearestLoopConstruct(newBehaviorConstruct);
+//                        LoopConstruct selectedLoopConstruct = this.perspective.getConstruct(selectedLoop);
+//                        if (nearestLoopConstruct != null) {
+//                        nearestLoopConstruct.reorderBehaviors ();
+//                        }
                         newBehaviorConstruct.settlePosition ();
                     }
 
