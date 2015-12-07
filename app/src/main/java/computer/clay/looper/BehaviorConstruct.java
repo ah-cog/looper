@@ -49,19 +49,16 @@ public class BehaviorConstruct {
         this.perspective = perspective;
 
         position.set (xPosition, yPosition);
+
         radius = DEFAULT_RADIUS;
 
-        // Create and associate a behavior with this placeholder.
+        // Create and associate a behavior with this behavior construct.
         this.behavior = new Behavior(this); // TODO: Remove this! Assign this through the behavior selection interface.
         this.behavior.setTitle (String.valueOf(Behavior.BEHAVIOR_COUNT));
         Behavior.BEHAVIOR_COUNT++;
 
-        // Create condition associated with this placeholder
-        if (behavior.BEHAVIOR_COUNT % 2 == 0) {
-            this.condition = new BehaviorCondition(this, BehaviorCondition.Type.SWITCH);
-        } else {
-            this.condition = new BehaviorCondition(this, BehaviorCondition.Type.NONE);
-        }
+        // Create the behavior condition associated with this behavior construct.
+        this.condition = new BehaviorCondition(this, BehaviorCondition.Type.NONE);
     }
 
     public boolean hasLoopConstruct () {
@@ -232,16 +229,21 @@ public class BehaviorConstruct {
 
     public Point getNearestPoint (LoopPerspective loopPerspective) {
 
-        Point nearestPoint = new Point();
+        Point nearestPoint = null;
 
-        double deltaX = this.position.x - loopPerspective.getLoopConstruct ().getPosition ().x;
-        double deltaY = this.position.y - loopPerspective.getLoopConstruct ().getPosition ().y;
-        double angleInDegrees = Math.atan2(deltaY, deltaX);
+        if (loopPerspective != null) {
 
-        int nearestX = (int) ((0) + (loopPerspective.getRadius()) * Math.cos (angleInDegrees));
-        int nearestY = (int) ((0) + (loopPerspective.getRadius()) * Math.sin (angleInDegrees));
+            nearestPoint = new Point();
 
-        nearestPoint.set (nearestX, nearestY);
+            double deltaX = this.position.x - loopPerspective.getLoopConstruct ().getPosition ().x;
+            double deltaY = this.position.y - loopPerspective.getLoopConstruct ().getPosition ().y;
+            double angleInDegrees = Math.atan2 (deltaY, deltaX);
+
+            int nearestX = (int) ((0) + (loopPerspective.getRadius ()) * Math.cos (angleInDegrees));
+            int nearestY = (int) ((0) + (loopPerspective.getRadius ()) * Math.sin (angleInDegrees));
+
+            nearestPoint.set (nearestX, nearestY);
+        }
 
         return nearestPoint;
     }

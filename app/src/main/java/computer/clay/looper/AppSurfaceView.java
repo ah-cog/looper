@@ -398,10 +398,6 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
         LoopConstruct loopConstruct = this.clay.getPerspective ().getLoopConstruct (loop);
 
-        // Define base coordinate system
-        float xOrigin = 0;
-        float yOrigin = 0;
-
         canvas.save ();
 
 //        for (LoopPerspective loopPerpsective : loopConstruct.getLoopPerspectives()) {
@@ -414,7 +410,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
         float previousBehaviorAngle = -90 + loopConstruct.getStartAngle (); // Initialize behavior condition to be the start of the loop.
 
-        for (BehaviorConstruct behaviorConstruct : loopConstruct.getBehaviorConstructs()) { // for (BehaviorConstruct behaviorConstruct : loop.getBehaviors ()) {
+        for (BehaviorConstruct behaviorConstruct : loopConstruct.getBehaviorConstructs ()) { // for (BehaviorConstruct behaviorConstruct : loop.getBehaviors ()) {
 
             // TODO: Get condition type and render the condition according to its type (e.g., for "switch" type, draw an arrowhead).
 
@@ -424,11 +420,16 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
             float behaviorAngle = (float) loopConstruct.getAngle (behaviorConstruct.getPosition ()) + (2 * loopConstruct.getStartAngle ());
             LoopPerspective loopPerspective = loopConstruct.getPerspective (behaviorAngle);
 
+            if (loopPerspective == null) {
+                Log.v ("Error", "No loop perspective exists at the specified angle construct.");
+                continue;
+            }
+
             // Calculate the geometry representing the loop's condition and flow.
-            float loopLeft = xOrigin + loopConstruct.getPosition ().x - loopPerspective.getRadius ();
-            float loopTop = yOrigin + -1 * loopConstruct.getPosition ().y - loopPerspective.getRadius ();
-            float loopRight = xOrigin + loopConstruct.getPosition ().x + loopPerspective.getRadius ();
-            float loopBottom = yOrigin + -1 * loopConstruct.getPosition ().y + loopPerspective.getRadius ();
+            float loopLeft = this.getOrigin ().x + loopConstruct.getPosition ().x - loopPerspective.getRadius ();
+            float loopTop = this.getOrigin ().y + -1 * loopConstruct.getPosition ().y - loopPerspective.getRadius ();
+            float loopRight = this.getOrigin ().x + loopConstruct.getPosition ().x + loopPerspective.getRadius ();
+            float loopBottom = this.getOrigin ().y + -1 * loopConstruct.getPosition ().y + loopPerspective.getRadius ();
 
             // Update the starting angle of the conditional arc.
 //            if (previousBehaviorAngle < loopPerspective.getStartAngle() + 30) {
