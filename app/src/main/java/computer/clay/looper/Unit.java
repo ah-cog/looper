@@ -8,7 +8,10 @@ import java.util.UUID;
 public class Unit {
 
     private UUID uuid; // The unit's static, unchanging, UUID
-    private String address; // The unit's IP address
+
+    private String internetAddress; // The unit's IP address
+
+    private String meshAddress; // The unit's IP address
 
     // TODO: Cache/model the unit's state and behavior
 
@@ -20,12 +23,20 @@ public class Unit {
         return this.uuid;
     }
 
-    public void setAddress (String address) {
-        this.address = address;
+    public void setInternetAddress (String address) {
+        this.internetAddress = address;
     }
 
-    public String getAddress () {
-        return this.address;
+    public String getInternetAddress () {
+        return this.internetAddress;
+    }
+
+    public void setMeshAddress (String address) {
+        this.meshAddress = address;
+    }
+
+    public String getMeshAddress () {
+        return this.meshAddress;
     }
 
     // TODO: Simulate the unit's state change based on its behavior

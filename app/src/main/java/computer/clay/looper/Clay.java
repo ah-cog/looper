@@ -13,7 +13,7 @@ public class Clay {
 
     private System system = new System (this); // i.e., like the "model"
     private Perspective perspective = new Perspective (system); // ie., like the "view"
-    private Person person = new Person (system, perspective); // i.e., like the "controller"
+    private Person person = new Person (this); // i.e., like the "controller"
 
     Clay () {
 

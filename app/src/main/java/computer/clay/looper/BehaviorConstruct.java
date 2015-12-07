@@ -53,7 +53,7 @@ public class BehaviorConstruct {
 
         // Create and associate a behavior with this placeholder.
         this.behavior = new Behavior(this); // TODO: Remove this! Assign this through the behavior selection interface.
-        this.behavior.setTitle(String.valueOf(Behavior.BEHAVIOR_COUNT));
+        this.behavior.setTitle (String.valueOf(Behavior.BEHAVIOR_COUNT));
         Behavior.BEHAVIOR_COUNT++;
 
         // Create condition associated with this placeholder
@@ -83,11 +83,11 @@ public class BehaviorConstruct {
         // Associate the specified loop construct with this behavior construct...
         this.loopConstruct = loopConstruct;
 
-        // ...then add this behavior construct to the loop...
-        this.loopConstruct.addBehaviorConstruct (this);
-
-        // ...and update state of this behavior construct.
-        this.state = State.SEQUENCED;
+//        // ...then add this behavior construct to the loop...
+//        this.loopConstruct.addBehaviorConstruct (this);
+//
+//        // ...and update state of this behavior construct.
+//        this.state = State.SEQUENCED;
 
     }
 
@@ -95,24 +95,28 @@ public class BehaviorConstruct {
      * Removes this behavior placeholder from the loop it's associated with, if any, and update
      * the state accordingly.
      */
-    public void removeLoopConstruct () {
-
-        if (this.hasLoopConstruct ()) {
-
-            // Remove this placeholder from the loop.
-            this.loopConstruct.removeBehaviorConstruct (this);
-
-            this.loopConstruct = null;
-
-            // Update state of the this placeholder
-            this.state = State.FREE;
-
-//            LoopConstruct nearestLoopConstruct = this.perspective.getNearestLoopConstruct (this);
-//            nearestLoopConstruct.reorderBehaviors();
-//            this.getLoopConstruct ().reorderBehaviors ();
-
-        }
-    }
+//    public void removeLoopConstruct () {
+//        this.loopConstruct = null;
+//        Log.v ("Clay_Loop_Construct", "removeLoopConstruct");
+//
+////        if (this.hasLoopConstruct ()) {
+////
+////            LoopConstruct previousLoopConstruct = this.loopConstruct;
+////
+////            this.loopConstruct = null;
+////
+////            // Update state of the this placeholder
+////            this.state = State.FREE;
+////
+//////            LoopConstruct nearestLoopConstruct = this.perspective.getNearestLoopConstruct (this);
+//////            nearestLoopConstruct.reorderBehaviors();
+//////            this.getLoopConstruct ().reorderBehaviors ();
+////
+////            // Remove this placeholder from the loop.
+////            previousLoopConstruct.removeBehaviorConstruct (this);
+////
+////        }
+//    }
 
     public void setBehavior (Behavior behavior) {
         this.behavior = behavior;
@@ -174,7 +178,9 @@ public class BehaviorConstruct {
             } else { // The behavior was positioned outside the snapping boundary of the loop.
 
                 if (this.hasLoopConstruct ()) { // Check if this behavior placeholder is in a loop sequence.
-                    this.removeLoopConstruct ();
+                    Log.v ("Clay", "REMOVING BEHAVIOR CONSTRUCT FROM LOOP CONSTRUCT.");
+                    this.getLoopConstruct ().removeBehaviorConstruct (this);
+//                    this.removeLoopConstruct ();
                 } else {
                     // NOTE: This happens when a free behavior is moved, but not onto a loop (it remains free after being moved).
                     Log.v ("Clay", "UNHANGLED CONDITION MET. HANDLE THIS CONDITION!");

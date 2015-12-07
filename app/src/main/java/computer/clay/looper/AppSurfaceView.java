@@ -102,7 +102,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
         // Create and start background Thread
         appRenderingThread = new AppRenderingThread (this);
         appRenderingThread.setRunning (true);
-        appRenderingThread.start();
+        appRenderingThread.start ();
 
     }
 
@@ -153,11 +153,11 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
             // Draw loops and behaviors.
 //            drawLoopConstruct (myCanvas, loop); // Draw the loop's construct.
-            myCanvas.save();
+            myCanvas.save ();
 
-            drawLoopConstructPerspectives(myCanvas, loop); // Draw perspectives on the loop
-            drawBehaviorConstructs (myCanvas, loop); // Draw behaviors on the loop.
+            drawLoopConstructPerspectives (myCanvas, loop); // Draw perspectives on the loop
             drawBehaviorConditions (myCanvas, loop); // Draw behavior conditions
+            drawBehaviorConstructs (myCanvas, loop); // Draw behaviors on the loop.
 //            drawCandidatePerspectives (myCanvas, loop); // Draw the candidate perspective(s) of the loop (if any).
 
             myCanvas.restore ();
@@ -193,22 +193,22 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
         // Check if the specified loop has a perspective. If not, add one for it, so it can be rendered.
         // TODO: Put this in the constructor for the LoopConstruct, so it will create itself as a default construct if there's not already a construct for the specified Loop.
-        if (!this.clay.getPerspective ().hasConstruct (loop)) {
+        if (!this.clay.getPerspective ().hasLoopConstruct (loop)) {
 
             // Create default loop construct
-            // TODO: Move this into the Perspective class (maybe in getConstruct and remove hasConstruct since it will always be true)
-            this.clay.getPerspective ().addConstruct (loop);
+            // TODO: Move this into the Perspective class (maybe in getLoopConstruct and remove hasLoopConstruct since it will always be true)
+            this.clay.getPerspective ().createLoopConstruct (loop);
 
-            if (!this.clay.getPerspective ().getConstruct (loop).hasPerspectives (loop)) {
+            if (!this.clay.getPerspective ().getLoopConstruct (loop).hasPerspectives (loop)) {
 
-                LoopConstruct loopConstruct = this.clay.getPerspective ().getConstruct (loop);
+                LoopConstruct loopConstruct = this.clay.getPerspective ().getLoopConstruct (loop);
 
                 Log.v ("Clay_Loop_Perspective", "A loop has no perspectives. Creating one.");
                 LoopPerspective defaultLoopPerspective = new LoopPerspective (loopConstruct);
                 defaultLoopPerspective.setStartAngle(-105);
                 defaultLoopPerspective.setSpan(330);
 
-                this.clay.getPerspective ().getConstruct (loop).addPerspective (defaultLoopPerspective);
+                this.clay.getPerspective ().getLoopConstruct (loop).addPerspective (defaultLoopPerspective);
 
             }
 
@@ -227,7 +227,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
      */
     void drawLoopConstruct (Canvas canvas, Loop loop) {
 
-        LoopConstruct loopConstruct = this.clay.getPerspective ().getConstruct (loop);
+        LoopConstruct loopConstruct = this.clay.getPerspective ().getLoopConstruct (loop);
 
         // Draw the loop
         float loopLeft = this.getOrigin ().x + loopConstruct.getPosition ().x - loopConstruct.getRadius ();
@@ -271,17 +271,17 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
      */
     void drawLoopConstructPerspectives (Canvas canvas, Loop loop) {
 
-        LoopConstruct loopConstruct = this.clay.getPerspective ().getConstruct (loop);
+        LoopConstruct loopConstruct = this.clay.getPerspective ().getLoopConstruct (loop);
 
         canvas.save ();
 
-        if (this.clay.getPerspective ().hasConstruct (loop)) {
+        if (this.clay.getPerspective ().hasLoopConstruct (loop)) {
 
-            if (this.clay.getPerspective ().getConstruct (loop).hasPerspectives (loop)) {
+            if (this.clay.getPerspective ().getLoopConstruct (loop).hasPerspectives (loop)) {
 
                 // TODO: Support multiple perspectives per "loop" (loop concept/placeholder)
 
-                for (LoopPerspective loopPerspective : this.clay.getPerspective ().getConstruct (loop).getPerspectives (loop)) {
+                for (LoopPerspective loopPerspective : this.clay.getPerspective ().getLoopConstruct (loop).getPerspectives (loop)) {
 
                     // Draw the loop
                     float loopLeft = this.getOrigin().x + loopConstruct.getPosition ().x - loopPerspective.getRadius ();
@@ -396,7 +396,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
     void drawBehaviorConditions (Canvas canvas, Loop loop) {
     // TODO: void drawBehaviorConditions (Canvas canvas, LoopPerspective loopPerspective)
 
-        LoopConstruct loopConstruct = this.clay.getPerspective ().getConstruct (loop);
+        LoopConstruct loopConstruct = this.clay.getPerspective ().getLoopConstruct (loop);
 
         // Define base coordinate system
         float xOrigin = 0;
@@ -538,71 +538,73 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
         canvas.save ();
 
-        LoopConstruct loopConstruct = this.clay.getPerspective().getConstruct (loop);
+        LoopConstruct loopConstruct = this.clay.getPerspective().getLoopConstruct (loop);
 
-        for (BehaviorConstruct behaviorConstruct : loopConstruct.getBehaviorConstructs()) { // for (BehaviorConstruct behaviorConstruct : loop.getBehaviors ()) {
+        if (loopConstruct.hasBehaviorConstructs ()) {
+            for (BehaviorConstruct behaviorConstruct : loopConstruct.getBehaviorConstructs ()) { // for (BehaviorConstruct behaviorConstruct : loop.getBehaviors ()) {
 
-            // Set style for behaviorConstruct node interior
-            paint.setStyle (Paint.Style.FILL_AND_STROKE);
-            paint.setStrokeWidth (2);
-            paint.setColor (Color.WHITE);
+//                Log.v ("Clay_Loop_Construct", behaviorConstruct.getBehavior ().getTitle () + ": " + behaviorConstruct.state);
 
-            // Draw behaviorConstruct node interior
-            canvas.drawCircle (behaviorConstruct.getPosition ().x, behaviorConstruct.getPosition ().y, behaviorConstruct.getRadius (), paint);
+                // Set style for behaviorConstruct node interior
+                paint.setStyle (Paint.Style.FILL_AND_STROKE);
+                paint.setStrokeWidth (2);
+                paint.setColor (Color.WHITE);
 
-            // Set style for behaviorConstruct node border
-            paint.setStyle (Paint.Style.STROKE);
-            paint.setStrokeWidth (2);
-            paint.setColor (Color.BLACK);
+                // Draw behaviorConstruct node interior
+                canvas.drawCircle (behaviorConstruct.getPosition ().x, behaviorConstruct.getPosition ().y, behaviorConstruct.getRadius (), paint);
 
-            // Draw behaviorConstruct node border
-            canvas.drawCircle (behaviorConstruct.getPosition ().x, behaviorConstruct.getPosition ().y, behaviorConstruct.getRadius (), paint);
+                // Set style for behaviorConstruct node border
+                paint.setStyle (Paint.Style.STROKE);
+                paint.setStrokeWidth (2);
+                paint.setColor (Color.BLACK);
 
-            // Set style for behavior's label
-            paint.setStyle (Paint.Style.FILL);
-            paint.setStrokeWidth (0);
-            paint.setColor (Color.BLACK);
+                // Draw behaviorConstruct node border
+                canvas.drawCircle (behaviorConstruct.getPosition ().x, behaviorConstruct.getPosition ().y, behaviorConstruct.getRadius (), paint);
 
-            // Set style for behavior's label
-            String name = "None";
-            if (behaviorConstruct.hasBehavior ()) {
-                name = behaviorConstruct.getBehavior ().getTitle ();
-            }
-            Rect textBounds = new Rect ();
-            paint.getTextBounds (name, 0, name.length (), textBounds);
-            paint.setTextSize (35);
-            canvas.drawText (name, behaviorConstruct.getPosition ().x - textBounds.exactCenterX (), behaviorConstruct.getPosition ().y - textBounds.exactCenterY (), paint);
+                // Set style for behavior's label
+                paint.setStyle (Paint.Style.FILL);
+                paint.setStrokeWidth (0);
+                paint.setColor (Color.BLACK);
 
-            /* Draw snapping path to nearest loop. */
+                // Set style for behavior's label
+                String name = "None";
+                if (behaviorConstruct.hasBehavior ()) {
+                    name = behaviorConstruct.getBehavior ().getTitle ();
+                }
+                Rect textBounds = new Rect ();
+                paint.getTextBounds (name, 0, name.length (), textBounds);
+                paint.setTextSize (35);
+                canvas.drawText (name, behaviorConstruct.getPosition ().x - textBounds.exactCenterX (), behaviorConstruct.getPosition ().y - textBounds.exactCenterY (), paint);
 
-            // Set the nearest loop (the one in which this behavior is contained) and snap to that one (ongoing).
-            Loop nearestLoop = loop; // TODO: Replace with nearestLoopConstruct
+                /* Draw snapping path to nearest loop. */
 
-            // Get the loop construct associated with the loop.
-            LoopConstruct nearestLoopConstruct = this.clay.getPerspective ().getConstruct (loop);
+                // Set the nearest loop (the one in which this behavior is contained) and snap to that one (ongoing).
+                Loop nearestLoop = loop; // TODO: Replace with nearestLoopConstruct
 
-            // TODO: behaviorConstruct.isTouched
-            // TODO: behaviorConstruct.getTouchAngle -OR- behaviorConstruct.getTouchPoint
+                // Get the loop construct associated with the loop.
+                LoopConstruct nearestLoopConstruct = this.clay.getPerspective ().getLoopConstruct (loop);
 
-            // TODO: get nearestLoopPerspective
+                // TODO: behaviorConstruct.isTouched
+                // TODO: behaviorConstruct.getTouchAngle -OR- behaviorConstruct.getTouchPoint
+
+                // TODO: get nearestLoopPerspective
 //                LoopPerspective nearestLoopPerspective = nearestLoopConstruct.getPerspective (this.clay.getPerson ().getTouch ());
 
 
+                // TODO: Get the angle of the behavior WRT the nearest loop construct (may not be this loop construct, if it is moved!)
+                double behaviorConstructAngle = nearestLoopConstruct.getAngle (behaviorConstruct.getPosition ());
 
+                // TODO: Get the perspective at the behavior's angle
 
-            // TODO: Get the angle of the behavior WRT the nearest loop construct (may not be this loop construct, if it is moved!)
-            double behaviorConstructAngle = nearestLoopConstruct.getAngle (behaviorConstruct.getPosition ());
+                LoopPerspective nearestLoopConstructPerspective = nearestLoopConstruct.getPerspective (behaviorConstructAngle);
 
-            // TODO: Get the perspective at the behavior's angle
+                // TODO: Get the radius of the perspective
 
-            LoopPerspective nearestLoopConstructPerspective = nearestLoopConstruct.getPerspective (behaviorConstructAngle);
-
-            // TODO: Get the radius of the perspective
-
-            // Draw snapping path to nearest loop
-            if (behaviorConstruct.getDistanceToLoopPerspective (nearestLoopConstructPerspective) < nearestLoopConstructPerspective.getSnapDistance ()) { // if (behaviorConstruct.getDistanceToLoopPerspective (nearestLoopConstructPerspective) < nearestLoopConstructPerspective.getRadius ()) {
-                Point nearestPoint = behaviorConstruct.getNearestPoint (nearestLoopConstructPerspective);
-                canvas.drawLine (behaviorConstruct.getPosition ().x, behaviorConstruct.getPosition ().y, nearestPoint.x, nearestPoint.y, paint);
+                // Draw snapping path to nearest loop
+                if (behaviorConstruct.getDistanceToLoopPerspective (nearestLoopConstructPerspective) < nearestLoopConstructPerspective.getSnapDistance ()) { // if (behaviorConstruct.getDistanceToLoopPerspective (nearestLoopConstructPerspective) < nearestLoopConstructPerspective.getRadius ()) {
+                    Point nearestPoint = behaviorConstruct.getNearestPoint (nearestLoopConstructPerspective);
+                    canvas.drawLine (behaviorConstruct.getPosition ().x, behaviorConstruct.getPosition ().y, nearestPoint.x, nearestPoint.y, paint);
+                }
             }
         }
 
@@ -617,8 +619,8 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
      */
     void drawBehaviorConstructs (Canvas canvas, System system) {
         //        String behaviorStates = "";
-        for (BehaviorConstruct behaviorConstruct : this.clay.getPerspective ().getBehaviorConstructs ()) { // for (BehaviorConstruct behaviorConstruct : this.clay.getSystem ().getBehaviors ()) {
-            //            behaviorStates = behaviorStates + " " + behaviorConstruct.state.toString();
+
+        for (BehaviorConstruct behaviorConstruct : this.clay.getPerspective ().getBehaviorConstructs ()) {
 
             // Only draw loops that are NOT on a loop!
             if (behaviorConstruct.hasLoopConstruct ()) { // if (behaviorConstruct.hasLoop ()) {
@@ -656,7 +658,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
             paint.setTextSize (35);
             myCanvas.drawText (name, behaviorConstruct.getPosition ().x - textBounds.exactCenterX (), behaviorConstruct.getPosition ().y - textBounds.exactCenterY (), paint);
 
-                /* Draw snapping path to nearest loop. */
+            /* Draw snapping path to nearest loop. */
 
             // Search for the nearest loop and snap to that one (ongoing).
             LoopConstruct nearestLoopConstruct = this.clay.getPerspective ().getNearestLoopConstruct (behaviorConstruct);
@@ -677,7 +679,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
             // TODO: Get radius of nearest perspective.
 
             // Get the loop construct associated with the loop.
-//            LoopConstruct nearestLoopConstruct = this.clay.getPerspective ().getConstruct (loop);
+//            LoopConstruct nearestLoopConstruct = this.clay.getPerspective ().getLoopConstruct (loop);
 
             // TODO: behaviorConstruct.isTouched
             // TODO: behaviorConstruct.getTouchAngle -OR- behaviorConstruct.getTouchPoint
@@ -705,7 +707,6 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                 canvas.drawLine (behaviorConstruct.getPosition ().x, behaviorConstruct.getPosition ().y, nearestPoint.x, nearestPoint.y, paint);
             }
 
-
             // Draw snapping path to nearest loop
 //            if (behaviorConstruct.getDistanceToLoop (nearestLoopConstruct) < 250) {
 //                Point nearestPoint = behaviorConstruct.getNearestPoint (nearestLoopConstruct);
@@ -717,15 +718,15 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
     void drawCandidatePerspectives (Canvas canvas, Loop loop) {
 
-        LoopConstruct loopConstruct = this.clay.getPerspective ().getConstruct (loop);
+        LoopConstruct loopConstruct = this.clay.getPerspective ().getLoopConstruct (loop);
 
         myCanvas.save ();
 
-        if (this.clay.getPerspective ().hasConstruct (loop)) {
+        if (this.clay.getPerspective ().hasLoopConstruct (loop)) {
 
-            if (this.clay.getPerspective ().getConstruct (loop).hasCandidatePerspective (loop)) {
+            if (this.clay.getPerspective ().getLoopConstruct (loop).hasCandidatePerspective (loop)) {
 
-                LoopPerspective candidateLoopPerspective = this.clay.getPerspective ().getConstruct (loop).getCandidatePerspective (loop);
+                LoopPerspective candidateLoopPerspective = this.clay.getPerspective ().getLoopConstruct (loop).getCandidatePerspective (loop);
 
                 if (candidateLoopPerspective.startAnglePoint != null && candidateLoopPerspective.spanPoint != null) {
 

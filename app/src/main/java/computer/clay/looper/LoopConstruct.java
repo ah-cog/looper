@@ -27,34 +27,64 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
 
     private ArrayList<BehaviorConstruct> behaviorConstructs = new ArrayList<BehaviorConstruct> ();
 
+    public boolean hasBehaviorConstructs () {
+        return (this.behaviorConstructs.size () > 0);
+    }
+
+    public boolean hasBehaviorConstruct (BehaviorConstruct behaviorConstruct) {
+        return this.behaviorConstructs.contains (behaviorConstruct);
+    }
+
     public void addBehaviorConstruct (BehaviorConstruct behaviorConstruct) {
 
-        // Add the behavior construct to the loop construct...
-        this.behaviorConstructs.add (behaviorConstruct);
+        // TODO: Make sure the behavior construct is in the perspective
 
-        // ...then add the behavior to the loop.
-        this.getLoop().addBehavior (behaviorConstruct.getBehavior());
+        // Check if the behavior construct is already in the loop...
+        if (!this.hasBehaviorConstruct (behaviorConstruct)) {
+
+            // ...and update state of this behavior construct.
+            behaviorConstruct.setLoopConstruct (this);
+            behaviorConstruct.state = BehaviorConstruct.State.SEQUENCED;
+
+            // ...if not, then add the behavior construct to the loop construct...
+            this.behaviorConstructs.add (behaviorConstruct);
+
+            // Associate the specified loop construct with this behavior construct...
+//            this.loopConstruct = loopConstruct;
+
+            // ...then add this behavior construct to the loop...
+//            this.loopConstruct.addBehaviorConstruct (this);
+
+            // ...and add the behavior to the loop.
+            this.getLoop().addBehavior (behaviorConstruct.getBehavior());
+        }
+
+        // Update the sequence order of behaviors based on the orientation of the behavior constructs on the loop construct.
+        this.reorderBehaviors ();
     }
 
     public void removeBehaviorConstruct (BehaviorConstruct behaviorConstruct) {
-
-        // Remove the behavior from the loop...
-        this.getLoop ().removeBehavior (behaviorConstruct.getBehavior ());
+        Log.v ("Clay_Loop_Construct", "removeBehaviorConstruct");
 
         // ...then remove the behavior construct from the loop construct.
         if (this.behaviorConstructs.contains (behaviorConstruct)) {
+
+            // Update state of the this behavior construct
+            behaviorConstruct.setLoopConstruct (null);
+            behaviorConstruct.state = BehaviorConstruct.State.FREE;
+
+//            if (behaviorConstruct.hasLoopConstruct ()) {
+//                behaviorConstruct.removeLoopConstruct ();
+//            }
+
             this.behaviorConstructs.remove (behaviorConstruct);
 
-//            // Update state of the this placeholder
-//            behaviorConstruct.state = BehaviorConstruct.State.FREE;
-
-            if (behaviorConstruct.hasLoopConstruct ()) {
-                behaviorConstruct.removeLoopConstruct ();
-            }
-
-            // Update the sequence order of behaviors based on the orientation of the behavior constructs on the loop construct.
-            this.reorderBehaviors();
+            // Remove the behavior from the loop...
+            this.getLoop ().removeBehavior (behaviorConstruct.getBehavior ());
         }
+
+        // Update the sequence order of behaviors based on the orientation of the behavior constructs on the loop construct.
+        this.reorderBehaviors ();
     }
 
     public ArrayList<LoopPerspective> getLoopPerspectives() {
@@ -133,7 +163,7 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
         // TODO: Check if there is a perspective that starts before and ends after the specified angle
 
 //        LoopPerspective nearestLoopPerspective = null;
-//        Log.v ("Clay_Loop_Perspective", "# PERSPECTIVES FOR NEAREST LOOP = " + this.perspective.getConstruct (nearestLoop).getPerspectives (nearestLoop).size ());
+//        Log.v ("Clay_Loop_Perspective", "# PERSPECTIVES FOR NEAREST LOOP = " + this.perspective.getLoopConstruct (nearestLoop).getPerspectives (nearestLoop).size ());
         for (LoopPerspective loopPerspective : this.loopPerspectives) {
             double startAngle = loopPerspective.startAngle;
             double stopAngle = loopPerspective.startAngle + loopPerspective.span;
@@ -157,7 +187,7 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
         // TODO: Check if there is a perspective that starts before and ends after the specified angle
 
 //        LoopPerspective nearestLoopPerspective = null;
-//        Log.v ("Clay_Loop_Perspective", "# PERSPECTIVES FOR NEAREST LOOP = " + this.perspective.getConstruct (nearestLoop).getPerspectives (nearestLoop).size ());
+//        Log.v ("Clay_Loop_Perspective", "# PERSPECTIVES FOR NEAREST LOOP = " + this.perspective.getLoopConstruct (nearestLoop).getPerspectives (nearestLoop).size ());
         for (LoopPerspective loopPerspective : this.loopPerspectives) {
             double startAngle = loopPerspective.startAngle;
             double stopAngle = loopPerspective.startAngle + loopPerspective.span;
@@ -508,6 +538,6 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
         for (BehaviorConstruct behaviorConstruct : this.getBehaviorConstructs ()) { // for (BehaviorConstruct behavior : this.getLoop ().getBehaviors ()) {
             loopSequence += behaviorConstruct.getBehavior ().getTitle () + " "; // loopSequence += behavior.getBehavior().getTitle() + " ";
         }
-        Log.v ("Clay", loopSequence);
+        Log.v ("Clay_Loop_Construct", loopSequence);
     }
 }

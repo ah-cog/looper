@@ -8,8 +8,10 @@ public class Behavior {
 
     public static int BEHAVIOR_COUNT = 0; // TODO: Replace this with UUID!
 
-    private String title;
     private UUID uuid;
+
+    private String title;
+    private String description;
 
     private BehaviorConstruct behaviorConstruct;
 

@@ -2,7 +2,6 @@ package computer.clay.looper;
 
 import android.graphics.Point;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class Perspective {
@@ -40,7 +39,7 @@ public class Perspective {
     }
 
     public void moveBy (int xOffset, int yOffset) {
-        position.offset(xOffset, yOffset);
+        position.offset (xOffset, yOffset);
     }
 
     public void setScaleFactor (float scaleFactor) {
@@ -57,7 +56,7 @@ public class Perspective {
      * @param loop
      * @return
      */
-    public boolean hasConstruct (Loop loop) {
+    public boolean hasLoopConstruct (Loop loop) {
         for (LoopConstruct loopConstruct : this.loopConstructs) {
             if (loopConstruct.getLoop () == loop) {
                 return true;
@@ -67,7 +66,7 @@ public class Perspective {
         return false;
     }
 
-    public void addConstruct (Loop loop) {
+    public void createLoopConstruct (Loop loop) {
         LoopConstruct loopConstruct = new LoopConstruct (loop);
         this.loopConstructs.add (loopConstruct);
     }
@@ -77,7 +76,9 @@ public class Perspective {
     }
 
     public void addBehaviorConstruct (BehaviorConstruct behaviorConstruct) {
-        this.behaviorConstructs.add (behaviorConstruct);
+        if (!this.behaviorConstructs.contains (behaviorConstruct)) {
+            this.behaviorConstructs.add (behaviorConstruct);
+        }
     }
 
     public ArrayList<BehaviorConstruct> getBehaviorConstructs () {
@@ -86,12 +87,12 @@ public class Perspective {
 
     // TODO: createConstruct to hide the creation of constructs.
 
-    // TODO: hasConstruct (Behavior behavior)
+    // TODO: hasLoopConstruct (Behavior behavior)
 
-    // TODO: hasConstruct (Loop loop, Behavior behavior)
-    // TODO: (...) Loop.hasConstruct (Behavior behavior)
+    // TODO: hasLoopConstruct (Loop loop, Behavior behavior)
+    // TODO: (...) Loop.hasLoopConstruct (Behavior behavior)
 
-    public LoopConstruct getConstruct (Loop loop) {
+    public LoopConstruct getLoopConstruct (Loop loop) {
         for (LoopConstruct loopConstruct : this.loopConstructs) {
             if (loopConstruct.getLoop () == loop) {
                 return loopConstruct;
@@ -101,16 +102,16 @@ public class Perspective {
         return null;
     }
 
-    // TODO: getConstruct (Behavior behavior)
+    // TODO: getLoopConstruct (Behavior behavior)
 
-    // TODO: getConstruct (Loop loop, Behavior behavior)
-    // TODO: (...) Loop.getConstruct (Behavior behavior)
+    // TODO: getLoopConstruct (Loop loop, Behavior behavior)
+    // TODO: (...) Loop.getLoopConstruct (Behavior behavior)
 
     public LoopConstruct getNearestLoopConstruct (BehaviorConstruct behaviorConstruct) {
         LoopConstruct nearestLoop = null;
         double nearestLoopDistance = Double.POSITIVE_INFINITY;
         for (Loop loop : this.system.getLoops ()) {
-            LoopConstruct loopConstruct = this.getConstruct (loop);
+            LoopConstruct loopConstruct = this.getLoopConstruct (loop);
             if (behaviorConstruct.getDistanceToLoop (loopConstruct) < nearestLoopDistance) {
                 nearestLoop = loopConstruct;
             }
