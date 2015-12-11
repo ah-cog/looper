@@ -7,18 +7,18 @@ import java.util.ArrayList;
  */
 public class Loop { // TODO: Possibly rename to LoopOperation
 
-    private System system = null;
-
     private ArrayList<Behavior> behaviors = new ArrayList<Behavior> ();
 
-    public Loop (System system) {
+    private Unit unit = null;
+
+    public Loop (Unit unit) {
         super();
 
-        this.system = system;
+        this.unit = unit;
     }
 
-    public System getSystem () {
-        return this.system;
+    public Unit getUnit () {
+        return this.unit;
     }
 
     public void addBehavior (Behavior behavior) {

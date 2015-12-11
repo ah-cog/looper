@@ -273,7 +273,7 @@ public class Person {
 
                 LoopPerspective nearestLoopPerspectiveBoundary = null;
                 double distanceToNearestLoopPerspectiveBoundary = Double.MAX_VALUE;
-                ArrayList<LoopPerspective> nearestLoopPerspectives = nearestLoopConstruct.getPerspectives (nearestLoopConstruct.getLoop ());
+                ArrayList<LoopPerspective> nearestLoopPerspectives = nearestLoopConstruct.getPerspectives ();
 //                ArrayList<LoopPerspective> nearestLoopPerspectives = this.perspective.getLoopConstruct (nearestLoop).getPerspectives (nearestLoop);
                 for (LoopPerspective loopPerspective : nearestLoopPerspectives) {
                     double startAngle = loopPerspective.startAngle;
@@ -385,7 +385,7 @@ public class Person {
 
         } else if (this.isTouch[finger] == true && this.isTouchPrevious[finger] == true) { // ...continue touching...
 
-            Log.v ("Clay", "continuing touch");
+//            Log.v ("Clay", "continuing touch");
 
             // Calculate the drag distance
             double dragDistanceSquare = Math.pow(xTouch[finger] - xTouchStart[finger], 2) + Math.pow(yTouch[finger] - yTouchStart[finger], 2);
@@ -432,9 +432,11 @@ public class Person {
                         if (!selectedLoop.hasCandidatePerspective (selectedLoop.getLoop ())) {
 //                        if (this.currentLoopPerspective == null) {
                         // TODO: Replace the above conditional with a check for proximity (so can adjust existing loop)?
-                            LoopPerspective candidateLoopPerspective = new LoopPerspective(selectedLoop);
-                            candidateLoopPerspective.startAnglePoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
-                            candidateLoopPerspective.startAngle = (int) selectedLoop.getAngle((int) xTouch[finger], (int) yTouch[finger]);
+                            Point startAnglePoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
+                            int startAngle = (int) selectedLoop.getAngle (startAnglePoint);
+                            LoopPerspective candidateLoopPerspective = new LoopPerspective (selectedLoop, startAngle, 0);
+                            candidateLoopPerspective.startAnglePoint = startAnglePoint;
+                            candidateLoopPerspective.startAngle = startAngle;
                             Log.v ("Clay", "startAngle = " + candidateLoopPerspective.startAngle);
                             //this.getClay ().getPerspective ().getLoopConstruct (selectedLoop).setCandidatePerspective(candidateLoopPerspective);
                             selectedLoop.setCandidatePerspective (candidateLoopPerspective);
@@ -674,6 +676,7 @@ public class Person {
                     if (nearestLoopDistance > conditionTouchProximity) {
                         Log.v ("Clay_Loop_Construct", "removing from loop: " + nearestLoopDistance);
                         touchedBehaviorConstruct.state = BehaviorConstruct.State.FREE;
+                        // TODO: send UDP message "remove behavior <uuid> from loop <uuid>"
                         if (touchedBehaviorConstruct.hasLoopConstruct ()) {
                             touchedBehaviorConstruct.getLoopConstruct ().removeBehaviorConstruct (touchedBehaviorConstruct);
                         }
@@ -681,6 +684,17 @@ public class Person {
                         Log.v ("Clay_Loop_Construct", "adding to loop: " + nearestLoopDistance);
                         touchedBehaviorConstruct.state = BehaviorConstruct.State.SEQUENCED;
                         nearestLoopConstruct.addBehaviorConstruct (touchedBehaviorConstruct);
+                        // TODO: send UDP message "add behavior <uuid> to loop <uuid>"
+                        // <HACK>
+                        // Queue behavior transformation in the outgoing message queue.
+                        // e.g., create behavior <uuid> "turn light <number> on" --> Response: got <message>
+                        // e.g., (shorthand) "add behavior <uuid> to loop (<uuid>)"
+                        // e.g., "focus perspective on behavior <uuid>" (Changes perspective so implicit language refers to it.)
+                        String behaviorUuid = touchedBehaviorConstruct.getUuid ().toString (); // HACK: BehaviorConstruct and Behavior should have separate UUIDs.
+                        //String behaviorConstructUuid = behaviorConstruct.getUuid ().toString (); // HACK: BehaviorConstruct and Behavior should have separate UUIDs.
+                        getClay ().getCommunication ().sendMessage (nearestLoopConstruct.getUnit ().getInternetAddress (), "create behavior " + behaviorUuid + " \"" + touchedBehaviorConstruct.getBehavior ().getTitle () + "\"");
+                        getClay ().getCommunication ().sendMessage (nearestLoopConstruct.getUnit ().getInternetAddress (), "add behavior " + behaviorUuid + " to loop");
+//                        // </HACK>
                     }
 
                     // Settle position of action.
@@ -691,7 +705,7 @@ public class Person {
 
                     // HACK: This hack removes _all_ touched behaviors when _any_ finger is lifted up.
 //                    touchedBehaviors.clear();
-                    touchedBehaviorConstruct = null;
+//                    touchedBehaviorConstruct = null;
                     // TODO: Remove specific finger from the list of fingers touching down.
 
                     // HACK: This hack updates the touch flag that indicates if _any_ finger is touching to false.
@@ -787,8 +801,10 @@ public class Person {
 
                     // Add a behavior construct from the perspective.
                     // TODO: this.getClay ().getPerspective ().createBehaviorConstruct (loopConstruct)
-                    BehaviorConstruct behaviorConstruct = new BehaviorConstruct (this.getClay ().getPerspective (), (int) xTouch[finger], (int) yTouch[finger]);
-                    this.getClay ().getPerspective ().addBehaviorConstruct (behaviorConstruct);
+//                    BehaviorConstruct behaviorConstruct = new BehaviorConstruct (this.getClay ().getPerspective (), (int) xTouch[finger], (int) yTouch[finger]);
+//                    this.getClay ().getPerspective ().addBehaviorConstruct (behaviorConstruct);
+                    Point touchPoint = new Point ((int) xTouch[finger], (int) yTouch[finger]);
+                    BehaviorConstruct behaviorConstruct = getClay ().getPerspective ().createBehaviorConstruct (touchPoint);
                     // nearestLoopConstruct.reorderBehaviors ();
                     behaviorConstruct.settlePosition ();
 

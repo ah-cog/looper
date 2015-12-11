@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 public class Perspective {
 
-    private System system = null;
+    private Clay clay = null;
 
     public static float DEFAULT_SCALE_FACTOR = 1.0f;
 
@@ -21,13 +21,17 @@ public class Perspective {
 //    public int startAngle = 0;
 //    public int span = 0;
 
-    public Perspective (System system) {
+    public Perspective (Clay clay) {
         super();
 
-        this.system = system;
+        this.clay = clay;
 
         this.position.set (0, 0);
         this.scaleFactor = DEFAULT_SCALE_FACTOR;
+    }
+
+    public Clay getClay () {
+        return this.clay;
     }
 
     public void setPosition (int x, int y) {
@@ -66,9 +70,14 @@ public class Perspective {
         return false;
     }
 
-    public void createLoopConstruct (Loop loop) {
-        LoopConstruct loopConstruct = new LoopConstruct (loop);
+    public boolean hasLoopConstructs () {
+        return (this.loopConstructs.size () > 0);
+    }
+
+    public LoopConstruct createLoopConstruct (Unit unit) {
+        LoopConstruct loopConstruct = new LoopConstruct (this, unit);
         this.loopConstructs.add (loopConstruct);
+        return loopConstruct;
     }
 
     public ArrayList<LoopConstruct> getLoopConstructs () {
@@ -110,12 +119,21 @@ public class Perspective {
     public LoopConstruct getNearestLoopConstruct (BehaviorConstruct behaviorConstruct) {
         LoopConstruct nearestLoop = null;
         double nearestLoopDistance = Double.POSITIVE_INFINITY;
-        for (Loop loop : this.system.getLoops ()) {
-            LoopConstruct loopConstruct = this.getLoopConstruct (loop);
+        for (LoopConstruct loopConstruct : getLoopConstructs ()) {
             if (behaviorConstruct.getDistanceToLoop (loopConstruct) < nearestLoopDistance) {
                 nearestLoop = loopConstruct;
             }
         }
         return nearestLoop;
+    }
+
+    public BehaviorConstruct createBehaviorConstruct (Point touchPoint) {
+        BehaviorConstruct behaviorConstruct = new BehaviorConstruct (this, touchPoint.x, touchPoint.y);
+        // <HACK>
+        getClay ().Hack_appActivity.Hack_PromptForBehaviorSelection (behaviorConstruct);
+//        getClay ().Hack_appActivity.Hack_PromptForBehaviorTitle (behaviorConstruct);
+        // </HACK>
+        addBehaviorConstruct (behaviorConstruct);
+        return behaviorConstruct;
     }
 }

@@ -1,18 +1,41 @@
 package computer.clay.looper;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
+import android.text.InputType;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.EditText;
 
 public class AppActivity extends Activity {
 
+    private final int CHECK_CODE = 0x1;
+    private final int LONG_DURATION = 5000;
+    private final int SHORT_DURATION = 1200;
+    private Speaker speaker;
+
     AppSurfaceView mySurfaceView;
+
+    private static Context context;
+
+    private void checkTTS(){
+        Intent check = new Intent();
+        check.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+        startActivityForResult(check, CHECK_CODE);
+    }
 
     /** Called when the activity is first created. */
     @Override
     public void onCreate (Bundle savedInstanceState) {
         super.onCreate (savedInstanceState);
+
+        // Store application context
+        AppActivity.context = getApplicationContext();
 
         // Set fullscreen
         requestWindowFeature (Window.FEATURE_NO_TITLE);
@@ -22,19 +45,165 @@ public class AppActivity extends Activity {
         // setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         setContentView (R.layout.activity_main);
-        mySurfaceView = (AppSurfaceView) findViewById (R.id.myview1);
+        mySurfaceView = (AppSurfaceView) findViewById (R.id.app_surface_view);
+
+        // HACK
+        mySurfaceView.getClay ().Hack_appActivity = this;
+
+        mySurfaceView.AppSurfaceView_OnResume ();
+
+        checkTTS ();
+    }
+
+    public static Context getAppContext() {
+        return AppActivity.context;
     }
 
     @Override
     protected void onResume () {
         super.onResume ();
-        mySurfaceView.AppSurfaceView_OnResume();
+        mySurfaceView.AppSurfaceView_OnResume ();
     }
 
     @Override
     protected void onPause () {
         super.onPause ();
-        mySurfaceView.AppSurfaceView_OnPause();
+        mySurfaceView.AppSurfaceView_OnPause ();
+
+//        // Pause the communications
+//        // HACK: Resume this!
+//        communication.stopDatagramServer ();
+//        clay.getCommunication ().stopDatagramServer ();
+    }
+
+    @Override
+    protected void onActivityResult (int requestCode, int resultCode, Intent data) {
+        super.onActivityResult (requestCode, resultCode, data);
+        if(requestCode == CHECK_CODE){
+            if(resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS){
+                speaker = new Speaker(this);
+            }else {
+                Intent install = new Intent();
+                install.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+                startActivity(install);
+            }
+        }
+    }
+
+    public void Hack_Speak (String phrase) {
+//        if (speaker.isAllowed ())
+        speaker.allow (true);
+        speaker.speak (phrase);
+        speaker.allow (false);
+    }
+
+    String Hack_behaviorTitle = "";
+    public void Hack_PromptForBehaviorTitle (final BehaviorConstruct behaviorConstruct) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle ("tell me the behavior");
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.setInputType(InputType.TYPE_CLASS_TEXT);//input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton ("OK", new DialogInterface.OnClickListener () {
+            @Override
+            public void onClick (DialogInterface dialog, int which) {
+                Hack_behaviorTitle = input.getText ().toString ();
+                behaviorConstruct.getBehavior ().setTitle (Hack_behaviorTitle);
+            }
+        });
+        builder.setNegativeButton ("Cancel", new DialogInterface.OnClickListener () {
+            @Override
+            public void onClick (DialogInterface dialog, int which) {
+                dialog.cancel ();
+            }
+        });
+
+        builder.show ();
+    }
+
+    public void Hack_PromptForBehaviorSelection (final BehaviorConstruct behaviorConstruct) {
+
+        final CharSequence[] items = {
+                "turn light 1 on",
+                "turn light 1 off",
+                "turn light 2 on",
+                "turn light 2 off",
+                "wait 200 ms",
+                "say it's done",
+                "say hey",
+                "slowly say it's done",
+                "quickly say it's done",
+                "request plug the sensor's signal wire into channel 6. i am blinking it for you.",
+                "request connect ground",
+                "request connect power",
+                "wait 1000"
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Select a behavior");
+        builder.setItems(items, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int item) {
+                // Do something with the selection
+//                mDoneButton.setText(items[item]);
+                behaviorConstruct.getBehavior ().setTitle (items[item].toString ());
+            }
+        });
+        AlertDialog alert = builder.create();
+        Hack_Speak ("hi. what do you want me to do? choose one of these behaviors.");
+        alert.show();
+
+//        AlertDialog.Builder builderSingle = new AlertDialog.Builder(AppActivity.getAppContext ());
+////        builderSingle.setIcon(R.drawable.ic_launcher);
+//        builderSingle.setTitle("Select One Name:-");
+//
+//        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
+//                AppActivity.getAppContext (),
+//                android.R.layout.select_dialog_singlechoice);
+//        arrayAdapter.add("Hardik");
+//        arrayAdapter.add("Archit");
+//        arrayAdapter.add("Jignesh");
+//        arrayAdapter.add("Umang");
+//        arrayAdapter.add("Gatti");
+//
+//        builderSingle.setNegativeButton (
+//                "cancel",
+//                new DialogInterface.OnClickListener () {
+//                    @Override
+//                    public void onClick (DialogInterface dialog, int which) {
+//                        dialog.dismiss ();
+//                    }
+//                });
+//
+//        builderSingle.setAdapter (
+//                arrayAdapter,
+//                new DialogInterface.OnClickListener () {
+//                    @Override
+//                    public void onClick (DialogInterface dialog, int which) {
+//                        String strName = arrayAdapter.getItem (which);
+//                        AlertDialog.Builder builderInner = new AlertDialog.Builder (AppActivity.getAppContext ());
+//                        builderInner.setMessage (strName);
+//                        builderInner.setTitle ("Your Selected Item is");
+//                        builderInner.setPositiveButton (
+//                                "Ok",
+//                                new DialogInterface.OnClickListener () {
+//                                    @Override
+//                                    public void onClick (
+//                                            DialogInterface dialog,
+//                                            int which) {
+//                                        dialog.dismiss ();
+//                                    }
+//                                });
+////                        builderInner.create ();
+//                        builderInner.show ();
+//                    }
+//                });
+////        builderSingle.create();
+//        builderSingle.show();
     }
 
 
@@ -167,6 +336,12 @@ public class AppActivity extends Activity {
 //         * so for convenience we're breaking it out into its own method now.
 //         */
 //        private String getReadableDateString(long time){
+
+    @Override
+    protected void onDestroy () {
+        super.onDestroy ();
+        speaker.destroy();
+    }
 //            // Because the API returns a unix timestamp (measured in seconds),
 //            // it must be converted to milliseconds in order to be converted to valid date.
 //            SimpleDateFormat shortenedDateFormat = new SimpleDateFormat("EEE MMM dd");

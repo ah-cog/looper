@@ -20,12 +20,32 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
     private int startAngle = DEFAULT_START_ANGLE;
     private int angleSpan = DEFAULT_ANGLE_SPAN;
 
-    private Loop loop = null;
+    private Perspective perspective = null;
+    private Unit unit = null;
+//    private Loop loop = null;
 
     private ArrayList<LoopPerspective> candidateLoopPerspectives = new ArrayList<LoopPerspective>();
     private ArrayList<LoopPerspective> loopPerspectives = new ArrayList<LoopPerspective>();
 
     private ArrayList<BehaviorConstruct> behaviorConstructs = new ArrayList<BehaviorConstruct> ();
+
+    LoopConstruct (Perspective perspective, Unit unit) {
+
+
+
+        this.perspective = perspective;
+
+        this.unit = unit;
+
+        // TODO: Create a default loop and perspective for the placeholder.
+//        Loop defaultLoop = new Loop(this.system);
+//        LoopPerspective defaultLoopPerspective = new LoopPerspective(defaultLoop);
+
+    }
+
+    public Perspective getPerspective () {
+        return this.perspective;
+    }
 
     public boolean hasBehaviorConstructs () {
         return (this.behaviorConstructs.size () > 0);
@@ -56,11 +76,24 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
 //            this.loopConstruct.addBehaviorConstruct (this);
 
             // ...and add the behavior to the loop.
-            this.getLoop().addBehavior (behaviorConstruct.getBehavior());
+            Log.v ("Clay", "adding behavior: " + behaviorConstruct.getBehavior ());
+            Log.v ("Clay", "to loop: " + this.getLoop ());
+            this.getLoop().addBehavior (behaviorConstruct.getBehavior ());
         }
 
         // Update the sequence order of behaviors based on the orientation of the behavior constructs on the loop construct.
         this.reorderBehaviors ();
+
+        // <HACK>
+//        // Queue behavior transformation in the outgoing message queue.
+//        // e.g., create behavior <uuid> "turn light <number> on" --> Response: got <message>
+//        // e.g., (shorthand) "add behavior <uuid> to loop (<uuid>)"
+//        // e.g., "focus perspective on behavior <uuid>" (Changes perspective so implicit language refers to it.)
+//        String behaviorUuid = behaviorConstruct.getUuid ().toString (); // HACK: BehaviorConstruct and Behavior should have separate UUIDs.
+//        //String behaviorConstructUuid = behaviorConstruct.getUuid ().toString (); // HACK: BehaviorConstruct and Behavior should have separate UUIDs.
+//        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "create behavior " + behaviorUuid + " \"" + behaviorConstruct.getBehavior ().getTitle () + "\"");
+//        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "add behavior " + behaviorUuid + " to loop");
+        // </HACK>
     }
 
     public void removeBehaviorConstruct (BehaviorConstruct behaviorConstruct) {
@@ -85,6 +118,13 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
 
         // Update the sequence order of behaviors based on the orientation of the behavior constructs on the loop construct.
         this.reorderBehaviors ();
+
+        // <HACK>
+        // Queue behavior transformation in the outgoing message queue.
+        // e.g., "add behavior \"turn light 1 on\" to loop"
+        // e.g., "remove behavior 1"
+//        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), behaviorConstruct.getBehavior ().getTitle ());
+        // </HACK>
     }
 
     public ArrayList<LoopPerspective> getLoopPerspectives() {
@@ -93,18 +133,12 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
 
     // TODO: Point position
 
-    LoopConstruct (Loop loop) {
-
-        this.loop = loop;
-
-        // TODO: Create a default loop and perspective for the placeholder.
-//        Loop defaultLoop = new Loop(this.system);
-//        LoopPerspective defaultLoopPerspective = new LoopPerspective(defaultLoop);
-
+    public Unit getUnit () {
+        return this.unit;
     }
 
     public Loop getLoop () {
-        return this.loop;
+        return this.getUnit ().getLoop ();
     }
 
     // TODO: double getRadius (double angle);
@@ -150,13 +184,16 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
      * @param loop The loop for which to search for a perspective.
      * @return True if there is a perspective on the specified loop and false otherwise.
      */
-    public boolean hasPerspectives (Loop loop) {
-        for (LoopPerspective loopPerspective : this.loopPerspectives) {
-            if (loop == loopPerspective.getLoopConstruct ().getLoop ()) {
-                return true;
-            }
-        }
-        return false;
+//    public boolean hasPerspectives (Loop loop) {
+//        for (LoopPerspective loopPerspective : this.loopPerspectives) {
+//            if (loop == loopPerspective.getLoopConstruct ().getLoop ()) {
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
+    public boolean hasPerspectives () {
+        return this.loopPerspectives.size () > 0;
     }
 
     public boolean hasPerspective (double angle) {
@@ -229,9 +266,7 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
             LoopPerspective existingLoopPerspective = this.loopPerspectives.get(0);
 
             // Add "complementary" loop perspective after the newly-created perspective.
-            LoopPerspective complementaryLoopPerspective = new LoopPerspective(this);
-            complementaryLoopPerspective.setStartAngle(loopPerspective.getStopAngle());
-            complementaryLoopPerspective.setSpan(existingLoopPerspective.getStopAngle() - loopPerspective.getStopAngle());
+            LoopPerspective complementaryLoopPerspective = new LoopPerspective (this, loopPerspective.getStopAngle(), (existingLoopPerspective.getStopAngle() - loopPerspective.getStopAngle()));
 
             // Update existing loop perspective to span the range before the newly-created perspective.
             existingLoopPerspective.setSpan(loopPerspective.getStartAngle() - existingLoopPerspective.getStartAngle());
@@ -252,9 +287,7 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
             LoopPerspective existingLoopPerspective = this.getPerspective (loopPerspective.getStartAngle());
 
             // Add "complementary" loop perspective after the newly-created perspective.
-            LoopPerspective complementaryLoopPerspective = new LoopPerspective(this);
-            complementaryLoopPerspective.setStartAngle(loopPerspective.getStopAngle());
-            complementaryLoopPerspective.setSpan(existingLoopPerspective.getStopAngle() - loopPerspective.getStopAngle());
+            LoopPerspective complementaryLoopPerspective = new LoopPerspective(this, loopPerspective.getStopAngle(), (existingLoopPerspective.getStopAngle() - loopPerspective.getStopAngle()));
 
             // Update existing loop perspective to span the range before the newly-created perspective.
             existingLoopPerspective.setSpan(loopPerspective.getStartAngle() - existingLoopPerspective.getStartAngle());
@@ -279,14 +312,8 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
         // TODO: Sort the list of perspectives by their order
     }
 
-    public ArrayList<LoopPerspective> getPerspectives (Loop loop) {
-        ArrayList<LoopPerspective> loopPerspectives = new ArrayList<LoopPerspective>();
-        for (LoopPerspective loopPerspective : this.loopPerspectives) {
-            if (loop == loopPerspective.getLoopConstruct ().getLoop ()) {
-                loopPerspectives.add(loopPerspective);
-            }
-        }
-        return loopPerspectives;
+    public ArrayList<LoopPerspective> getPerspectives () {
+        return this.loopPerspectives;
     }
 
     public void removePerspective(Loop loop) {
@@ -332,12 +359,12 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
     }
 
     /**
-     * Get the angle at which the specified point falls with respect to the center of the loop.
+     * Get the angle at which the specified point falls relative to the center point of the loop.
      */
     public double getAngle (int x, int y) {
         Point startAngle = this.getPoint (this.startAngle);
         Point stopAngle = new Point (x, y);
-        double angle = this.getAngle(startAngle, stopAngle);
+        double angle = this.getAngle (startAngle, stopAngle);
         return angle;
     }
 
@@ -370,9 +397,9 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
         double d = endingPoint.y - p1.y;
 
         double atanA = Math.atan2 (a, b);
-        double atanB = Math.atan2(c, d);
+        double atanB = Math.atan2 (c, d);
 
-        double result = Math.toDegrees(atanA - atanB);
+        double result = Math.toDegrees (atanA - atanB);
 
         return result;
     }
@@ -382,7 +409,7 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
      */
     public Point getPoint (double angle) {
         Point point = new Point ();
-        double angleInRadians = Math.toRadians(this.startAngle + angle); // ((90.0 - angle) + angle);
+        double angleInRadians = Math.toRadians (this.startAngle + angle); // ((90.0 - angle) + angle);
         double x = this.getPosition ().x + this.getRadius () * Math.cos (angleInRadians);
         double y = this.getPosition ().y + this.getRadius () * Math.sin (angleInRadians);
         point.set ((int) x, (int) y);
@@ -539,5 +566,11 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
             loopSequence += behaviorConstruct.getBehavior ().getTitle () + " "; // loopSequence += behavior.getBehavior().getTitle() + " ";
         }
         Log.v ("Clay_Loop_Construct", loopSequence);
+    }
+
+    public LoopPerspective createPerspective (int startAngle, int span) {
+        LoopPerspective defaultLoopPerspective = new LoopPerspective (this, startAngle, span);
+        this.addPerspective (defaultLoopPerspective);
+        return defaultLoopPerspective;
     }
 }

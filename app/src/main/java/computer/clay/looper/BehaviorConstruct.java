@@ -3,9 +3,13 @@ package computer.clay.looper;
 import android.graphics.Point;
 import android.util.Log;
 
+import java.util.UUID;
+
 public class BehaviorConstruct {
 
     public static int DEFAULT_RADIUS = 80;
+
+    private UUID uuid = null;
 
     private Behavior behavior = null;
 
@@ -44,6 +48,8 @@ public class BehaviorConstruct {
     public BehaviorConstruct (Perspective perspective, int xPosition, int yPosition) {
         super();
 
+        this.uuid = UUID.randomUUID ();
+
         this.state = State.FREE;
 
         this.perspective = perspective;
@@ -59,6 +65,10 @@ public class BehaviorConstruct {
 
         // Create the behavior condition associated with this behavior construct.
         this.condition = new BehaviorCondition(this, BehaviorCondition.Type.NONE);
+    }
+
+    public UUID getUuid () {
+        return this.uuid;
     }
 
     public boolean hasLoopConstruct () {

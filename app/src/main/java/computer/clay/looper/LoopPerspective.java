@@ -26,10 +26,30 @@ public class LoopPerspective {
 
     private BehaviorConstruct firstBehaviorConstruct = null; // The first behavior construct displayed in the perspective's span
 
-    LoopPerspective (LoopConstruct loopConstruct) { // TODO: LoopPerspective (Perspective perspective, Loop loop) {
+    LoopPerspective (LoopConstruct loopConstruct, int angle, int span) { // TODO: LoopPerspective (Perspective perspective, Loop loop) {
+
         // TODO: this.perspective = perspective;
+
         this.loopConstruct = loopConstruct;
+
+        this.setStartAngle (angle);
+        this.setSpan (span);
     }
+
+    /**
+     * Get the angle at which the specified point falls relative to the the center of the loop,
+     * like the method LoopConstruct.getAngle(...), but also relative to the start angle of the
+     * this perspective.
+     */
+    /*
+    public double getAngle (int x, int y) {
+        // TODO: Implement this function!
+//        Point startAngle = this.getPoint (this.startAngle);
+//        Point stopAngle = new Point (x, y);
+//        double angle = this.getAngle(startAngle, stopAngle);
+//        return angle;
+    }
+    */
 
     public int getRadius () {
         return this.radius + (DEFAULT_RADIUS_EXTENSION - (int) ((this.getSpan () / 360.0) * DEFAULT_RADIUS_EXTENSION));
