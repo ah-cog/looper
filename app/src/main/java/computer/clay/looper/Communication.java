@@ -28,21 +28,53 @@ public class Communication {
         public final static int MAXIMUM_RETRY_COUNT = 10;
         public static final int RETRY_SEND_PERIOD = 5000;
 
+        private UUID uuid = null;
+
         InetAddress address;
         String content;
 
         boolean verify; // if true, then verify that a response was received
         boolean isVerified; // if true, then this message has been verified by the unit
         // TODO: timeout
-        String checksum; // i.e., the expected response to compare against
+        private String checksum; // i.e., the expected response to compare against
 
-        Date timeLastSent = new Date (0);
-        int retryCount = 0;
+        Date timeLastSent;
+        int retryCount;
 
         Message (InetAddress address, String content) {
+
+            this.uuid = UUID.randomUUID ();
+
             this.address = address;
             this.content = content;
+
+            timeLastSent = new Date (0);
+            retryCount = 0;
+
+            // TODO: Only do this when "verify" is true.
+            if (content.startsWith (Message.VERIFY_PREFIX)) {
+                this.checksum = Communication.generateChecksum (this.content);
+            } else {
+                this.checksum = Communication.generateChecksum (Message.VERIFY_PREFIX + this.content);
+            }
+
         }
+
+        public String getChecksum () {
+            return this.checksum;
+        }
+
+//        public boolean isGuaranteed () {
+//            return this.verify;
+//        }
+//
+//        public boolean hasArrived () {
+//            return this.isVerified == true ;
+//        }
+//
+//        public void verify () {
+//
+//        }
     }
 
     private ArrayList<Message> incomingMessages = new ArrayList<Message> (); // Create incoming message queue.
@@ -85,7 +117,7 @@ public class Communication {
                 message = new Message (senderAddress, tokens[1]);
 
                 // Update the unit construct associated with the message
-                Log.v ("Clay_Messaging", "Looking for unit with address " + tokens[0]);
+//                Log.v ("Clay_Messaging", "Looking for unit with address " + tokens[0]);
                 if (getClay ().hasUnitByAddress (tokens[0])) {
 
                     Log.v ("Clay_Time", "Found unit.");
@@ -140,15 +172,15 @@ public class Communication {
 
     public void processIncomingMessages () {
         // Dequeue and process the next message on the incoming message queue.
-        Log.v ("Clay_Time", "Checking for incoming messages");
-        if (hasIncomingMessages()) {
+//        Log.v ("Clay_Time", "Checking for incoming messages");
+        if (hasIncomingMessages ()) {
             Log.v ("Clay_Time", "Processing incoming message");
             while (hasIncomingMessages ()) {
-                Message dequeuedMessage = dequeueIncomingMessage();
+                Message dequeuedMessage = dequeueIncomingMessage ();
                 processIncomingMessage (dequeuedMessage);
             }
         }
-        Log.v ("Clay_Time", "Done processing messages");
+//        Log.v ("Clay_Time", "Done processing messages");
     }
 
     private void processIncomingMessage (Message message) {
@@ -169,12 +201,12 @@ public class Communication {
 
                     // Compute the checksum for the incoming message.
                     // Note that this incoming message does not INCLUDE the checksum in the received content.
-                    message.checksum = sha1Hash (message.content);
-                    String rechecksum = sha1Hash (Message.VERIFY_PREFIX + outgoingMessage.content);
+//                    message.checksum = generateChecksum (message.content);
+//                    String rechecksum = generateChecksum (Message.VERIFY_PREFIX + outgoingMessage.content);
 
-                    Log.v ("Clay_Messaging", "\tChecksum expected: " + outgoingMessage.checksum);
-                    Log.v ("Clay_Messaging", "\tChecksum computed: " + rechecksum);
-                    Log.v ("Clay_Messaging", "\tChecksum received: " + message.checksum);
+                    Log.v ("Clay_Messaging", "\t----");
+                    Log.v ("Clay_Messaging", "\tChecksum expected: " + outgoingMessage.getChecksum () + "\t" + Message.VERIFY_PREFIX + outgoingMessage.content);
+                    Log.v ("Clay_Messaging", "\tChecksum received: " + message.getChecksum () + "\t" + message.content);
 
                     try {
                         byte[] outgoingBytes = outgoingMessage.content.getBytes ("UTF-8");
@@ -227,6 +259,14 @@ public class Communication {
                 Log.v("Clay", "Updating state of existing Unit with address " + ipAddress);
             }
 
+        } else if (message.content.startsWith("say ")) {
+
+            Log.v ("Clay_Verbalizer", message.content);
+
+            String phrase = message.content.split (" ")[2];
+
+            getClay ().Hack_appActivity.Hack_Speak (phrase);
+
         } else {
             Log.v ("Clay", "bad command");
 //            String ipAddress = message;
@@ -249,6 +289,7 @@ public class Communication {
     }
 
     public void queueOutgoingMessage (Message message) {
+        // TODO: Search outgoing queue for message with duplicate UUID, in which case, compare the content, to verify that it's not a duplicate before sending! (Or just drop it.)
         outgoingMessages.add (message);
     }
 
@@ -260,7 +301,7 @@ public class Communication {
         return outgoingMessages.remove (0);
     }
 
-    Date timeLastSentMessage = new Date ();
+    Date timeLastSentMessage = new Date (0);
     long outgoingMessagePeriod = 5000;
     public void processOutgoingMessages () {
 
@@ -274,27 +315,31 @@ public class Communication {
             // Get the next outgoing message.
             Message outgoingMessage = peekOutgoingMessage ();
 
-//            Log.v ("Clay_Messaging", "Time since last send attempt: " + (currentTime.getTime () - outgoingMessage.timeLastSent.getTime ()));
+            Log.v ("Verbose_Clay_Messaging", "                 Message: " + outgoingMessage.content);
+            Log.v ("Verbose_Clay_Messaging", "Time since last dispatch: " + (currentTime.getTime () - timeLastSentMessage.getTime ()));
+            Log.v ("Verbose_Clay_Messaging", " Time since last message: " + (currentTime.getTime () - outgoingMessage.timeLastSent.getTime ()));
+            Log.v ("Verbose_Clay_Messaging", "                 Retries: " + outgoingMessage.retryCount);
+            Log.v ("Verbose_Clay_Messaging", "-----");
 
-//        if (currentTime.getTime () - timeLastSentMessage.getTime () > outgoingMessagePeriod) {
-            if ((currentTime.getTime () - outgoingMessage.timeLastSent.getTime ()) > Message.RETRY_SEND_PERIOD) {
+//            if ((currentTime.getTime () - timeLastSentMessage.getTime ()) > outgoingMessagePeriod) {
+                long currentTimeMillis = currentTime.getTime ();
 
-                Log.v ("Clay_Messaging", "\tProcessing outgoing message queue (" + outgoingMessages.size () + " messages)");
+                if (((currentTimeMillis - timeLastSentMessage.getTime ()) > outgoingMessagePeriod) && ((currentTimeMillis - outgoingMessage.timeLastSent.getTime ()) > Message.RETRY_SEND_PERIOD)) {
 
-//            if (hasOutgoingMessages ()) {
+                    Log.v ("Clay_Messaging", "\tProcessing outgoing message queue (" + outgoingMessages.size () + " messages)");
+                    for (Message queuedOutgoingMessage : outgoingMessages) {
+                        Log.v ("Clay_Messaging", "\t\t" + queuedOutgoingMessage.content);
+                    }
+                    Log.v ("Clay_Messaging", "\tSending outgoing message \"" + outgoingMessage.content + "\" to " + outgoingMessage.address);
 
-                // Get the next outgoing message.
-//                Message outgoingMessage = peekOutgoingMessage ();
+                    outgoingMessage.timeLastSent = currentCalendar.getTime ();
+                    outgoingMessage.retryCount++;
+                    timeLastSentMessage = outgoingMessage.timeLastSent;
 
-                Log.v ("Clay_Messaging", "\tSending outgoing message \"" + outgoingMessage.content + "\" to " + outgoingMessage.address);
+                    processOutgoingMessage (outgoingMessage);
 
-                processOutgoingMessage (outgoingMessage);
-
-                outgoingMessage.timeLastSent = currentCalendar.getTime ();
-
-            }
-
-//            timeLastSentMessage = currentCalendar.getTime ();
+                }
+//            }
 
         }
 
@@ -302,23 +347,18 @@ public class Communication {
 
     private void processOutgoingMessage (Message outgoingMessage) {
 
-//        Log.v("Clay_Messaging", "Verify? " + (outgoingMessage.verify ? "Yes." : "No."));
-//        Log.v("Clay_Messaging", "Is verified? " + (outgoingMessage.isVerified ? "Yes." : "No."));
+        Log.v ("Clay_Messaging", "\t\t    verify = " + outgoingMessage.verify);
+        Log.v ("Clay_Messaging", "\t\tisVerified = " + outgoingMessage.isVerified);
 
         // If the message should be verified but hasn't yet been verified...
         if (outgoingMessage.verify == true && outgoingMessage.isVerified == false) {
-
-            // Generate checksum for message
-            if (outgoingMessage.verify == true) {
-                outgoingMessage.checksum = sha1Hash (Message.VERIFY_PREFIX + outgoingMessage.content); // TODO: Change input to checksum to include the address?
-                Log.v ("Clay_Messaging", "The SHA digest for the message is " + outgoingMessage.checksum);
-            }
 
             // Send the message.
             sendMessageAsync (outgoingMessage);
 
         }
 
+        /*
         // If the message should be verified and has been verified successfully... dequeue it. It doesn't need to be resent, since it has already been sent.
         else if (outgoingMessage.verify == true && outgoingMessage.isVerified == true) {
 
@@ -326,9 +366,10 @@ public class Communication {
             outgoingMessage = dequeueOutgoingMessage ();
 
         }
+        */
 
         // If the message doesn't need to be verified... dequeue it and send it.
-        else {
+        else if (outgoingMessage.verify == false) {
 
             // Dequeue the message
             outgoingMessage = dequeueOutgoingMessage ();
@@ -342,26 +383,24 @@ public class Communication {
 
     }
 
-    String sha1Hash( String toHash )
-    {
+    public static String generateChecksum (String message) {
+        return generateSha1Hash (message);
+    }
+
+    public static String generateSha1Hash (String string) {
         String hash = null;
-        try
-        {
-            MessageDigest digest = MessageDigest.getInstance( "SHA-1" );
-            byte[] bytes = toHash.getBytes("UTF-8");
-            digest.update(bytes, 0, bytes.length);
-            bytes = digest.digest();
+        try {
+            MessageDigest digest = MessageDigest.getInstance ("SHA-1");
+            byte[] bytes = string.getBytes ("UTF-8");
+            digest.update (bytes, 0, bytes.length);
+            bytes = digest.digest ();
 
             // This is ~55x faster than looping and String.formating()
-            hash = bytesToHex( bytes );
-        }
-        catch( NoSuchAlgorithmException e )
-        {
-            e.printStackTrace();
-        }
-        catch( UnsupportedEncodingException e )
-        {
-            e.printStackTrace();
+            hash = bytesToHex (bytes);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace ();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace ();
         }
         return hash;
     }
@@ -462,12 +501,12 @@ public class Communication {
                 }
 
                 while(bKeepRunning) {
-                    Log.v ("Clay_Time", "Looking for incoming messages");
+                    Log.v ("Clay_Traffic", "Looking for incoming messages");
 
                     if (serverSocket.isBound()) {
 //                        Log.v("Clay", "Bound socket to local port " + serverSocket.getLocalPort() + ".");
                     } else {
-                        Log.v("Clay_Messaging", "Error: Could not bind to local port " + serverSocket.getLocalPort() + ".");
+                        Log.v("Clay_Datagram_Server", "Error: Could not bind to local port " + serverSocket.getLocalPort() + ".");
                     }
 
                     // NOTE: "This method blocks until a packet is received or a timeout has expired."
@@ -478,7 +517,7 @@ public class Communication {
                     InetAddress senderAddress = packet.getAddress ();
                     String serializedMessageObject = getIpAsString (senderAddress) + ":" + packetData;
 
-                    Log.v ("Clay_Messaging", "Received packet data \"" + packetData + "\" from " + packet.getAddress ().getHostAddress ());
+                    Log.v ("Clay_Datagram_Server", "Received packet data \"" + packetData + "\" from " + packet.getAddress ().getHostAddress ());
 
 //                    Log.v ("Clay Datagram Server", "Received packet data: " + packetData);
 
@@ -589,9 +628,6 @@ public class Communication {
             message = new Message (InetAddress.getByName (address), content);
             message.verify = true; // TODO: message.verify
             queueOutgoingMessage (message);
-            //processOutgoingMessages (); // HACK: Move this to a place where it is called periodically!
-//            UdpDatagramTask udpDatagramTask = new UdpDatagramTask();
-//            udpDatagramTask.execute (message);
         } catch (UnknownHostException e) {
             e.printStackTrace ();
         }

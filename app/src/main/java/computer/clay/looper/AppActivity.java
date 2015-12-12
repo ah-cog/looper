@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
@@ -91,10 +92,13 @@ public class AppActivity extends Activity {
     }
 
     public void Hack_Speak (String phrase) {
+        Log.v  ("Clay_Verbalizer", "Hack_Speak: " + phrase);
 //        if (speaker.isAllowed ())
-        speaker.allow (true);
-        speaker.speak (phrase);
-        speaker.allow (false);
+        if (speaker != null) {
+            speaker.allow (true);
+            speaker.speak (phrase);
+            speaker.allow (false);
+        }
     }
 
     String Hack_behaviorTitle = "";

@@ -673,17 +673,18 @@ public class Person {
                     Log.v ("Clay_Loop_Construct", "nearestLoopDistance = " + nearestLoopDistance);
                     Log.v ("Clay_Loop_Construct", "conditionTouchProximity = " + conditionTouchProximity);
 
+                    // TODO: Move this into LoopConstruct.settlePosition()
                     if (nearestLoopDistance > conditionTouchProximity) {
                         Log.v ("Clay_Loop_Construct", "removing from loop: " + nearestLoopDistance);
-                        touchedBehaviorConstruct.state = BehaviorConstruct.State.FREE;
+                        touchedBehaviorConstruct.state = BehaviorConstruct.State.FREE; // TODO: Move this into LoopConstruct.settlePosition()
                         // TODO: send UDP message "remove behavior <uuid> from loop <uuid>"
                         if (touchedBehaviorConstruct.hasLoopConstruct ()) {
                             touchedBehaviorConstruct.getLoopConstruct ().removeBehaviorConstruct (touchedBehaviorConstruct);
                         }
                     } else {
                         Log.v ("Clay_Loop_Construct", "adding to loop: " + nearestLoopDistance);
-                        touchedBehaviorConstruct.state = BehaviorConstruct.State.SEQUENCED;
-                        nearestLoopConstruct.addBehaviorConstruct (touchedBehaviorConstruct);
+                        touchedBehaviorConstruct.state = BehaviorConstruct.State.SEQUENCED; // TODO: Move this into LoopConstruct.settlePosition()
+//                        nearestLoopConstruct.addBehaviorConstruct (touchedBehaviorConstruct);
                         // TODO: send UDP message "add behavior <uuid> to loop <uuid>"
                         // <HACK>
                         // Queue behavior transformation in the outgoing message queue.
@@ -692,8 +693,8 @@ public class Person {
                         // e.g., "focus perspective on behavior <uuid>" (Changes perspective so implicit language refers to it.)
                         String behaviorUuid = touchedBehaviorConstruct.getUuid ().toString (); // HACK: BehaviorConstruct and Behavior should have separate UUIDs.
                         //String behaviorConstructUuid = behaviorConstruct.getUuid ().toString (); // HACK: BehaviorConstruct and Behavior should have separate UUIDs.
-                        getClay ().getCommunication ().sendMessage (nearestLoopConstruct.getUnit ().getInternetAddress (), "create behavior " + behaviorUuid + " \"" + touchedBehaviorConstruct.getBehavior ().getTitle () + "\"");
-                        getClay ().getCommunication ().sendMessage (nearestLoopConstruct.getUnit ().getInternetAddress (), "add behavior " + behaviorUuid + " to loop");
+//                        getClay ().getCommunication ().sendMessage (nearestLoopConstruct.getUnit ().getInternetAddress (), "create behavior " + behaviorUuid + " \"" + touchedBehaviorConstruct.getBehavior ().getTitle () + "\"");
+//                        getClay ().getCommunication ().sendMessage (nearestLoopConstruct.getUnit ().getInternetAddress (), "add behavior " + behaviorUuid + " to loop");
 //                        // </HACK>
                     }
 

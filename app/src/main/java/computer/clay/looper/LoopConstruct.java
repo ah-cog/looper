@@ -57,6 +57,8 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
 
     public void addBehaviorConstruct (BehaviorConstruct behaviorConstruct) {
 
+        Log.v ("Behavior_Construct", "Adding behavior construct " + behaviorConstruct.getUuid ());
+
         // TODO: Make sure the behavior construct is in the perspective
 
         // Check if the behavior construct is already in the loop...
@@ -90,14 +92,16 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
 //        // e.g., (shorthand) "add behavior <uuid> to loop (<uuid>)"
 //        // e.g., "focus perspective on behavior <uuid>" (Changes perspective so implicit language refers to it.)
 //        String behaviorUuid = behaviorConstruct.getUuid ().toString (); // HACK: BehaviorConstruct and Behavior should have separate UUIDs.
-//        //String behaviorConstructUuid = behaviorConstruct.getUuid ().toString (); // HACK: BehaviorConstruct and Behavior should have separate UUIDs.
+        String behaviorConstructUuid = behaviorConstruct.getUuid ().toString (); // HACK: BehaviorConstruct and Behavior should have separate UUIDs.
 //        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "create behavior " + behaviorUuid + " \"" + behaviorConstruct.getBehavior ().getTitle () + "\"");
 //        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "add behavior " + behaviorUuid + " to loop");
+        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "create behavior " + behaviorConstructUuid + " \"" + behaviorConstruct.getBehavior ().getTitle () + "\"");
+        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "add behavior " + behaviorConstructUuid + " to loop");
         // </HACK>
     }
 
     public void removeBehaviorConstruct (BehaviorConstruct behaviorConstruct) {
-        Log.v ("Clay_Loop_Construct", "removeBehaviorConstruct");
+        Log.v ("Clay_Remove_Behavior", "Removing behavior construct.");
 
         // ...then remove the behavior construct from the loop construct.
         if (this.behaviorConstructs.contains (behaviorConstruct)) {
@@ -123,7 +127,14 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
         // Queue behavior transformation in the outgoing message queue.
         // e.g., "add behavior \"turn light 1 on\" to loop"
         // e.g., "remove behavior 1"
+        String behaviorConstructUuid = behaviorConstruct.getUuid ().toString (); // HACK: BehaviorConstruct and Behavior should have separate UUIDs.
+        String removeBehaviorMessage = "remove behavior " + behaviorConstructUuid + " from loop";
+        Log.v ("Clay_Remove_Behavior", "Removing behavior construct " + behaviorConstructUuid + ".");
 //        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), behaviorConstruct.getBehavior ().getTitle ());
+//        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "create behavior " + behaviorUuid + " \"" + behaviorConstruct.getBehavior ().getTitle () + "\"");
+//        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "add behavior " + behaviorUuid + " to loop");
+//        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "create behavior " + behaviorConstructUuid + " \"" + behaviorConstruct.getBehavior ().getTitle () + "\"");
+        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), removeBehaviorMessage);
         // </HACK>
     }
 

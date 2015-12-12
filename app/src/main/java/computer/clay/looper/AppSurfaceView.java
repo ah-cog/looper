@@ -24,7 +24,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
     private SurfaceHolder surfaceHolder;
 
     // Annotations (e.g., for debugging)
-    private boolean enableAnnotations = true;
+    private boolean enableAnnotations = false;
 
     // Canvas
     private int canvasWidth, canvasHeight;
@@ -35,7 +35,6 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
     // Clay
     private Clay clay = new Clay ();
-//    private Communication communication = new Communication (clay);
 
     // Define base coordinate system
     private Point origin = new Point ();
@@ -141,6 +140,8 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
         }
     }
 
+    boolean Hack_SentEraseLoopOnStartupMessage = false;
+
     @Override
     protected void onDraw (Canvas canvas) {
 
@@ -174,6 +175,14 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
             // TODO: Put this in the constructor for the LoopConstruct, so it will create itself as a default construct if there's not already a construct for the specified Loop.
         for (Unit unit : getClay ().getUnits ()) {
             this.prepareUnitPerspective (unit);
+        }
+
+        // HACK: Remove this! This is not actual synchronization! It should READ the loop on startup, not destroy it. Store the UUID of the loop on the device.
+        if (Hack_SentEraseLoopOnStartupMessage == false) {
+            for (Unit unit : getClay ().getUnits ()) {
+                getClay ().getCommunication ().sendMessage (unit.getInternetAddress (), "reset");
+            }
+            Hack_SentEraseLoopOnStartupMessage = true;
         }
 
         // Draw loops and behaviors.
@@ -410,19 +419,19 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
                             // Set loop color based on the time the last message was received
                             int loopConstructColor = onlineLoopConstructColors[0];
-                            if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 300) {
+                            if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 800) {
                                 loopConstructColor = onlineLoopConstructColors[0];
-                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 400) {
-                                loopConstructColor = onlineLoopConstructColors[1];
-                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 500) {
-                                loopConstructColor = onlineLoopConstructColors[2];
-                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 600) {
-                                loopConstructColor = onlineLoopConstructColors[3];
-                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 700) {
-                                loopConstructColor = onlineLoopConstructColors[4];
                             } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 1000) {
-                                loopConstructColor = onlineLoopConstructColors[5];
+                                loopConstructColor = onlineLoopConstructColors[1];
+                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 1200) {
+                                loopConstructColor = onlineLoopConstructColors[2];
+                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 1400) {
+                                loopConstructColor = onlineLoopConstructColors[3];
                             } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 1500) {
+                                loopConstructColor = onlineLoopConstructColors[4];
+                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 1600) {
+                                loopConstructColor = onlineLoopConstructColors[5];
+                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 1700) {
                                 loopConstructColor = onlineLoopConstructColors[6];
                             } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 1800) {
                                 loopConstructColor = onlineLoopConstructColors[7];
