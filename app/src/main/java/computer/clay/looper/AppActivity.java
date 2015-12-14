@@ -9,9 +9,16 @@ import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.text.InputType;
 import android.util.Log;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.ToggleButton;
+
+import java.util.ArrayList;
+import java.util.Random;
 
 public class AppActivity extends Activity {
 
@@ -92,7 +99,7 @@ public class AppActivity extends Activity {
     }
 
     public void Hack_Speak (String phrase) {
-        Log.v  ("Clay_Verbalizer", "Hack_Speak: " + phrase);
+        Log.v ("Clay_Verbalizer", "Hack_Speak: " + phrase);
 //        if (speaker.isAllowed ())
         if (speaker != null) {
             speaker.allow (true);
@@ -102,21 +109,120 @@ public class AppActivity extends Activity {
     }
 
     String Hack_behaviorTitle = "";
-    public void Hack_PromptForBehaviorTitle (final BehaviorConstruct behaviorConstruct) {
+    public void Hack_PromptForBehaviorTransform (final BehaviorConstruct behaviorConstruct) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle ("tell me the behavior");
+        builder.setTitle ("Change the channel.");
+        // builder.setTitle ("Behavior Transform");
 
-        // Set up the input
-        final EditText input = new EditText(this);
-        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-        input.setInputType(InputType.TYPE_CLASS_TEXT);//input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        builder.setView(input);
+        // TODO: Specify the units to receive the change.
+
+        // Declare transformation layout
+        LinearLayout transformLayout = new LinearLayout (this);
+        transformLayout.setOrientation (LinearLayout.VERTICAL);
+
+        // TODO: Add behavior condition.
+
+        // Set up the LED label
+        final TextView lightLabel = new TextView (this);
+        lightLabel.setText ("LEDs");
+        lightLabel.setPadding (10, 10, 10, 10);
+        transformLayout.addView (lightLabel);
+
+        // LEDs
+
+        LinearLayout lightLayout = new LinearLayout (this);
+        lightLayout.setOrientation (LinearLayout.HORIZONTAL);
+//        channelLayout.setLayoutParams (new LinearLayout.LayoutParams (MATCH_PARENT));
+        final ArrayList<ToggleButton> lightToggleButtons = new ArrayList<> ();
+        for (int i = 0; i < 12; i++) {
+            final String channelLabel = Integer.toString (i + 1);
+            final ToggleButton toggleButton = new ToggleButton (this);
+            toggleButton.setPadding (0, 0, 0, 0);
+            toggleButton.setText (channelLabel);
+            toggleButton.setTextOn (channelLabel);
+            toggleButton.setTextOff (channelLabel);
+            // e.g., LinearLayout.LayoutParams param = new LinearLayout.LayoutParams( ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(10, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
+//            params.setMargins (0, 0, 0, 0);
+            toggleButton.setLayoutParams (params);
+            lightToggleButtons.add (toggleButton); // Add the button to the list.
+            lightLayout.addView (toggleButton);
+        }
+//        channelLayout.setHorizontalGravity (Gravity.CENTER_HORIZONTAL);
+//        transformLayout.setPadding (0, 0, 0, 0);
+        transformLayout.addView (lightLayout);
+
+        // LEDs
+
+        // Set up the label
+        final TextView signalLabel = new TextView (this);
+        signalLabel.setText ("I/O");
+        signalLabel.setPadding (10, 10, 10, 10);
+        transformLayout.addView (signalLabel);
+
+        LinearLayout signalLayout = new LinearLayout (this);
+        signalLayout.setOrientation (LinearLayout.HORIZONTAL);
+//        channelLayout.setLayoutParams (new LinearLayout.LayoutParams (MATCH_PARENT));
+        final ArrayList<ToggleButton> signalToggleButtons = new ArrayList<> ();
+        for (int i = 0; i < 12; i++) {
+            final String channelLabel = Integer.toString (i + 1);
+            final ToggleButton toggleButton = new ToggleButton (this);
+            toggleButton.setPadding (0, 0, 0, 0);
+            toggleButton.setText ("?");
+            toggleButton.setTextOn ("O");
+            toggleButton.setTextOff ("I");
+            // e.g., LinearLayout.LayoutParams param = new LinearLayout.LayoutParams( ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(10, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
+//            params.setMargins (0, 0, 0, 0);
+            toggleButton.setLayoutParams (params);
+            signalToggleButtons.add (toggleButton); // Add the button to the list.
+            signalLayout.addView (toggleButton);
+        }
+//        channelLayout.setHorizontalGravity (Gravity.CENTER_HORIZONTAL);
+//        transformLayout.setPadding (0, 0, 0, 0);
+        transformLayout.addView (signalLayout);
+
+        // Wait (until next behavior)
+
+        // Set up the label
+        final TextView waitLabel = new TextView (this);
+        waitLabel.setText ("Wait");
+        waitLabel.setPadding (10, 10, 10, 10);
+        transformLayout.addView (waitLabel);
+
+        final EditText waitValue = new EditText(this); // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        waitValue.setInputType(InputType.TYPE_CLASS_NUMBER);//input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        builder.setView (waitValue);
+        transformLayout.addView (waitValue);
+
+        // Assign the layout to the alert dialog.
+        builder.setView (transformLayout);
 
         // Set up the buttons
         builder.setPositiveButton ("OK", new DialogInterface.OnClickListener () {
             @Override
             public void onClick (DialogInterface dialog, int which) {
-                Hack_behaviorTitle = input.getText ().toString ();
+//                Hack_behaviorTitle = input.getText ().toString ();
+                String transformString = "change channel to";
+                // Add the LED state
+                for (int i = 0; i < 12; i++) {
+                    if (lightToggleButtons.get (i).isChecked ()) {
+                        transformString = transformString.concat (" 1");
+                    } else  {
+                        transformString = transformString.concat (" 0");
+                    }
+                }
+                // Add the GPIO state
+                for (int i = 0; i < 12; i++) {
+                    if (signalToggleButtons.get (i).isChecked ()) {
+                        transformString = transformString.concat (" 1");
+                    } else  {
+                        transformString = transformString.concat (" 0");
+                    }
+                }
+                // Add wait
+                transformString = transformString.concat (" " + waitValue.getText ());
+                Hack_behaviorTitle = transformString;
                 behaviorConstruct.getBehavior ().setTitle (Hack_behaviorTitle);
             }
         });
@@ -130,6 +236,35 @@ public class AppActivity extends Activity {
         builder.show ();
     }
 
+//    String Hack_behaviorTitle = "";
+//    public void Hack_PromptForBehaviorTitle (final BehaviorConstruct behaviorConstruct) {
+//        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//        builder.setTitle ("tell me the behavior");
+//
+//        // Set up the input
+//        final EditText input = new EditText(this);
+//        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+//        input.setInputType(InputType.TYPE_CLASS_TEXT);//input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+//        builder.setView(input);
+//
+//        // Set up the buttons
+//        builder.setPositiveButton ("OK", new DialogInterface.OnClickListener () {
+//            @Override
+//            public void onClick (DialogInterface dialog, int which) {
+//                Hack_behaviorTitle = input.getText ().toString ();
+//                behaviorConstruct.getBehavior ().setTitle (Hack_behaviorTitle);
+//            }
+//        });
+//        builder.setNegativeButton ("Cancel", new DialogInterface.OnClickListener () {
+//            @Override
+//            public void onClick (DialogInterface dialog, int which) {
+//                dialog.cancel ();
+//            }
+//        });
+//
+//        builder.show ();
+//    }
+
     public void Hack_PromptForBehaviorSelection (final BehaviorConstruct behaviorConstruct) {
 
         final CharSequence[] items = {
@@ -137,18 +272,20 @@ public class AppActivity extends Activity {
                 "turn light 1 off",
                 "turn light 2 on",
                 "turn light 2 off",
+                "turn lights on",
+                "turn lights off",
                 "wait 200 ms",
-                "say it's done",
-                "say hey",
-                "slowly say it's done",
-                "quickly say it's done",
+                "wait 1000",
+                "reset",
+                "say \"i sense a soul in search of answers\"",
+//                "slowly say it's done",
+//                "quickly say it's done",
                 "request plug the sensor's signal wire into channel 6. i am blinking it for you.",
                 "request connect ground",
-                "request connect power",
-                "wait 1000"
+                "request connect power"
         };
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder (this);
         builder.setTitle("Select a behavior");
         builder.setItems(items, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int item) {
@@ -158,7 +295,25 @@ public class AppActivity extends Activity {
             }
         });
         AlertDialog alert = builder.create();
-        Hack_Speak ("hi. what do you want me to do? choose one of these behaviors.");
+
+        // Verbalize creative scaffolding for context
+        ArrayList<String> phrases = new ArrayList<String> ();
+        phrases.add ("hi. what do you want me to do?");
+        phrases.add ("choose one of these behaviors.");
+        phrases.add ("do what?");
+        phrases.add ("what're you thinking?");
+        phrases.add ("tell me what to do");
+        phrases.add ("which one?");
+        phrases.add ("select a behavior");
+        phrases.add ("adding a behavior");
+        // Choose the phrase to verbalize. Default to random selection algorithm.
+        // TODO: Choose the verbalization pattern based on the speed of interaction (metric for experience and comfort level).
+        Random random = new Random();
+        int phraseChoice = random.nextInt (phrases.size ());
+        // Verbalize the phrase
+        Hack_Speak (phrases.get (phraseChoice));
+        // TODO: Adapt voice recognition to look for context-specfic speech.
+
         alert.show();
 
 //        AlertDialog.Builder builderSingle = new AlertDialog.Builder(AppActivity.getAppContext ());

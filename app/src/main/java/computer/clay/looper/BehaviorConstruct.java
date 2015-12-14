@@ -45,6 +45,9 @@ public class BehaviorConstruct {
     // TODO: Associate with command (action's behavior tree/graph structure)
     // TODO: Associate with cloud object
 
+    // Syncrhonization/flow state
+    private boolean isSynchronized;
+
     public BehaviorConstruct (Perspective perspective, int xPosition, int yPosition) {
         super();
 
@@ -65,6 +68,14 @@ public class BehaviorConstruct {
 
         // Create the behavior condition associated with this behavior construct.
         this.condition = new BehaviorCondition(this, BehaviorCondition.Type.NONE);
+    }
+
+    public boolean isSynchronized () {
+        return this.isSynchronized;
+    }
+
+    public void setSynchronized (boolean isSynchronized) {
+        this.isSynchronized = isSynchronized;
     }
 
     public UUID getUuid () {

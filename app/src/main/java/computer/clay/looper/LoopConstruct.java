@@ -57,7 +57,7 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
 
     public void addBehaviorConstruct (BehaviorConstruct behaviorConstruct) {
 
-        Log.v ("Behavior_Construct", "Adding behavior construct " + behaviorConstruct.getUuid ());
+//        Log.v ("Behavior_Construct", "Adding behavior construct " + behaviorConstruct.getUuid ());
 
         // TODO: Make sure the behavior construct is in the perspective
 
@@ -78,8 +78,6 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
 //            this.loopConstruct.addBehaviorConstruct (this);
 
             // ...and add the behavior to the loop.
-            Log.v ("Clay", "adding behavior: " + behaviorConstruct.getBehavior ());
-            Log.v ("Clay", "to loop: " + this.getLoop ());
             this.getLoop().addBehavior (behaviorConstruct.getBehavior ());
         }
 
@@ -87,16 +85,37 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
         this.reorderBehaviors ();
 
         // <HACK>
-//        // Queue behavior transformation in the outgoing message queue.
-//        // e.g., create behavior <uuid> "turn light <number> on" --> Response: got <message>
-//        // e.g., (shorthand) "add behavior <uuid> to loop (<uuid>)"
-//        // e.g., "focus perspective on behavior <uuid>" (Changes perspective so implicit language refers to it.)
-//        String behaviorUuid = behaviorConstruct.getUuid ().toString (); // HACK: BehaviorConstruct and Behavior should have separate UUIDs.
+        // Queue behavior transformation in the outgoing message queue.
+        // e.g., create behavior <uuid> "turn light <number> on" --> Response: got <message>
+        // e.g., (shorthand) "add behavior <uuid> to loop (<uuid>)"
+        // e.g., "focus perspective on behavior <uuid>" (Changes perspective so implicit language refers to it.)
         String behaviorConstructUuid = behaviorConstruct.getUuid ().toString (); // HACK: BehaviorConstruct and Behavior should have separate UUIDs.
-//        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "create behavior " + behaviorUuid + " \"" + behaviorConstruct.getBehavior ().getTitle () + "\"");
-//        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "add behavior " + behaviorUuid + " to loop");
+
+        // Get the UUID of the behavior prior to the one being added to the loop, or null if there's no previous behavior (i.e., the behavior is the first one in the loop).
+        BehaviorConstruct nextBehaviorConstruct = null;
+        for (int i = 0; i < this.getBehaviorConstructs ().size (); i++) {
+            BehaviorConstruct currentBehaviorConstruct = this.getBehaviorConstructs ().get (i);
+            if (currentBehaviorConstruct.getUuid ().compareTo (behaviorConstruct.getUuid ()) == 0) {
+                if (i < (this.getBehaviorConstructs ().size () - 1)) {
+                    nextBehaviorConstruct = this.getBehaviorConstructs ().get (i + 1);
+                    break;
+                }
+            }
+        }
+        if (nextBehaviorConstruct != null) {
+            Log.v ("Clay_Language", "Adding behavior prior to " + nextBehaviorConstruct.getUuid ().toString ());
+        } else {
+            Log.v ("Clay_Language", "Adding behavior prior to end of the list.");
+        }
+
         getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "create behavior " + behaviorConstructUuid + " \"" + behaviorConstruct.getBehavior ().getTitle () + "\"");
-        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "add behavior " + behaviorConstructUuid + " to loop");
+        if (nextBehaviorConstruct != null) {
+            // Add the behavior to the front of the loop
+            getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "add behavior " + behaviorConstructUuid + " before " + nextBehaviorConstruct.getUuid ().toString ()); // TODO: "add behavior <behavior-uuid> to loop <loop-uuid> before <behavior-uuid>
+        } else {
+            // Add the behavior to the end of the loop
+            getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "add behavior " + behaviorConstructUuid); // TODO: "add behavior <behavior-uuid> to loop <loop-uuid>
+        }
         // </HACK>
     }
 
@@ -123,6 +142,8 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
         // Update the sequence order of behaviors based on the orientation of the behavior constructs on the loop construct.
         this.reorderBehaviors ();
 
+        Log.v ("Clay_Language", "Removing behavior " + behaviorConstruct.getUuid ().toString () + " from loop.");
+
         // <HACK>
         // Queue behavior transformation in the outgoing message queue.
         // e.g., "add behavior \"turn light 1 on\" to loop"
@@ -134,6 +155,7 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
 //        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "create behavior " + behaviorUuid + " \"" + behaviorConstruct.getBehavior ().getTitle () + "\"");
 //        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "add behavior " + behaviorUuid + " to loop");
 //        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "create behavior " + behaviorConstructUuid + " \"" + behaviorConstruct.getBehavior ().getTitle () + "\"");
+        behaviorConstruct.setSynchronized (false);
         getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), removeBehaviorMessage);
         // </HACK>
     }

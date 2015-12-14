@@ -204,6 +204,9 @@ public class Communication {
 //                    message.checksum = generateChecksum (message.content);
 //                    String rechecksum = generateChecksum (Message.VERIFY_PREFIX + outgoingMessage.content);
 
+                    // TODO: Get the behaviorConstruct by UUID which sent this message originally.
+                    // TODO: behaviorConstruct.setSynchronized (true);
+
                     Log.v ("Clay_Messaging", "\t----");
                     Log.v ("Clay_Messaging", "\tChecksum expected: " + outgoingMessage.getChecksum () + "\t" + Message.VERIFY_PREFIX + outgoingMessage.content);
                     Log.v ("Clay_Messaging", "\tChecksum received: " + message.getChecksum () + "\t" + message.content);
@@ -302,7 +305,7 @@ public class Communication {
     }
 
     Date timeLastSentMessage = new Date (0);
-    long outgoingMessagePeriod = 5000;
+    long outgoingMessagePeriod = 500;
     public void processOutgoingMessages () {
 
         if (hasOutgoingMessages ()) {
