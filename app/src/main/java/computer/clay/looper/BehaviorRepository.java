@@ -21,24 +21,28 @@ public class BehaviorRepository {
 
     private void setupTestRepository () {
 
-        Behavior lightBehavior = new Behavior("light"); // e.g., "turn on lights  3 8 9 10 12"
-        this.cachedBehaviors.add(lightBehavior);
-        Behavior motionBehavior = new Behavior("motion");
-        this.cachedBehaviors.add(motionBehavior);
-        Behavior gestureBehavior = new Behavior("gesture");
-        this.cachedBehaviors.add(gestureBehavior);
-        Behavior timeBehavior = new Behavior("time"); // e.g., "delay 1 second"
-        this.cachedBehaviors.add(timeBehavior);
-        Behavior communicationBehavior = new Behavior("communication");
-        this.cachedBehaviors.add(communicationBehavior);
-        Behavior controlBehavior = new Behavior("control"); // e.g., "turn on 3 9 12"
-        this.cachedBehaviors.add(controlBehavior);
-        Behavior soundBehavior = new Behavior("sound");
-        this.cachedBehaviors.add(soundBehavior);
-        Behavior speechBehavior = new Behavior("speech");
-        this.cachedBehaviors.add(speechBehavior);
-        Behavior serviceBehavior = new Behavior("service");
-        this.cachedBehaviors.add(serviceBehavior);
+        Behavior behaviorTransform = new Behavior ("change channel"); // e.g., change channel to 1,1,1,0 1,1,1,0 1,1,1,0 1,1,1,0 1,1,1,0 1,1,1,0 1,1,1,0 1,1,1,0 1,1,1,0 1,1,1,0 1,1,1,0 1,1,1,0
+//        behaviorTransform.setTransform ("change channel to ");
+        this.cachedBehaviors.add (behaviorTransform);
+
+//        Behavior lightBehavior = new Behavior("light"); // e.g., "turn on lights  3 8 9 10 12"
+//        this.cachedBehaviors.add(lightBehavior);
+//        Behavior motionBehavior = new Behavior("motion");
+//        this.cachedBehaviors.add(motionBehavior);
+//        Behavior gestureBehavior = new Behavior("gesture");
+//        this.cachedBehaviors.add(gestureBehavior);
+//        Behavior timeBehavior = new Behavior("time"); // e.g., "delay 1 second"
+//        this.cachedBehaviors.add(timeBehavior);
+//        Behavior communicationBehavior = new Behavior("communication");
+//        this.cachedBehaviors.add(communicationBehavior);
+//        Behavior controlBehavior = new Behavior("control"); // e.g., "turn on 3 9 12"
+//        this.cachedBehaviors.add(controlBehavior);
+//        Behavior soundBehavior = new Behavior("sound");
+//        this.cachedBehaviors.add(soundBehavior);
+//        Behavior speechBehavior = new Behavior("speech");
+//        this.cachedBehaviors.add(speechBehavior);
+//        Behavior serviceBehavior = new Behavior("service");
+//        this.cachedBehaviors.add(serviceBehavior);
     }
 
     public void addRepositoryUri (String repositoryUri) {
