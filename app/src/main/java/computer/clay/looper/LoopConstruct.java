@@ -108,7 +108,7 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
             Log.v ("Clay_Language", "Adding behavior prior to end of the list.");
         }
 
-        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "create behavior " + behaviorConstructUuid + " \"" + behaviorConstruct.getBehavior ().getTitle () + "\"");
+        getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "create behavior " + behaviorConstructUuid + " \"" + behaviorConstruct.getBehavior ().getTransform () + "\"");
         if (nextBehaviorConstruct != null) {
             // Add the behavior to the front of the loop
             getPerspective ().getClay ().getCommunication ().sendMessage (this.getUnit ().getInternetAddress (), "add behavior " + behaviorConstructUuid + " before " + nextBehaviorConstruct.getUuid ().toString ()); // TODO: "add behavior <behavior-uuid> to loop <loop-uuid> before <behavior-uuid>

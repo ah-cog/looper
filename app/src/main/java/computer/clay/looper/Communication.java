@@ -266,7 +266,7 @@ public class Communication {
 
             Log.v ("Clay_Verbalizer", message.content);
 
-            String phrase = message.content.split (" ")[2];
+            String phrase = message.content.split (" ")[1];
 
             getClay ().Hack_appActivity.Hack_Speak (phrase);
 

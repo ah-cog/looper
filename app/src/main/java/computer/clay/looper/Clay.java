@@ -29,7 +29,7 @@ public class Clay {
 
     Clay () {
 
-        discoverVirtualUnits ();
+        // discoverVirtualUnits ();
 
         // TODO: Discover units!
     }

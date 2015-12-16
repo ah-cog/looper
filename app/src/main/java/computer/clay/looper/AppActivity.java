@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -111,7 +112,74 @@ public class AppActivity extends Activity {
         }
     }
 
-    String Hack_behaviorTitle = "";
+    String Hack_TimeTransformTitle = "";
+    public void Hack_PromptForTimeTransform (final BehaviorConstruct behaviorConstruct) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle ("Time Transform");
+        builder.setMessage ("How do you want to change time?");
+
+        // Declare transformation layout
+        LinearLayout transformLayout = new LinearLayout (this);
+        transformLayout.setOrientation (LinearLayout.VERTICAL);
+
+        // Wait (until next behavior)
+
+        // Set up the label
+        final TextView waitLabel = new TextView (this);
+        waitLabel.setText ("Wait (0 ms)");
+        waitLabel.setPadding (70, 20, 70, 20);
+        transformLayout.addView (waitLabel);
+
+        final SeekBar waitVal = new SeekBar (this);
+        waitVal.setMax (1000);
+        waitVal.setHapticFeedbackEnabled (true); // TODO: Emulate this in the custom interface
+        waitVal.setOnSeekBarChangeListener (new SeekBar.OnSeekBarChangeListener () {
+            @Override
+            public void onProgressChanged (SeekBar seekBar, int progress, boolean fromUser) {
+                waitLabel.setText ("Wait (" + progress + " ms)");
+            }
+
+            @Override
+            public void onStartTrackingTouch (SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch (SeekBar seekBar) {
+
+            }
+        });
+        transformLayout.addView (waitVal);
+
+        // Assign the layout to the alert dialog.
+        builder.setView (transformLayout);
+
+        // Set up the buttons
+        builder.setPositiveButton ("OK", new DialogInterface.OnClickListener () {
+            @Override
+            public void onClick (DialogInterface dialog, int which) {
+
+                // Create transform string
+                String transformString = "wait ";
+
+                // Add wait
+                transformString = transformString.concat (Integer.toString (waitVal.getProgress ()));
+                Hack_TimeTransformTitle = transformString;
+                behaviorConstruct.getBehavior().setTitle ("time");
+                behaviorConstruct.getBehavior().setTransform (Hack_TimeTransformTitle);
+            }
+        });
+        builder.setNegativeButton ("Cancel", new DialogInterface.OnClickListener () {
+            @Override
+            public void onClick (DialogInterface dialog, int which) {
+                dialog.cancel ();
+            }
+        });
+
+        builder.show ();
+    }
+
+    String Hack_BehaviorTransformTitle = "";
     public void Hack_PromptForBehaviorTransform (final BehaviorConstruct behaviorConstruct) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle ("Change the channel.");
@@ -124,6 +192,7 @@ public class AppActivity extends Activity {
         LinearLayout transformLayout = new LinearLayout (this);
         transformLayout.setOrientation (LinearLayout.VERTICAL);
 
+        /*
         // Condition
 
         // Set up the condition label
@@ -131,16 +200,17 @@ public class AppActivity extends Activity {
         conditionLabel.setText("Condition");
         conditionLabel.setPadding(70, 20, 70, 20);
         transformLayout.addView(conditionLabel);
+        */
 
         // TODO: None, Switch, Threshold, Gesture, Message, Data
 
+        // LEDs:
+
         // Set up the LED label
         final TextView lightLabel = new TextView (this);
-        lightLabel.setText("LEDs");
+        lightLabel.setText("Enable LED feedback");
         lightLabel.setPadding(70, 20, 70, 20);
         transformLayout.addView (lightLabel);
-
-        // LEDs
 
         LinearLayout lightLayout = new LinearLayout (this);
         lightLayout.setOrientation (LinearLayout.HORIZONTAL);
@@ -162,201 +232,595 @@ public class AppActivity extends Activity {
         }
         transformLayout.addView (lightLayout);
 
-        // LEDs
+        // Channels
+
+        final ArrayList<ToggleButton> channelEnableToggleButtons = new ArrayList<> ();
+        final ArrayList<Button> channelDirectionButtons = new ArrayList<> ();
+        final ArrayList<Button> channelModeButtons = new ArrayList<> ();
+        final ArrayList<ToggleButton> channelValueToggleButtons = new ArrayList<> ();
+
+        // Set up the channel label
+        final TextView channelEnabledLabel = new TextView (this);
+        channelEnabledLabel.setText("Enable channels");
+        channelEnabledLabel.setPadding(70, 20, 70, 20);
+        transformLayout.addView (channelEnabledLabel);
+
+        LinearLayout channelEnabledLayout = new LinearLayout (this);
+        channelEnabledLayout.setOrientation (LinearLayout.HORIZONTAL);
+        for (int i = 0; i < 12; i++) {
+            final String channelLabel = Integer.toString (i + 1);
+            final ToggleButton toggleButton = new ToggleButton (this);
+            toggleButton.setPadding(0, 0, 0, 0);
+            toggleButton.setText (channelLabel);
+            toggleButton.setTextOn (channelLabel);
+            toggleButton.setTextOff (channelLabel);
+            // e.g., LinearLayout.LayoutParams param = new LinearLayout.LayoutParams( ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(10, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
+            params.setMargins (0, 0, 0, 0);
+            toggleButton.setLayoutParams (params);
+            channelEnableToggleButtons.add (toggleButton); // Add the button to the list.
+            channelEnabledLayout.addView (toggleButton);
+        }
+        transformLayout.addView (channelEnabledLayout);
 
         // Set up the label
         final TextView signalLabel = new TextView (this);
-        signalLabel.setText ("I/O/PWM"); // INPUT: Discrete/Digital, Continuous/Analog; OUTPUT: Discrete, Continuous/PWM
+        signalLabel.setText ("Set channel direction, mode, and value"); // INPUT: Discrete/Digital, Continuous/Analog; OUTPUT: Discrete, Continuous/PWM
         signalLabel.setPadding (70, 20, 70, 20);
         transformLayout.addView (signalLabel);
 
-//        LinearLayout signalLayout = new LinearLayout (this);
-//        signalLayout.setOrientation (LinearLayout.HORIZONTAL);
-////        channelLayout.setLayoutParams (new LinearLayout.LayoutParams (MATCH_PARENT));
-//        final ArrayList<ToggleButton> signalToggleButtons = new ArrayList<> ();
-//        for (int i = 0; i < 12; i++) {
-//            final String channelLabel = Integer.toString (i + 1);
-//            final ToggleButton toggleButton = new ToggleButton (this);
-//            toggleButton.setPadding (0, 0, 0, 0);
-//            toggleButton.setText ("?");
-//            toggleButton.setTextOn ("O");
-//            toggleButton.setTextOff ("I");
-//            // e.g., LinearLayout.LayoutParams param = new LinearLayout.LayoutParams( ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
-//            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(10, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
-////            params.setMargins (0, 0, 0, 0);
-//            toggleButton.setLayoutParams (params);
-//            signalToggleButtons.add (toggleButton); // Add the button to the list.
-//            signalLayout.addView (toggleButton);
-//        }
-////        channelLayout.setHorizontalGravity (Gravity.CENTER_HORIZONTAL);
-////        transformLayout.setPadding (0, 0, 0, 0);
-//        transformLayout.addView (signalLayout);
-
-        LinearLayout ioLayout = new LinearLayout (this);
+        // Show I/O options
+        final LinearLayout ioLayout = new LinearLayout (this);
         ioLayout.setOrientation (LinearLayout.HORIZONTAL);
-//        channelLayout.setLayoutParams (new LinearLayout.LayoutParams (MATCH_PARENT));
-        final ArrayList<Button> ioToggleButtons = new ArrayList<> ();
         for (int i = 0; i < 12; i++) {
             final String channelLabel = Integer.toString (i + 1);
             final Button toggleButton = new Button (this);
             toggleButton.setPadding (0, 0, 0, 0);
             toggleButton.setText(" ");
-            toggleButton.setOnClickListener(new View.OnClickListener() {
+            toggleButton.setEnabled (false); // TODO: Initialize with current state at the behavior's location in the loop! That is allow defining _changes to_ an existing state, so always work from grounded state material.
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(10, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
+            toggleButton.setLayoutParams (params);
+            channelDirectionButtons.add (toggleButton); // Add the button to the list.
+            ioLayout.addView (toggleButton);
+        }
+        transformLayout.addView (ioLayout);
+
+        /*
+        // Set up the I/O mode label
+        final TextView ioModeLabel = new TextView (this);
+        ioModeLabel.setText ("I/O Mode"); // INPUT: Discrete/Digital, Continuous/Analog; OUTPUT: Discrete, Continuous/PWM
+        ioModeLabel.setPadding (70, 20, 70, 20);
+        transformLayout.addView (ioModeLabel);
+        */
+
+        // Show I/O selection mode (Discrete or Continuous)
+        LinearLayout channelModeLayout = new LinearLayout (this);
+        channelModeLayout.setOrientation (LinearLayout.HORIZONTAL);
+        for (int i = 0; i < 12; i++) {
+            final Button toggleButton = new Button (this);
+            toggleButton.setPadding (0, 0, 0, 0);
+            toggleButton.setText(" ");
+            toggleButton.setEnabled (false); // TODO: Initialize with current state at the behavior's location in the loop! That is allow defining _changes to_ an existing state, so always work from grounded state material.
+            // e.g., LinearLayout.LayoutParams param = new LinearLayout.LayoutParams( ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(10, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
+            toggleButton.setLayoutParams (params);
+            channelModeButtons.add (toggleButton); // Add the button to the list.
+            channelModeLayout.addView (toggleButton);
+        }
+        transformLayout.addView (channelModeLayout);
+
+        // Value. Show channel value.
+        LinearLayout channelValueLayout = new LinearLayout (this);
+        channelValueLayout.setOrientation (LinearLayout.HORIZONTAL);
+//        channelLayout.setLayoutParams (new LinearLayout.LayoutParams (MATCH_PARENT));
+        for (int i = 0; i < 12; i++) {
+            // final String buttonLabel = Integer.toString (i + 1);
+            final ToggleButton toggleButton = new ToggleButton (this);
+            toggleButton.setPadding(0, 0, 0, 0);
+            toggleButton.setEnabled (false);
+            toggleButton.setText (" ");
+            toggleButton.setTextOn ("H");
+            toggleButton.setTextOff ("L");
+            // e.g., LinearLayout.LayoutParams param = new LinearLayout.LayoutParams( ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(10, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
+            params.setMargins (0, 0, 0, 0);
+            toggleButton.setLayoutParams (params);
+            channelValueToggleButtons.add (toggleButton); // Add the button to the list.
+            channelValueLayout.addView (toggleButton);
+        }
+        transformLayout.addView (channelValueLayout);
+
+        // Set up interactivity for channel enable buttons.
+        for (int i = 0; i < 12; i++) {
+
+            final ToggleButton channelEnableButton = channelEnableToggleButtons.get (i);
+            final Button channelDirectionButton = channelDirectionButtons.get (i);
+            final Button channelModeButton = channelModeButtons.get (i);
+            final ToggleButton channelValueToggleButton = channelValueToggleButtons.get (i);
+
+            channelEnableButton.setOnCheckedChangeListener (new CompoundButton.OnCheckedChangeListener () {
                 @Override
-                public void onClick (View v) {
-                    String currentText = toggleButton.getText().toString();
-                    if (currentText.equals (" ")) {
-                        toggleButton.setText ("I");
-                    } else if (currentText.equals("I")) {
-                        toggleButton.setText("O");
-                    } else if (currentText.equals("O")) {
-                        toggleButton.setText("P");
-                    } else if (currentText.equals("P")) {
-                        toggleButton.setText(" ");
+                public void onCheckedChanged (CompoundButton buttonView, boolean isChecked) {
+
+                    if (channelDirectionButton.getText ().toString ().equals (" ")) {
+                        channelDirectionButton.setText ("I");
+                    }
+                    channelDirectionButton.setEnabled (isChecked);
+
+                    if (channelModeButton.getText ().toString ().equals (" ")) {
+                        channelModeButton.setText ("T");
+                    }
+                    channelModeButton.setEnabled (isChecked);
+
+                    if (isChecked == false) {
+                        channelValueToggleButton.setEnabled (isChecked);
                     }
                 }
             });
-            // e.g., LinearLayout.LayoutParams param = new LinearLayout.LayoutParams( ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(10, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
-//            params.setMargins (0, 0, 0, 0);
-            toggleButton.setLayoutParams (params);
-            ioToggleButtons.add (toggleButton); // Add the button to the list.
-            ioLayout.addView (toggleButton);
         }
-//        channelLayout.setHorizontalGravity (Gravity.CENTER_HORIZONTAL);
-//        transformLayout.setPadding (0, 0, 0, 0);
-        transformLayout.addView (ioLayout);
 
-        // Wait (until next behavior)
+        // Setup interactivity for I/O options
+        for (int i = 0; i < 12; i++) {
 
-        // Set up the label
-        final TextView waitLabel = new TextView (this);
-        waitLabel.setText ("Wait (0 ms)");
-        waitLabel.setPadding (70, 20, 70, 20);
-        transformLayout.addView (waitLabel);
+            final Button channelDirectionButton = channelDirectionButtons.get (i);
+            final Button channelModeButton = channelModeButtons.get (i);
+            final ToggleButton channelValueToggleButton = channelValueToggleButtons.get (i);
 
-//        final EditText waitValue = new EditText(this); // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-//        waitValue.setInputType(InputType.TYPE_CLASS_NUMBER);//input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-////        builder.setView (waitValue);
-//        transformLayout.addView (waitValue);
+            channelDirectionButton.setOnClickListener (new View.OnClickListener () {
+                @Override
+                public void onClick (View v) {
+                    String currentText = channelDirectionButton.getText ().toString ();
+                    if (currentText.equals (" ")) {
+                        channelDirectionButton.setText ("I");
+                        channelModeButton.setEnabled (true);
 
-        final SeekBar waitVal = new SeekBar (this);
-        waitVal.setMax(1000);
-        waitVal.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                waitLabel.setText ("Wait (" + progress + " ms)");
-            }
+                        // Update modes for input channel.
+                        if (channelModeButton.getText ().toString ().equals (" ")) {
+                            channelModeButton.setText ("T");
+                        }
+                        channelModeButton.setOnClickListener (new View.OnClickListener () {
+                            @Override
+                            public void onClick (View v) {
+                                String currentText = channelModeButton.getText ().toString ();
+                                if (currentText.equals (" ")) { // Do not change. Keep current state.
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
+                                    channelModeButton.setText ("T"); // Toggle.
 
-            }
+                                    // Update values for output channel.
+                                    channelValueToggleButton.setEnabled (true);
+                                    if (channelValueToggleButton.getText ().toString ().equals (" ")) {
+                                        channelValueToggleButton.setText ("L");
+                                    }
 
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
+                                } else if (currentText.equals ("T")) {
+                                    channelModeButton.setText ("W"); // Waveform.
+                                    channelValueToggleButton.setEnabled (false); // Update values for output channel.
+                                } else if (currentText.equals ("W")) {
+                                    channelModeButton.setText ("P"); // Pulse.
+                                    channelValueToggleButton.setEnabled (false); // Update values for output channel.
+                                } else if (currentText.equals ("P")) {
+                                    channelModeButton.setText ("T"); // Toggle
 
-            }
-        });
-        transformLayout.addView(waitVal);
+                                    // Update values for output channel.
+                                    channelValueToggleButton.setEnabled (true);
+                                    if (channelValueToggleButton.getText ().toString ().equals (" ")) {
+                                        channelValueToggleButton.setText ("L");
+                                    }
+                                }
+                            }
+                        });
 
-        // Assign the layout to the alert dialog.
-        builder.setView(transformLayout);
+                    } else if (currentText.equals ("I")) {
+                        channelDirectionButton.setText ("O");
 
-        // Set up the buttons
-        builder.setPositiveButton ("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-//                Hack_behaviorTitle = input.getText ().toString ();
-                String transformString = "change channel to";
-                // Add the LED state
-                for (int i = 0; i < 12; i++) {
-                    if (lightToggleButtons.get(i).isChecked()) {
-                        transformString = transformString.concat(" 1");
-                    } else {
-                        transformString = transformString.concat(" 0");
+                        // Update modes for output channel.
+                        channelModeButton.setEnabled (true);
+                        if (channelModeButton.getText ().toString ().equals (" ")) {
+                            channelModeButton.setText ("T");
+                        }
+                        channelModeButton.setOnClickListener (new View.OnClickListener () {
+                            @Override
+                            public void onClick (View v) {
+                                String currentText = channelModeButton.getText ().toString ();
+                                if (currentText.equals (" ")) { // Do not change. Keep current state.
+
+                                    channelModeButton.setText ("T"); // Toggle.
+
+                                    // Update values for output channel.
+                                    channelValueToggleButton.setEnabled (true);
+                                    if (channelValueToggleButton.getText ().toString ().equals (" ")) {
+                                        channelValueToggleButton.setText ("L");
+                                    }
+
+                                } else if (currentText.equals ("T")) {
+                                    channelModeButton.setText ("W"); // Waveform.
+                                    channelValueToggleButton.setEnabled (false); // Update values for output channel.
+                                } else if (currentText.equals ("W")) {
+                                    channelModeButton.setText ("P"); // Pulse.
+                                    channelValueToggleButton.setEnabled (false); // Update values for output channel.
+                                } else if (currentText.equals ("P")) {
+                                    channelModeButton.setText ("T"); // Toggle
+
+                                    // Update values for output channel.
+                                    channelValueToggleButton.setEnabled (true);
+                                    if (channelValueToggleButton.getText ().toString ().equals (" ")) {
+                                        channelValueToggleButton.setText ("L");
+                                    }
+                                }
+                            }
+                        });
+
+                    } else if (currentText.equals ("O")) {
+                        channelDirectionButton.setText ("I");
+                        channelModeButton.setEnabled (true);
+
+                        // Update modes for input channel.
+                        if (channelModeButton.getText ().toString ().equals (" ")) {
+                            channelModeButton.setText ("T");
+                        }
+                        channelModeButton.setOnClickListener (new View.OnClickListener () {
+                            @Override
+                            public void onClick (View v) {
+                                String currentText = channelModeButton.getText ().toString ();
+                                if (currentText.equals (" ")) { // Do not change. Keep current state.
+                                    channelModeButton.setText ("T"); // Toggle.
+
+                                    // Update values for output channel.
+                                    channelValueToggleButton.setEnabled (true);
+                                    if (channelValueToggleButton.getText ().toString ().equals (" ")) {
+                                        channelValueToggleButton.setText ("L");
+                                    }
+
+                                } else if (currentText.equals ("T")) {
+                                    channelModeButton.setText ("W"); // Waveform.
+                                    channelValueToggleButton.setEnabled (false); // Update values for output channel.
+                                } else if (currentText.equals ("W")) {
+                                    channelModeButton.setText ("P"); // Pulse.
+                                    channelValueToggleButton.setEnabled (false); // Update values for output channel.
+                                } else if (currentText.equals ("P")) {
+                                    channelModeButton.setText ("T"); // Toggle
+
+                                    // Update values for output channel.
+                                    channelValueToggleButton.setEnabled (true);
+                                    if (channelValueToggleButton.getText ().toString ().equals (" ")) {
+                                        channelValueToggleButton.setText ("L");
+                                    }
+                                }
+                            }
+                        });
                     }
                 }
-                // Add the GPIO state
+            });
+        }
+
+        // Assign the layout to the alert dialog.
+        builder.setView (transformLayout);
+
+        // Set up the buttons
+        builder.setPositiveButton ("OK", new DialogInterface.OnClickListener () {
+            @Override
+            public void onClick (DialogInterface dialog, int which) {
+//                Hack_behaviorTitle = input.getText ().toString ();
+                String transformString = "apply ";
+                // Add the LED state
+//                for (int i = 0; i < 12; i++) {
+//                    if (lightToggleButtons.get(i).isChecked()) {
+//                        transformString = transformString.concat(" 1");
+//                    } else {
+//                        transformString = transformString.concat(" 0");
+//                    }
+//                }
+
                 for (int i = 0; i < 12; i++) {
-                    String type = ioToggleButtons.get(i).getText().toString();
-                    if (type.equals("I")) { // Input
-                        transformString = transformString.concat(" 1");
-                    } else if (type.equals("O")) { // Output
-                        transformString = transformString.concat(" 2");
-                    } else if (type.equals("P")) { // PWM
-                        transformString = transformString.concat(" 3");
+
+                    final ToggleButton lightEnableButton = lightToggleButtons.get (i);
+                    final ToggleButton channelEnableButton = channelEnableToggleButtons.get (i);
+                    final Button channelDirectionButton = channelDirectionButtons.get (i);
+                    final Button channelModeButton = channelModeButtons.get (i);
+                    final ToggleButton channelValueToggleButton = channelValueToggleButtons.get (i);
+
+                    // LED enable. Is the LED on or off?
+
+                    if (lightEnableButton.isChecked ()) {
+                        transformString = transformString.concat ("T");
                     } else {
-                        transformString = transformString.concat(" 0");
+                        transformString = transformString.concat ("F");
+                    }
+                    // transformString = transformString.concat (","); // Add comma
+
+                    // TODO: Set LED color.
+
+                    // Channel enable. Is the channel enabled?
+
+                    if (channelEnableButton.isChecked ()) {
+                        transformString = transformString.concat ("T");
+                    } else {
+                        transformString = transformString.concat ("F");
+                    }
+                    // transformString = transformString.concat (","); // Add comma
+
+                    // Channel I/O direction. Is the I/O input or output?
+
+                    if (channelDirectionButton.isEnabled ()) {
+                        String channelDirectionString = channelDirectionButton.getText ().toString ();
+                        transformString = transformString.concat (channelDirectionString);
+                    } else {
+                        transformString = transformString.concat ("-");
+                    }
+                    // transformString = transformString.concat (","); // Add comma
+
+                    // Channel I/O mode. Is the channel toggle switch (discrete), waveform (continuous), or pulse?
+
+                    if (channelModeButton.isEnabled ()) {
+                        String channelModeString = channelModeButton.getText ().toString ();
+                        transformString = transformString.concat (channelModeString);
+                    } else {
+                        transformString = transformString.concat ("-");
                     }
 
+                    // Channel value.
+                    // TODO: Create behavior transform to apply channel values separately. This transform should only configure the channel operational flow state.
+
+                    if (channelValueToggleButton.isEnabled ()) {
+                        String channelValueString = channelValueToggleButton.getText ().toString ();
+                        transformString = transformString.concat (channelValueString);
+                    } else {
+                        transformString = transformString.concat ("-");
+                    }
+
+                    // Add space between channel states.
+                    if (i < (12 - 1)) {
+                        transformString = transformString.concat (" ");
+                    }
                 }
 
                 // Add wait
-                transformString = transformString.concat(" " + waitVal.getProgress());
-                Hack_behaviorTitle = transformString;
-                behaviorConstruct.getBehavior().
-
-                setTitle(Hack_behaviorTitle);
+                Hack_BehaviorTransformTitle = transformString;
+                behaviorConstruct.getBehavior().setTitle ("transform");
+                behaviorConstruct.getBehavior().setTransform (Hack_BehaviorTransformTitle);
             }
         });
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        builder.setNegativeButton ("Cancel", new DialogInterface.OnClickListener () {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
+            public void onClick (DialogInterface dialog, int which) {
+                dialog.cancel ();
             }
         });
 
-        builder.show();
+        builder.show ();
     }
 
-//    String Hack_behaviorTitle = "";
-//    public void Hack_PromptForBehaviorTitle (final BehaviorConstruct behaviorConstruct) {
-//        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//        builder.setTitle ("tell me the behavior");
+    String Hack_SwitchBehaviorTransformTitle = "";
+    public void Hack_PromptForSwitchBehaviorTransform (final BehaviorConstruct behaviorConstruct) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle ("Cause and effect.");
+        builder.setMessage ("Describe the relationship.");
+
+        // TODO: Specify the units to receive the change.
+
+        // Declare transformation layout
+        LinearLayout transformLayout = new LinearLayout (this);
+        transformLayout.setOrientation (LinearLayout.VERTICAL);
+
+        /*
+        // Condition
+
+        // Set up the condition label
+        final TextView conditionLabel = new TextView (this);
+        conditionLabel.setText("Condition");
+        conditionLabel.setPadding(70, 20, 70, 20);
+        transformLayout.addView(conditionLabel);
+        */
+
+        // TODO: None, Switch, Threshold, Gesture, Message, Data
+
+        // Source:
+
+        // Set up the switch cause label
+        final TextView switchCauseLabel = new TextView (this);
+        switchCauseLabel.setText ("Cause");
+        switchCauseLabel.setPadding (70, 20, 70, 20);
+        transformLayout.addView (switchCauseLabel);
+
+//        final NumberPicker switchCauseNumberPicker = new NumberPicker (this);
+//        switchCauseNumberPicker.setEnabled (true);
+//        switchCauseNumberPicker.setMinValue (1);
+//        switchCauseNumberPicker.setMaxValue (12);
+
+        LinearLayout switchCauseLayout = new LinearLayout (this);
+        switchCauseLayout.setOrientation (LinearLayout.HORIZONTAL);
+        final ArrayList<ToggleButton> switchCauseToggleButtons = new ArrayList<> ();
+        for (int i = 0; i < 12; i++) {
+            final String channelLabel = Integer.toString (i + 1);
+            final ToggleButton toggleButton = new ToggleButton (this);
+            toggleButton.setPadding (0, 0, 0, 0);
+            toggleButton.setText (channelLabel);
+            toggleButton.setTextOn (channelLabel);
+            toggleButton.setTextOff (channelLabel);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(10, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
+            params.setMargins (0, 0, 0, 0);
+            toggleButton.setLayoutParams (params);
+            switchCauseToggleButtons.add (toggleButton); // Add the button to the list.
+            switchCauseLayout.addView (toggleButton);
+        }
+        transformLayout.addView (switchCauseLayout);
+
+        // Effect:
+
+        // Set up the switch cause label
+        final TextView switchEffectLabel = new TextView (this);
+        switchEffectLabel.setText ("Effect");
+        switchEffectLabel.setPadding (70, 20, 70, 20);
+        transformLayout.addView (switchEffectLabel);
+
+        LinearLayout switchEffectLayout = new LinearLayout (this);
+        switchEffectLayout.setOrientation (LinearLayout.HORIZONTAL);
+        final ArrayList<ToggleButton> switchEffectToggleButtons = new ArrayList<> ();
+//        final ArrayList<ArrayList<Boolean>> switchEffectChannels = new ArrayList<> ();
+//        for (int i = 0; i < 12; i++) {
+//            ArrayList<Boolean> effectChannels = new ArrayList<> ();
+//            for (int j = 0; j < 12; j++) {
+//                effectChannels.add (false);
+//            }
+//            switchEffectChannels.add (effectChannels);
+//        }
+        for (int i = 0; i < 12; i++) {
+            final String channelLabel = Integer.toString (i + 1);
+            final ToggleButton toggleButton = new ToggleButton (this);
+            toggleButton.setPadding(0, 0, 0, 0);
+            toggleButton.setText(channelLabel);
+            toggleButton.setTextOn(channelLabel);
+            toggleButton.setTextOff(channelLabel);
+            // e.g., LinearLayout.LayoutParams param = new LinearLayout.LayoutParams( ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(10, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f);
+            params.setMargins (0, 0, 0, 0);
+            toggleButton.setLayoutParams (params);
+            switchEffectToggleButtons.add (toggleButton); // Add the button to the list.
+            switchEffectLayout.addView (toggleButton);
+        }
+        transformLayout.addView (switchEffectLayout);
+
+//        for (int i = 0; i < 12; i++) {
+//            final ToggleButton switchCauseToggleButton = switchCauseToggleButtons.get (i);
+//            switchCauseToggleButton.setOnCheckedChangeListener (new CompoundButton.OnCheckedChangeListener () {
+//                @Override
+//                public void onCheckedChanged (CompoundButton buttonView, boolean isChecked) {
 //
-//        // Set up the input
-//        final EditText input = new EditText(this);
-//        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-//        input.setInputType(InputType.TYPE_CLASS_TEXT);//input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-//        builder.setView(input);
+//                    buttonView.setEnabled (false);
 //
-//        // Set up the buttons
-//        builder.setPositiveButton ("OK", new DialogInterface.OnClickListener () {
-//            @Override
-//            public void onClick (DialogInterface dialog, int which) {
+//                    // Update states of effect channel toggle buttons.
+//                    for (int j = 0; j < 12; j++) {
+//
+//                        // Update the cause toggle buttons.
+//                        ToggleButton otherSwitchCauseToggleButton = switchCauseToggleButtons.get (j);
+//                        if (buttonView != otherSwitchCauseToggleButton) {
+//                            otherSwitchCauseToggleButton.setChecked (false);
+//                        }
+//
+//                        // Update the effect toggle buttons.
+//                        switchEffectToggleButtons.get (j).setEnabled (false);
+//                        switchEffectToggleButtons.get (j).setChecked (false);
+//                        switchEffectToggleButtons.get (j).setEnabled (true);
+//                    }
+//
+//                    buttonView.setChecked (true);
+//                    buttonView.setEnabled (true);
+//
+//                }
+//            });
+//        }
+
+        // Assign the layout to the alert dialog.
+        builder.setView (transformLayout);
+
+        // Set up the buttons
+        builder.setPositiveButton ("OK", new DialogInterface.OnClickListener () {
+            @Override
+            public void onClick (DialogInterface dialog, int which) {
 //                Hack_behaviorTitle = input.getText ().toString ();
-//                behaviorConstruct.getBehavior ().setTitle (Hack_behaviorTitle);
-//            }
-//        });
-//        builder.setNegativeButton ("Cancel", new DialogInterface.OnClickListener () {
-//            @Override
-//            public void onClick (DialogInterface dialog, int which) {
-//                dialog.cancel ();
-//            }
-//        });
-//
-//        builder.show ();
-//    }
+
+                for (int i = 0; i < 12; i++) {
+
+                    // Get the cause toggle button.
+                    ToggleButton causeToggleButton = switchCauseToggleButtons.get (i);
+                    if (causeToggleButton.isChecked () == false) {
+                        continue;
+                    }
+
+                    // Get the effects of the given cause
+                    for (int j = 0; j < 12; j++) {
+
+                        // Get the cause toggle button.
+                        ToggleButton effectToggleButton = switchEffectToggleButtons.get (j);
+                        if (effectToggleButton.isChecked () == false) {
+                            continue;
+                        }
+
+                        String transformString = "cause " + (i + 1) + " effect " + (j + 1); // TODO: "switch <cause-unit-uuid> 4 <effect-unit-uuid> 8 when <transition-type>"
+
+                        // Define cause and effect transform.
+                        Hack_SwitchBehaviorTransformTitle = transformString;
+                        behaviorConstruct.getBehavior().setTitle ("cause/effect");
+                        behaviorConstruct.getBehavior().setTransform (Hack_SwitchBehaviorTransformTitle);
+
+                        // HACK: Break
+                        // TODO: Support adding multiple mappings to try it out. Feel the power!
+                        i = 12;
+                        j = 12;
+
+                    }
+
+                }
+            }
+        });
+        builder.setNegativeButton ("Cancel", new DialogInterface.OnClickListener () {
+            @Override
+            public void onClick (DialogInterface dialog, int which) {
+                dialog.cancel ();
+            }
+        });
+
+        builder.show ();
+    }
+
+    String Hack_PromptForSpeechTitle = "";
+    public void Hack_PromptForSpeech (final BehaviorConstruct behaviorConstruct) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle ("tell me the behavior");
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.setInputType(InputType.TYPE_CLASS_TEXT);//input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton ("OK", new DialogInterface.OnClickListener () {
+            @Override
+            public void onClick (DialogInterface dialog, int which) {
+                Hack_PromptForSpeechTitle = input.getText ().toString ();
+                behaviorConstruct.getBehavior ().setTitle ("say");
+                behaviorConstruct.getBehavior ().setTransform ("say " + Hack_PromptForSpeechTitle);
+            }
+        });
+        builder.setNegativeButton ("Cancel", new DialogInterface.OnClickListener () {
+            @Override
+            public void onClick (DialogInterface dialog, int which) {
+                dialog.cancel ();
+            }
+        });
+
+        builder.show ();
+    }
 
     public void Hack_PromptForBehaviorSelection (final BehaviorConstruct behaviorConstruct) {
 
         final CharSequence[] items = {
-                "turn light 1 on",
-                "turn light 1 off",
-                "turn light 2 on",
-                "turn light 2 off",
-                "turn lights on",
-                "turn lights off",
-                "wait 200 ms",
-                "wait 1000",
+                "channel",
+                "time",
+                "cause/effect",
+                "message",
+
                 "reset",
-                "say \"i sense a soul in search of answers\"",
+                "condition",
+                "say",
+                "connect component",
+                "request",
+                "memory",
+//                "turn light 1 on",
+//                "turn light 1 off",
+//                "turn light 2 on",
+//                "turn light 2 off",
+//                "turn lights on",
+//                "turn lights off",
+//                "wait 200 ms",
+//                "wait 1000",
+//                "say \"i sense a soul in search of answers\"",
 //                "slowly say it's done",
 //                "quickly say it's done",
-                "request plug the sensor's signal wire into channel 6. i am blinking it for you.",
-                "request connect ground",
-                "request connect power"
+//                "request plug the sensor's signal wire into channel 6. i am blinking it for you.",
+//                "request connect ground",
+//                "request connect power"
         };
 
         AlertDialog.Builder builder = new AlertDialog.Builder (this);
@@ -365,7 +829,18 @@ public class AppActivity extends Activity {
             public void onClick(DialogInterface dialog, int item) {
                 // Do something with the selection
 //                mDoneButton.setText(items[item]);
-                behaviorConstruct.getBehavior ().setTitle (items[item].toString ());
+                if (items[item].toString ().equals ("channel")) {
+                    Hack_PromptForBehaviorTransform (behaviorConstruct);
+                } else if (items[item].toString ().equals ("time")) {
+                    Hack_PromptForTimeTransform (behaviorConstruct);
+                } else if (items[item].toString ().equals ("cause/effect")) {
+                    Hack_PromptForSwitchBehaviorTransform (behaviorConstruct);
+                }
+
+                else if (items[item].toString ().equals ("say")) {
+                    Hack_PromptForSpeech (behaviorConstruct);
+                }
+//                behaviorConstruct.getBehavior ().setTitle (items[item].toString ());
             }
         });
         AlertDialog alert = builder.create();

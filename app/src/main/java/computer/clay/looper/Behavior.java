@@ -12,8 +12,11 @@ public class Behavior {
 
     private String title;
     private String description;
+    private String transform;
 
     private BehaviorConstruct behaviorConstruct;
+
+    // TODO: private Loop loop;
 
     Behavior(String title) {
         this.behaviorConstruct = null;
@@ -21,16 +24,30 @@ public class Behavior {
         this.uuid = UUID.randomUUID();
 
         this.title = title;
+        this.description = "";
+        this.transform = "";
     }
 
     // TODO: Remove this!
     Behavior (BehaviorConstruct behaviorConstruct) {
         this.behaviorConstruct = behaviorConstruct;
+
+        this.uuid = UUID.randomUUID();
+
+        this.title = title;
+        this.description = "";
+        this.transform = "";
     }
 
     // TODO: Remove this!
     public void setBehaviorConstruct (BehaviorConstruct behaviorConstruct) {
         this.behaviorConstruct = behaviorConstruct;
+
+        this.uuid = UUID.randomUUID();
+
+        this.title = title;
+        this.description = "";
+        this.transform = "";
     }
 
     public BehaviorConstruct getBehaviorConstruct () {
@@ -47,6 +64,22 @@ public class Behavior {
 
     public String getTitle () {
         return this.title;
+    }
+
+    public void setDescription (String description) {
+        this.description = description;
+    }
+
+    public String getDescription () {
+        return this.description;
+    }
+
+    public void setTransform (String transform) {
+        this.transform = transform;
+    }
+
+    public String getTransform () {
+        return this.transform;
     }
 
     // TODO: setAction : Specifiy the URI of the action for which to download a script (to relay to Clay).
