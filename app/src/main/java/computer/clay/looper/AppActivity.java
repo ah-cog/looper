@@ -21,6 +21,8 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import com.firebase.client.Firebase;
+
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -44,23 +46,26 @@ public class AppActivity extends Activity {
     /** Called when the activity is first created. */
     @Override
     public void onCreate (Bundle savedInstanceState) {
-        super.onCreate (savedInstanceState);
+        super.onCreate(savedInstanceState);
 
         // Store application context
         AppActivity.context = getApplicationContext();
 
         // Set fullscreen
         requestWindowFeature (Window.FEATURE_NO_TITLE);
-        getWindow().setFlags (WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        // Configure Clay for the Android platform
+        Clay.setPlatformContext (this);
 
         // Set orientation
         // setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
-        setContentView (R.layout.activity_main);
+        setContentView(R.layout.activity_main);
         mySurfaceView = (AppSurfaceView) findViewById (R.id.app_surface_view);
 
         // HACK
-        mySurfaceView.getClay ().Hack_appActivity = this;
+        //mySurfaceView.getClay ().Hack_appActivity = this;
 
         mySurfaceView.AppSurfaceView_OnResume ();
 

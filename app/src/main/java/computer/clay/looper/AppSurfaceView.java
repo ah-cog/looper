@@ -78,25 +78,21 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
     public void surfaceCreated (SurfaceHolder holder) {
 
         canvasWidth = getWidth ();
-        canvasHeight = getHeight ();
+        canvasHeight = getHeight();
         canvasBitmap = Bitmap.createBitmap (canvasWidth, canvasHeight, Bitmap.Config.ARGB_8888);
         myCanvas = new Canvas ();
-        myCanvas.setBitmap (canvasBitmap);
+        myCanvas.setBitmap(canvasBitmap);
 
 
         // TODO: Move setPosition to a better location!
-        clay.getPerspective ().setPosition (myCanvas.getWidth () / 2, myCanvas.getHeight () / 2);
+        getClay().getPerspective().setPosition(myCanvas.getWidth() / 2, myCanvas.getHeight() / 2);
 
         identityMatrix = new Matrix ();
-
-//        AppSurfaceView_OnResume ();
     }
 
     @Override
     public void surfaceDestroyed (SurfaceHolder holder) {
         // TODO Auto-generated method stub
-
-//        AppSurfaceView_OnPause ();
     }
 
     public void AppSurfaceView_OnResume () {
@@ -116,7 +112,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
         appRenderingThread.setRunning (true);
         appRenderingThread.start ();
 
-        getClay ().getCommunication ().startDatagramServer ();
+        getClay ().getCommunication ().startDatagramServer();
 
     }
 
@@ -145,7 +141,8 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
     @Override
     protected void onDraw (Canvas canvas) {
 
-        getClay ().getCommunication ().startDatagramServer (); // HACK:
+        // HACK:
+        getClay().getCommunication ().startDatagramServer (); // TODO: Move this to AppActivity
         getClay ().getCommunication ().processIncomingMessages ();
         getClay ().getCommunication ().processOutgoingMessages (); // HACK: This should be located elsewhere, probably in its own thread or in the updateState function!
 
@@ -245,13 +242,14 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
         // TODO: Put this in the constructor for the LoopConstruct, so it will create itself as a default construct if there's not already a construct for the specified Loop.
         if (!getClay ().getPerspective ().hasLoopConstruct (unit.getLoop ())) {
 
-            getClay ().Hack_appActivity.Hack_Speak ("discovered new clay");
+            // HACK
+            ((AppActivity) getClay ().getPlatformContext()).Hack_Speak ("discovered new clay");
 
             // Create default loop construct
             // TODO: Move this into the Perspective class (maybe in getLoopConstruct and remove hasLoopConstruct since it will always be true)
             LoopConstruct loopConstruct = getClay ().getPerspective ().createLoopConstruct (unit);
 
-            getClay ().Hack_appActivity.Hack_Speak ("showing the loop");
+            ((AppActivity) getClay ().getPlatformContext()).Hack_Speak("showing the loop");
 
             if (!loopConstruct.hasPerspectives ()) {
 

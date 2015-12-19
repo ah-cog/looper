@@ -268,7 +268,7 @@ public class Communication {
 
             String phrase = message.content.split (" ")[1];
 
-            getClay ().Hack_appActivity.Hack_Speak (phrase);
+            ((AppActivity) getClay ().getPlatformContext()).Hack_Speak(phrase);
 
         } else {
             Log.v ("Clay", "bad command");

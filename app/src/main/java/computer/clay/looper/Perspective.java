@@ -130,7 +130,7 @@ public class Perspective {
     public BehaviorConstruct createBehaviorConstruct (Point touchPoint) {
         BehaviorConstruct behaviorConstruct = new BehaviorConstruct (this, touchPoint.x, touchPoint.y);
         // <HACK>
-        getClay ().Hack_appActivity.Hack_PromptForBehaviorSelection (behaviorConstruct);
+        ((AppActivity) getClay ().getPlatformContext()).Hack_PromptForBehaviorSelection(behaviorConstruct);
 //        getClay ().Hack_appActivity.Hack_PromptForBehaviorTransform (behaviorConstruct);
 //        getClay ().Hack_appActivity.Hack_PromptForBehaviorTitle (behaviorConstruct);
         // </HACK>

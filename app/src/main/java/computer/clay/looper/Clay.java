@@ -1,6 +1,9 @@
 package computer.clay.looper;
 
+import android.content.Context;
 import android.util.Log;
+
+import com.firebase.client.Firebase;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -23,15 +26,33 @@ public class Clay {
     // Physical systems
     private Communication communication = new Communication (this);
 
+    private Timeline timeline = null;
+
     // Hacks for debugging!
     // TODO: Remove all of these!
-    public AppActivity Hack_appActivity = null;
+//    public AppActivity Hack_appActivity = null;
+
+    static private Context context;
 
     Clay () {
+
+        // TODO: throw exception if context is not defined!
+
+        // Start the timeline database
+        this.timeline = new Timeline (this);
 
         // discoverVirtualUnits ();
 
         // TODO: Discover units!
+    }
+
+    // TODO: Move this into Clay, then just reference Clay's platform context.
+    public static void setPlatformContext (Context context) {
+        Clay.context = context;
+    }
+
+    public static Context getPlatformContext () {
+        return Clay.context;
     }
 
     public Communication getCommunication () {
