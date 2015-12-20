@@ -15,7 +15,17 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
+
+import computer.clay.looper.AppActivity;
+import computer.clay.looper.AppRenderingThread;
+import computer.clay.looper.BehaviorCondition;
+import computer.clay.looper.BehaviorConstruct;
+import computer.clay.looper.Clay;
+import computer.clay.looper.System;
+import computer.clay.looper.Loop;
+import computer.clay.looper.LoopConstruct;
+import computer.clay.looper.LoopPerspective;
+import computer.clay.looper.Unit;
 
 public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callback {
 
@@ -23,18 +33,49 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
     private SurfaceHolder surfaceHolder;
 
+    // Canvas
+    private Bitmap canvasBitmap = null;
+    private Canvas myCanvas = null;
+    private int canvasWidth, canvasHeight;
+    private Paint paint = new Paint (Paint.ANTI_ALIAS_FLAG);
+    private Matrix identityMatrix;
+
     // Annotations (e.g., for debugging)
     private boolean enableAnnotations = false;
 
-    // Canvas
-    private int canvasWidth, canvasHeight;
-    private Bitmap canvasBitmap = null;
-    private Canvas myCanvas = null;
-    private Matrix identityMatrix;
-    private Paint paint = new Paint (Paint.ANTI_ALIAS_FLAG);
+    // Color: #0080ff
+    // Reference: http://www.color-hex.com/color/0080ff
+    // Tints of #0080ff: [ #0080ff, #198cff, #3299ff, #4ca6ff, #66b2ff, #7fbfff, #99ccff, #b2d8ff, #cce5ff, #e5f2ff, #ffffff ]
+    private int[] onlineLoopConstructColors = new int[] {
+            Color.parseColor ("#0080ff"),
+            Color.parseColor ("#198cff"),
+            Color.parseColor ("#3299ff"),
+            Color.parseColor ("#4ca6ff"),
+            Color.parseColor ("#66b2ff"),
+            Color.parseColor ("#7fbfff"),
+            Color.parseColor ("#99ccff"),
+            Color.parseColor ("#b2d8ff"),
+            Color.parseColor ("#cce5ff"),
+            Color.parseColor ("#e5f2ff")
+    };
+
+    // Color: #d90000
+    // Reference: http://www.color-hex.com/color/d90000
+    private int[] offlineLoopConstructColors = new int[] {
+            Color.parseColor ("#d90000"),
+            Color.parseColor ("#dc1919"),
+            Color.parseColor ("#e03232"),
+            Color.parseColor ("#e44c4c"),
+            Color.parseColor ("#e86666"),
+            Color.parseColor ("#ec7f7f"),
+            Color.parseColor ("#ef9999"),
+            Color.parseColor ("#f3b2b2"),
+            Color.parseColor ("#f7cccc"),
+            Color.parseColor ("#fbe5e5")
+    };
 
     // Clay
-    private Clay clay = new Clay ();
+//    private Clay clay = new Clay ();
 
     // Define base coordinate system
     private Point origin = new Point ();
@@ -85,7 +126,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
 
         // TODO: Move setPosition to a better location!
-        getClay().getPerspective().setPosition(myCanvas.getWidth() / 2, myCanvas.getHeight() / 2);
+        getClay().getPerspective ().setPosition(myCanvas.getWidth() / 2, myCanvas.getHeight() / 2);
 
         identityMatrix = new Matrix ();
     }
@@ -101,18 +142,13 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
         surfaceHolder = getHolder ();
         getHolder ().addCallback (this);
 
-        // Start communications
-//        if (communication == null) {
-//            communication = new Communication(this.clay);
-//        }
-//        communication.startDatagramServer();
-
         // Create and start background Thread
         appRenderingThread = new AppRenderingThread (this);
         appRenderingThread.setRunning (true);
         appRenderingThread.start ();
 
-        getClay ().getCommunication ().startDatagramServer();
+        // Start communications
+        getClay ().getCommunication ().startDatagramServer ();
 
     }
 
@@ -136,13 +172,13 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
         }
     }
 
-    boolean Hack_SentEraseLoopOnStartupMessage = false;
+//    boolean Hack_SentEraseLoopOnStartupMessage = false;
 
     @Override
     protected void onDraw (Canvas canvas) {
 
         // HACK:
-        getClay().getCommunication ().startDatagramServer (); // TODO: Move this to AppActivity
+        getClay ().getCommunication ().startDatagramServer (); // TODO: Move this to AppActivity
         getClay ().getCommunication ().processIncomingMessages ();
         getClay ().getCommunication ().processOutgoingMessages (); // HACK: This should be located elsewhere, probably in its own thread or in the updateState function!
 
@@ -150,55 +186,48 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
         // Move the perspective
         myCanvas.save ();
-        myCanvas.translate (clay.getPerspective ().getPosition ().x, clay.getPerspective ().getPosition ().y);
-        myCanvas.scale (clay.getPerspective ().getScaleFactor (), clay.getPerspective ().getScaleFactor ());
+        myCanvas.translate (getClay ().getPerspective ().getPosition ().x, getClay ().getPerspective ().getPosition ().y);
+        myCanvas.scale (getClay ().getPerspective ().getScaleFactor (), getClay ().getPerspective ().getScaleFactor ());
 
         // Draw the background
         myCanvas.drawColor (Color.WHITE);
 
-        // Create the default, empty loop if none exist.
-//        if (this.clay.getSystem ().getLoops().size () == 0) {
-//
-//            // Create a loop on the system if one doesn't exist.
-//            Loop defaultLoop = new Loop (this.clay);
-//            this.clay.getSystem ().addLoop (defaultLoop);
-//
-//        }
-
-        // Draw the loops
-//        for (Loop loop : this.clay.getSystem ().getLoops ()) {
-
-            // Prepare for drawing. Check if the specified loop has a perspective. If not, add one for it, so it can be rendered.
-            // TODO: Put this in the constructor for the LoopConstruct, so it will create itself as a default construct if there's not already a construct for the specified Loop.
+    // Prepare for drawing. Check if the specified loop has a perspective. If not, add one for it, so it can be rendered.
+    // TODO: Put this in the constructor for the LoopConstruct, so it will create itself as a default construct if there's not already a construct for the specified Loop.
         for (Unit unit : getClay ().getUnits ()) {
             this.prepareUnitPerspective (unit);
         }
 
-        // HACK: Remove this! This is not actual synchronization! It should READ the loop on startup, not destroy it. Store the UUID of the loop on the device.
-        if (Hack_SentEraseLoopOnStartupMessage == false) {
-            for (Unit unit : getClay ().getUnits ()) {
-                getClay ().getCommunication ().sendMessage (unit.getInternetAddress (), "reset");
-            }
-            Hack_SentEraseLoopOnStartupMessage = true;
-        }
+//        // HACK: Remove this! This is not actual synchronization! It should READ the loop on startup, not destroy it. Store the UUID of the loop on the device.
+//        if (Hack_SentEraseLoopOnStartupMessage == false) {
+//            for (Unit unit : getClay ().getUnits ()) {
+//                getClay ().getCommunication ().sendMessage (unit.getInternetAddress (), "reset");
+//            }
+//            Hack_SentEraseLoopOnStartupMessage = true;
+//        }
 
         // Draw loops and behaviors.
-//        drawLoopConstruct (myCanvas); // Draw the loop's construct.
         myCanvas.save ();
 
         drawLoopConstructPerspectives (myCanvas); // Draw perspectives on the loop
         drawBehaviorConditions (myCanvas); // Draw behavior conditions
         drawBehaviorConstructs (myCanvas); // Draw behaviors on the loop.
-//        drawCandidatePerspectives (myCanvas, loop); // Draw the candidate perspective(s) of the loop (if any).
+        // drawCandidatePerspectives (myCanvas, loop); // Draw the candidate perspective(s) of the loop (if any).
 
         myCanvas.restore ();
 
-//        }
+        // Draw "Clay" title if there are no units present.
+        if (!getClay ().hasUnits ()) {
+            drawTitle ();
+            // TODO: drawWhatIsClayLink (); // Draw link to show demo of Clay modules.
+            // TODO: drawGetClayLink (); // Draw link to purchase Clay modules.
+            // TODO: drawTalkAboutClayLink (); // Draw link to talk to someone about getClay ().
+        }
 
         // Draw behavior constructs that are NOT on a loop. Behavior constructs on a loop are drawn above.
-        drawBehaviorConstructs (myCanvas, this.clay.getSystem ());
+        drawBehaviorConstructs (myCanvas, getClay ().getSystem ());
 
-        // Paint the bitmap to the "primary" canvas
+        // Paint the bitmap to the "primary" canvas.
         canvas.drawBitmap (canvasBitmap, identityMatrix, null);
 
         // Restore the perspective translation.
@@ -222,7 +251,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
 
         // HACK: TODO: Move this to a separate "behavior execution thread" that performs the behavior and updates the behavior/construct states.
-//        for (Loop loop : this.clay.getSystem ().getLoops ()) {
+//        for (Loop loop : this.getClay ().getSystem ().getLoops ()) {
 //            for (BehaviorConstruct behaviorConstruct : loop.getBehaviors ()) {
 //                Behavior behavior = behaviorConstruct.getBehavior ();
 //                behavior.perform ();
@@ -249,7 +278,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
             // TODO: Move this into the Perspective class (maybe in getLoopConstruct and remove hasLoopConstruct since it will always be true)
             LoopConstruct loopConstruct = getClay ().getPerspective ().createLoopConstruct (unit);
 
-            ((AppActivity) getClay ().getPlatformContext()).Hack_Speak("showing the loop");
+            ((AppActivity) getClay ().getPlatformContext()).Hack_Speak ("showing the loop");
 
             if (!loopConstruct.hasPerspectives ()) {
 
@@ -265,71 +294,27 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
         }
     }
 
-    /**
-     * Draws the specified loop construct.
-     *
-     * @param canvas
-     * @param loop
-     */
-    void drawLoopConstruct (Canvas canvas) {
-
-        for (LoopConstruct loopConstruct : getClay ().getPerspective ().getLoopConstructs ()) {
-
-            // Draw the loop
-            float loopLeft = this.getOrigin ().x + loopConstruct.getPosition ().x - loopConstruct.getRadius ();
-            float loopTop = this.getOrigin ().y + -1 * loopConstruct.getPosition ().y - loopConstruct.getRadius ();
-            float loopRight = this.getOrigin ().x + loopConstruct.getPosition ().x + loopConstruct.getRadius ();
-            float loopBottom = this.getOrigin ().y + -1 * loopConstruct.getPosition ().y + loopConstruct.getRadius ();
-
-            canvas.save ();
-
-            // Set the loop's style
-            paint.setStyle (Paint.Style.STROKE);
-            paint.setStrokeWidth (2);
-            paint.setColor (Color.LTGRAY);
-
-            // Draw the loop
-            canvas.drawArc (loopLeft, loopTop, loopRight, loopBottom, -90 + loopConstruct.getStartAngle (), loopConstruct.getAngleSpan (), false, paint);
-
-            // TODO: Annotate the start and end of the loop with lines that specify the start angle and end angle in degrees in Clay's relative coordinate system.
-
-            // Draw arrowhead on loop
-            canvas.save ();
-//            myCanvas.translate(perspective.getPosition().x, perspective.getPosition().y);
-            canvas.rotate (-1 * (360 - (loopConstruct.getStartAngle () + loopConstruct.getAngleSpan ())));
-            canvas.translate (0, -1 * loopConstruct.getRadius ());
-
-            // Set the arrowhead's style
-            paint.setStyle (Paint.Style.STROKE);
-            paint.setStrokeWidth (2);
-            paint.setColor (Color.LTGRAY);
-
-            // Draw the arrowhead
-            canvas.drawLine (-20, -20, 0, 0, paint);
-            canvas.drawLine (-20, 20, 0, 0, paint);
-
-            // Draw behavior construct annotations
-            if (enableAnnotations) {
-                // Set style for behavior's label
-                paint.setStyle (Paint.Style.FILL);
-                paint.setStrokeWidth (0);
-                paint.setColor (Color.BLACK);
-                paint.setTextSize (24);
-
-                // Set style for behavior's label
-                String annotation = "loop (\u03BB)\npoint (\u03C1) = (" + loopConstruct.getPosition ().x + ", " + loopConstruct.getPosition ().x + ")";
-
-                Rect textBounds = new Rect ();
-                paint.getTextBounds (annotation, 0, annotation.length (), textBounds);
-                canvas.drawText (annotation, loopConstruct.getPosition ().x - textBounds.exactCenterX (), loopConstruct.getPosition ().y - textBounds.exactCenterY (), paint);
-            }
-
-            canvas.restore ();
-        }
+    public Clay getClay () {
+        return ((AppActivity) Clay.getPlatformContext ()).getClay ();
     }
 
-    public Clay getClay () {
-        return this.clay;
+    /**
+     * Draw "Clay" title in the center of the canvas.
+     */
+    void drawTitle () {
+
+        paint.setStyle (Paint.Style.FILL);
+        paint.setStrokeWidth (0);
+        paint.setColor (Color.BLACK);
+        paint.setTextSize (80);
+
+        // Set style for behavior's label
+        String title = "Clay";
+
+        Rect textBounds = new Rect ();
+        paint.getTextBounds (title, 0, title.length (), textBounds);
+        myCanvas.drawText (title, 0 - (textBounds.width () / 2), 0 - (textBounds.height () / 2), paint);
+
     }
 
     /**
@@ -340,18 +325,18 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
      */
     void drawLoopConstructPerspectives (Canvas canvas) {
 
-//        LoopConstruct loopConstruct = this.clay.getPerspective ().getLoopConstruct (loop);
+//        LoopConstruct loopConstruct = this.getClay ().getPerspective ().getLoopConstruct (loop);
         for (LoopConstruct loopConstruct : getClay ().getPerspective ().getLoopConstructs ()) {
 
             canvas.save ();
 
-//            if (this.clay.getPerspective ().hasLoopConstruct (loop)) {
+//            if (this.getClay ().getPerspective ().hasLoopConstruct (loop)) {
 
-            if (loopConstruct.hasPerspectives ()) { // if (this.clay.getPerspective ().getLoopConstruct (loop).hasPerspectives (loop)) {
+            if (loopConstruct.hasPerspectives ()) { // if (this.getClay ().getPerspective ().getLoopConstruct (loop).hasPerspectives (loop)) {
 
                     // TODO: Support multiple perspectives per "loop" (loop concept/placeholder)
 
-                for (LoopPerspective loopPerspective : loopConstruct.getPerspectives ()) { // for (LoopPerspective loopPerspective : this.clay.getPerspective ().getLoopConstruct (loop).getPerspectives (loop)) {
+                for (LoopPerspective loopPerspective : loopConstruct.getPerspectives ()) { // for (LoopPerspective loopPerspective : this.getClay ().getPerspective ().getLoopConstruct (loop).getPerspectives (loop)) {
 
                         // Draw the loop
                         float loopLeft = this.getOrigin ().x + loopConstruct.getPosition ().x - loopPerspective.getRadius ();
@@ -384,64 +369,34 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                             float perspectiveLoopRight = this.getOrigin ().x + loopConstruct.getPosition ().x + loopPerspective.getRadius ();
                             float perspectiveLoopBottom = this.getOrigin ().y + -1 * loopConstruct.getPosition ().y + loopPerspective.getRadius ();
 
-                            // Color: #0080ff
-                            // Reference: http://www.color-hex.com/color/0080ff
-                            // Tints of #0080ff: [ #0080ff, #198cff, #3299ff, #4ca6ff, #66b2ff, #7fbfff, #99ccff, #b2d8ff, #cce5ff, #e5f2ff, #ffffff ]
-                            int[] onlineLoopConstructColors = new int[] {
-                                    Color.parseColor ("#0080ff"),
-                                    Color.parseColor ("#198cff"),
-                                    Color.parseColor ("#3299ff"),
-                                    Color.parseColor ("#4ca6ff"),
-                                    Color.parseColor ("#66b2ff"),
-                                    Color.parseColor ("#7fbfff"),
-                                    Color.parseColor ("#99ccff"),
-                                    Color.parseColor ("#b2d8ff"),
-                                    Color.parseColor ("#cce5ff"),
-                                    Color.parseColor ("#e5f2ff")
-                            };
-
-                            // Color: #d90000
-                            // Reference: http://www.color-hex.com/color/d90000
-                            int[] offlineLoopConstructColors = new int[] {
-                                    Color.parseColor ("#d90000"),
-                                    Color.parseColor ("#dc1919"),
-                                    Color.parseColor ("#e03232"),
-                                    Color.parseColor ("#e44c4c"),
-                                    Color.parseColor ("#e86666"),
-                                    Color.parseColor ("#ec7f7f"),
-                                    Color.parseColor ("#ef9999"),
-                                    Color.parseColor ("#f3b2b2"),
-                                    Color.parseColor ("#f7cccc"),
-                                    Color.parseColor ("#fbe5e5")
-                            };
 
                             // Set loop color based on the time the last message was received
                             int loopConstructColor = onlineLoopConstructColors[0];
-                            if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 800) {
+                            if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 3000) {
                                 loopConstructColor = onlineLoopConstructColors[0];
-                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 1000) {
+                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 3500) {
                                 loopConstructColor = onlineLoopConstructColors[1];
-                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 1200) {
+                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 4000) {
                                 loopConstructColor = onlineLoopConstructColors[2];
-                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 1400) {
+                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 4500) {
                                 loopConstructColor = onlineLoopConstructColors[3];
-                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 1500) {
+                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 5000) {
                                 loopConstructColor = onlineLoopConstructColors[4];
-                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 1600) {
+                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 6000) {
                                 loopConstructColor = onlineLoopConstructColors[5];
-                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 1700) {
+                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 7000) {
                                 loopConstructColor = onlineLoopConstructColors[6];
-                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 1800) {
+                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 8000) {
                                 loopConstructColor = onlineLoopConstructColors[7];
-                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 2000) {
+                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 9000) {
                                 loopConstructColor = onlineLoopConstructColors[8];
-                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 3000) {
+                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () < 10000) {
                                 loopConstructColor = onlineLoopConstructColors[9];
                             }
 
-                            else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () > 4000) {
+                            else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () > 10000) {
                                 loopConstructColor = offlineLoopConstructColors[9];
-                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () > 5000) {
+                            } else if (loopConstruct.getLoop ().getUnit ().getTimeSinceLastMessage () > 12000) {
                                 loopConstructColor = offlineLoopConstructColors[4];
                             } else {
                                 loopConstructColor = onlineLoopConstructColors[0];
@@ -546,7 +501,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
     void drawBehaviorConditions (Canvas canvas) {
     // TODO: void drawBehaviorConditions (Canvas canvas, LoopPerspective loopPerspective)
 
-//        LoopConstruct loopConstruct = this.clay.getPerspective ().getLoopConstruct (loop);
+//        LoopConstruct loopConstruct = this.getClay ().getPerspective ().getLoopConstruct (loop);
 
         for (LoopConstruct loopConstruct : getClay ().getPerspective ().getLoopConstructs ()) {
             canvas.save ();
@@ -693,7 +648,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
             canvas.save ();
 
-            //LoopConstruct loopConstruct = this.clay.getPerspective().getLoopConstruct (loop);
+            //LoopConstruct loopConstruct = this.getClay ().getPerspective().getLoopConstruct (loop);
 
 
             if (loopConstruct.hasBehaviorConstructs ()) {
@@ -758,13 +713,13 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                     Loop nearestLoop = loopConstruct.getLoop (); // TODO: Replace with nearestLoopConstruct
 
                     // Get the loop construct associated with the loop.
-                    LoopConstruct nearestLoopConstruct = this.clay.getPerspective ().getLoopConstruct (nearestLoop);
+                    LoopConstruct nearestLoopConstruct = this.getClay ().getPerspective ().getLoopConstruct (nearestLoop);
 
                     // TODO: behaviorConstruct.isTouched
                     // TODO: behaviorConstruct.getTouchAngle -OR- behaviorConstruct.getTouchPoint
 
                     // TODO: get nearestLoopPerspective
-//                LoopPerspective nearestLoopPerspective = nearestLoopConstruct.getPerspective (this.clay.getPerson ().getTouch ());
+//                LoopPerspective nearestLoopPerspective = nearestLoopConstruct.getPerspective (this.getClay ().getPerson ().getTouch ());
 
 
                     // TODO: Get the angle of the behavior WRT the nearest loop construct (may not be this loop construct, if it is moved!)
@@ -797,7 +752,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
     void drawBehaviorConstructs (Canvas canvas, System system) {
         //        String behaviorStates = "";
 
-        for (BehaviorConstruct behaviorConstruct : this.clay.getPerspective ().getBehaviorConstructs ()) {
+        for (BehaviorConstruct behaviorConstruct : this.getClay ().getPerspective ().getBehaviorConstructs ()) {
 
             // Only draw loops that are NOT on a loop!
             if (behaviorConstruct.hasLoopConstruct ()) { // if (behaviorConstruct.hasLoop ()) {
@@ -858,13 +813,13 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
             // TODO: Get radius of nearest perspective.
 
             // Get the loop construct associated with the loop.
-//            LoopConstruct nearestLoopConstruct = this.clay.getPerspective ().getLoopConstruct (loop);
+//            LoopConstruct nearestLoopConstruct = this.getClay ().getPerspective ().getLoopConstruct (loop);
 
             // TODO: behaviorConstruct.isTouched
             // TODO: behaviorConstruct.getTouchAngle -OR- behaviorConstruct.getTouchPoint
 
             // TODO: get nearestLoopPerspective
-//                LoopPerspective nearestLoopPerspective = nearestLoopConstruct.getPerspective (this.clay.getPerson ().getTouch ());
+//                LoopPerspective nearestLoopPerspective = nearestLoopConstruct.getPerspective (this.getClay ().getPerson ().getTouch ());
 
 
 
@@ -897,15 +852,15 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
     void drawCandidatePerspectives (Canvas canvas, Loop loop) {
 
-        LoopConstruct loopConstruct = this.clay.getPerspective ().getLoopConstruct (loop);
+        LoopConstruct loopConstruct = this.getClay ().getPerspective ().getLoopConstruct (loop);
 
         myCanvas.save ();
 
-        if (this.clay.getPerspective ().hasLoopConstruct (loop)) {
+        if (this.getClay ().getPerspective ().hasLoopConstruct (loop)) {
 
-            if (this.clay.getPerspective ().getLoopConstruct (loop).hasCandidatePerspective (loop)) {
+            if (this.getClay ().getPerspective ().getLoopConstruct (loop).hasCandidatePerspective (loop)) {
 
-                LoopPerspective candidateLoopPerspective = this.clay.getPerspective ().getLoopConstruct (loop).getCandidatePerspective (loop);
+                LoopPerspective candidateLoopPerspective = this.getClay ().getPerspective ().getLoopConstruct (loop).getCandidatePerspective (loop);
 
                 if (candidateLoopPerspective.startAnglePoint != null && candidateLoopPerspective.spanPoint != null) {
 
@@ -1023,8 +978,8 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                 // Update touch action state with the raw touch information provided by the operating platform (i.e., Android).
                 for (int i = 0; i < pointCount; i++) {
                     int id = motionEvent.getPointerId (i);
-                    xTouches[id] = (motionEvent.getX (i) - clay.getPerspective ().getPosition ().x) / clay.getPerspective ().getScaleFactor (); // HACK: TODO: Get x position directly!
-                    yTouches[id] = (motionEvent.getY (i) - clay.getPerspective ().getPosition ().y) / clay.getPerspective ().getScaleFactor (); // HACK: TODO: Get y position directly!
+                    xTouches[id] = (motionEvent.getX (i) - getClay ().getPerspective ().getPosition ().x) / getClay ().getPerspective ().getScaleFactor (); // HACK: TODO: Get x position directly!
+                    yTouches[id] = (motionEvent.getY (i) - getClay ().getPerspective ().getPosition ().y) / getClay ().getPerspective ().getScaleFactor (); // HACK: TODO: Get y position directly!
                 }
 
 //                // Check if touching _any_ behaviors (or loops, or canvas, or perspective). If so, keep the canvas locked, and find the action that's being touched.
@@ -1040,8 +995,8 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                 // Update the state of the touched object based on the current touch interaction state.
                 if (touchAction == MotionEvent.ACTION_DOWN) {
 
-                    clay.getPerson ().touch (pointerId, xTouches[pointerId], yTouches[pointerId]);
-                    clay.getPerson ().classify (pointerId);
+                    getClay ().getPerson ().touch (pointerId, xTouches[pointerId], yTouches[pointerId]);
+                    getClay ().getPerson ().classify (pointerId);
 
                 } else if (touchAction == MotionEvent.ACTION_POINTER_DOWN) {
 
@@ -1049,13 +1004,13 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
                 } else if (touchAction == MotionEvent.ACTION_MOVE) {
 
-                    clay.getPerson ().touch (pointerId, xTouches[pointerId], yTouches[pointerId]);
-                    clay.getPerson ().classify (pointerId);
+                    getClay ().getPerson ().touch (pointerId, xTouches[pointerId], yTouches[pointerId]);
+                    getClay ().getPerson ().classify (pointerId);
 
                 } else if (touchAction == MotionEvent.ACTION_UP) {
 
-                    clay.getPerson ().untouch (pointerId, xTouches[pointerId], yTouches[pointerId]);
-                    clay.getPerson ().classify(pointerId);
+                    getClay ().getPerson ().untouch (pointerId, xTouches[pointerId], yTouches[pointerId]);
+                    getClay ().getPerson ().classify(pointerId);
 
                 } else if (touchAction == MotionEvent.ACTION_POINTER_UP) {
 

@@ -235,31 +235,39 @@ public class Communication {
 
             }
 
-        } else if (message.content.startsWith("connect to ")) {
+        } else if (message.content.startsWith("set unit ")) {
 
-            String ipAddress = message.content.split (" ")[2];
+            // e.g., "set unit <uuid> address to <ip-address>"
 
-            if (!getClay ().hasUnitByAddress (ipAddress)) {
-//            if (!units.contains (ipAddress)) {
-                Log.v ("Clay_Time", "Adding Clay with address " + ipAddress);
-                Unit unit = new Unit (clay, UUID.randomUUID ());
-                unit.setInternetAddress (ipAddress);
-                getClay ().addUnit (unit);
+            String[] messageTokens = message.content.split (" ");
 
-                // Print the current list of Clay units.
-                String currentUnits = "";
-                for (Unit clayUnit : getClay ().getUnits ()) {
-                    currentUnits += clayUnit.getInternetAddress () + " ";
+            if (messageTokens.length > 5) {
+                String unitUuid = messageTokens[2];
+                String unitAddress = messageTokens[5];
+
+                if (!getClay ().hasUnitByAddress (unitAddress)) {
+
+                    Log.v ("Clay_Time", "Adding Clay " + unitUuid + " with address " + unitAddress);
+                    Unit unit = new Unit (clay, UUID.fromString (unitUuid));
+                    unit.setInternetAddress (unitAddress);
+                    getClay ().addUnit (unit);
+                    getClay ().getTimeline ().addEvent (unit, "discovered");
+
+                    // HACK: This should not be here always. It should eventually be replaced with a command to load a specific loop from the Internet.
+//                    sendMessage (unit.getInternetAddress (), "reset");
+
+                    /*
+                    // Print the current list of Clay units.
+                    String currentUnits = "";
+                    for (Unit clayUnit : getClay ().getUnits ()) {
+                        currentUnits += clayUnit.getInternetAddress () + " ";
+                    }
+                    Log.v ("Clay_Time", "Network: [ " + currentUnits + " ]");
+                    */
+
+                } else {
+                    Log.v ("Clay", "Updating state of existing Unit with address " + unitAddress);
                 }
-                Log.v ("Clay_Time", "Network: [ " + currentUnits + " ]");
-
-//                sendMessageAsync (ipAddress, "connected!!!");
-
-                // HACK: Updates the list of discovered Clay units.
-//                listAdapter.notifyDataSetChanged(); // TODO: Remove this! Make it automatic and abstracted away!
-
-            } else {
-                Log.v("Clay", "Updating state of existing Unit with address " + ipAddress);
             }
 
         } else if (message.content.startsWith("say ")) {
@@ -271,19 +279,8 @@ public class Communication {
             ((AppActivity) getClay ().getPlatformContext()).Hack_Speak(phrase);
 
         } else {
-            Log.v ("Clay", "bad command");
-//            String ipAddress = message;
-//            if (!units.contains(ipAddress)) {
-//                Log.v("Clay", "Adding Clay with address " + ipAddress);
-//                units.add(ipAddress);
-//
-//                // Print the current list of Clay units.
-//                String currentUnits = "";
-//                for (String clayUnit : units) {
-//                    currentUnits += clayUnit + " ";
-//                }
-//                Log.v("Clay", "Network: [ " + currentUnits + " ]");
-//            }
+            Log.v ("Clay", "Error: Unrecognized message.");
+            // TODO: Add the unrecognized message the Timeline in a category for unrecognized messages, and allow it to be defined.
         }
     }
 
@@ -547,21 +544,6 @@ public class Communication {
         }
     }
 
-    /*
-    private Runnable updateTextMessage = new Runnable() {
-        public void run() {
-            if (datagramServer == null) return;
-//            textMessage.setText(myDatagramReceiver.getLastMessage());
-
-//            String httpRequestText = listAdapter.getItem(position); //CharSequence text = "Hello toast!";
-//                int duration = Toast.LENGTH_SHORT;
-//            Toast toast = Toast.makeText(getParent(), myDatagramReceiver.getLastMessage(), Toast.LENGTH_SHORT); //Toast toast = Toast.makeText(context, text, duration);
-//            toast.show();
-            Log.v("Clay UDP Server", datagramServer.getLastMessage());
-        }
-    };
-    */
-
     /**
      * UDP Outbound Messaging
      */
@@ -571,58 +553,6 @@ public class Communication {
     private static final int DISCOVERY_BROADCAST_PORT = 4445;
     private static final int BROADCAST_PORT = 4446;
     private static final int MESSAGE_PORT = BROADCAST_PORT; // or 4446
-
-//    private void sendDatagram (String ipAddress, int port, String message) {
-//        Log.v("Clay_Messaging", "\tSending datagram to " + ipAddress + ": " + message);
-//        try {
-//            // Send UDP packet to the specified address.
-//            DatagramSocket socket = new DatagramSocket(port);
-//            DatagramPacket packet = new DatagramPacket (message.getBytes(), message.length(), InetAddress.getByName (ipAddress), port);
-//            socket.send(packet);
-//            socket.close();
-//        } catch (IOException e) {
-//            Log.e("Clay", "Error ", e);
-//        }
-//    }
-
-//    private void sendDatagram (String message) {
-//        try {
-//
-//
-//
-////            // Broadcast UDP packet to the specified address.
-////            String messageStr = params[0]; // "turn light 1 on";
-////            int local_port = 4445;
-////            int server_port = 4445;
-////            DatagramSocket s = new DatagramSocket(local_port);
-//////                InetAddress local = InetAddress.getByName("192.168.43.235");
-////            InetAddress local = InetAddress.getByName("255.255.255.255");
-////            int msg_length = messageStr.length();
-////            byte[] message = messageStr.getBytes();
-////            DatagramPacket p = new DatagramPacket(message, msg_length, local, server_port);
-////            s.send(p);
-////            s.close();
-//
-//
-//
-//            // Send UDP packet to the specified address.
-//            String messageStr = message; // "turn light 1 on";
-//            DatagramSocket s = new DatagramSocket(BROADCAST_PORT);
-//            InetAddress local = InetAddress.getByName(BROADCAST_ADDRESS); // ("192.168.43.235");
-////                InetAddress local = InetAddress.getByName("255.255.255.255");
-//            int msg_length = messageStr.length();
-//            byte[] messageBytes = messageStr.getBytes();
-//            DatagramPacket p = new DatagramPacket(messageBytes, msg_length, local, BROADCAST_PORT);
-//            s.send(p);
-//            s.close();
-//        } catch (IOException e) {
-//            Log.e("Clay", "Error ", e);
-//            // If the code didn't successfully get the weather data, there's no point in attemping
-//            // to parse it.
-//
-////            return null;
-//        }
-//    }
 
     public void sendMessage (String address, String content) {
         Log.v("Clay", "sendMessageAsync");

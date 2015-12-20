@@ -3,17 +3,13 @@ package computer.clay.looper;
 import android.content.Context;
 import android.util.Log;
 
-import com.firebase.client.Firebase;
-
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 import java.util.UUID;
 
 public class Clay {
-
-    // Clay
-    // - Placeholder
-    //   - LoopConstruct
-    //   - BehaviorConstruct
 
     private ArrayList<Unit> units = new ArrayList<Unit> (); // TODO: Move this to the System class!
 
@@ -24,9 +20,8 @@ public class Clay {
     private Person person = new Person (this); // i.e., like the "controller"
 
     // Physical systems
-    private Communication communication = new Communication (this);
-
     private Timeline timeline = null;
+    private Communication communication = null;
 
     // Hacks for debugging!
     // TODO: Remove all of these!
@@ -34,11 +29,16 @@ public class Clay {
 
     static private Context context;
 
+    private Calendar calendar = Calendar.getInstance (TimeZone.getTimeZone ("GMT"));
+
     Clay () {
 
         // TODO: throw exception if context is not defined!
 
-        // Start the timeline database
+        // Start the communications systems
+        this.communication = new Communication (this);
+
+        // Start the timeline system
         this.timeline = new Timeline (this);
 
         // discoverVirtualUnits ();
@@ -51,8 +51,24 @@ public class Clay {
         Clay.context = context;
     }
 
+    private Calendar getCalendar () {
+        return this.calendar;
+    }
+
+    public Date getDate () {
+        return this.calendar.getTime ();
+    }
+
+    public long getTime () {
+        return this.calendar.getTimeInMillis ();
+    }
+
     public static Context getPlatformContext () {
         return Clay.context;
+    }
+
+    public BehaviorRepository getBehaviorRepository () {
+        return this.behaviorRepository;
     }
 
     public Communication getCommunication () {
@@ -62,6 +78,10 @@ public class Clay {
         }
 
         return this.communication;
+    }
+
+    public Timeline getTimeline () {
+        return this.timeline;
     }
 
     public System getSystem () {
@@ -93,6 +113,10 @@ public class Clay {
         if (!this.units.contains (unit)) {
             this.units.add (unit);
         }
+    }
+
+    public boolean hasUnits () {
+        return this.units.size () > 0;
     }
 
     public boolean hasUnit (Unit unit) {

@@ -21,8 +21,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
-import com.firebase.client.Firebase;
-
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -36,6 +34,8 @@ public class AppActivity extends Activity {
     AppSurfaceView mySurfaceView;
 
     private static Context context;
+
+    private Clay clay = null;
 
     private void checkTTS(){
         Intent check = new Intent();
@@ -58,6 +58,9 @@ public class AppActivity extends Activity {
         // Configure Clay for the Android platform
         Clay.setPlatformContext (this);
 
+        // Create Clay
+        this.clay = new Clay ();
+
         // Set orientation
         // setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
@@ -70,6 +73,10 @@ public class AppActivity extends Activity {
         mySurfaceView.AppSurfaceView_OnResume ();
 
         checkTTS ();
+    }
+
+    public Clay getClay () {
+        return this.clay;
     }
 
     public static Context getAppContext() {
@@ -768,6 +775,9 @@ public class AppActivity extends Activity {
         builder.show ();
     }
 
+    /**
+     * Verbalizer.
+     */
     String Hack_PromptForSpeechTitle = "";
     public void Hack_PromptForSpeech (final BehaviorConstruct behaviorConstruct) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -798,54 +808,66 @@ public class AppActivity extends Activity {
         builder.show ();
     }
 
+    /**
+     * Message.
+     */
+    String Hack_PromptForMessageTitle = "";
+    public void Hack_PromptForMessage (final BehaviorConstruct behaviorConstruct) {
+        AlertDialog.Builder builder = new AlertDialog.Builder (this);
+        builder.setTitle ("Describe the message.");
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.setInputType(InputType.TYPE_CLASS_TEXT);//input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton ("OK", new DialogInterface.OnClickListener () {
+            @Override
+            public void onClick (DialogInterface dialog, int which) {
+                Hack_PromptForMessageTitle = input.getText ().toString ();
+                behaviorConstruct.getBehavior ().setTitle ("say");
+                behaviorConstruct.getBehavior ().setTransform ("say " + Hack_PromptForMessageTitle);
+            }
+        });
+        builder.setNegativeButton ("Cancel", new DialogInterface.OnClickListener () {
+            @Override
+            public void onClick (DialogInterface dialog, int which) {
+                dialog.cancel ();
+            }
+        });
+
+        builder.show ();
+    }
+
     public void Hack_PromptForBehaviorSelection (final BehaviorConstruct behaviorConstruct) {
 
-        final CharSequence[] items = {
-                "channel",
-                "time",
-                "cause/effect",
-                "message",
+        // Create the list of behaviors
+        int basicBehaviorCount = getClay ().getBehaviorRepository ().getCachedBehaviors ().size ();
+        final String[] basicBehaviors = new String[basicBehaviorCount];
+        for (int i = 0; i < basicBehaviorCount; i++) {
+            Behavior behavior = getClay ().getBehaviorRepository ().getCachedBehaviors ().get (i);
+            basicBehaviors[i] = behavior.getTitle ();
+        }
 
-                "reset",
-                "condition",
-                "say",
-                "connect component",
-                "request",
-                "memory",
-//                "turn light 1 on",
-//                "turn light 1 off",
-//                "turn light 2 on",
-//                "turn light 2 off",
-//                "turn lights on",
-//                "turn lights off",
-//                "wait 200 ms",
-//                "wait 1000",
-//                "say \"i sense a soul in search of answers\"",
-//                "slowly say it's done",
-//                "quickly say it's done",
-//                "request plug the sensor's signal wire into channel 6. i am blinking it for you.",
-//                "request connect ground",
-//                "request connect power"
-        };
-
+        // Show the list of behaviors
         AlertDialog.Builder builder = new AlertDialog.Builder (this);
-        builder.setTitle("Select a behavior");
-        builder.setItems(items, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                // Do something with the selection
-//                mDoneButton.setText(items[item]);
-                if (items[item].toString ().equals ("channel")) {
-                    Hack_PromptForBehaviorTransform (behaviorConstruct);
-                } else if (items[item].toString ().equals ("time")) {
-                    Hack_PromptForTimeTransform (behaviorConstruct);
-                } else if (items[item].toString ().equals ("cause/effect")) {
-                    Hack_PromptForSwitchBehaviorTransform (behaviorConstruct);
-                }
+        builder.setTitle ("Select a behavior");
+        builder.setItems (basicBehaviors, new DialogInterface.OnClickListener () {
+            public void onClick (DialogInterface dialog, int item) {
 
-                else if (items[item].toString ().equals ("say")) {
+                if (basicBehaviors[item].toString ().equals ("control")) {
+                    Hack_PromptForBehaviorTransform (behaviorConstruct);
+                } else if (basicBehaviors[item].toString ().equals ("time")) {
+                    Hack_PromptForTimeTransform (behaviorConstruct);
+                } else if (basicBehaviors[item].toString ().equals ("cause/effect")) {
+                    Hack_PromptForSwitchBehaviorTransform (behaviorConstruct);
+                } else if (basicBehaviors[item].toString ().equals ("message")) {
+                    Hack_PromptForMessage (behaviorConstruct);
+                } else if (basicBehaviors[item].toString ().equals ("say")) {
                     Hack_PromptForSpeech (behaviorConstruct);
                 }
-//                behaviorConstruct.getBehavior ().setTitle (items[item].toString ());
             }
         });
         AlertDialog alert = builder.create();
