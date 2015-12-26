@@ -549,16 +549,16 @@ public class LoopConstruct { // TODO: Possibly renamed to LoopScaffold, LoopScaf
      * Returns the behavior condition at the specified angle. This method assumes that behaviors
      * are stored in ascending order of their angles on the loop.
      */
-    public BehaviorCondition getBehaviorConditionAtAngle (double angle) {
+    public BehaviorTrigger getBehaviorConditionAtAngle (double angle) {
 
-        BehaviorCondition behaviorCondition = null;
+        BehaviorTrigger behaviorTrigger = null;
 
         BehaviorConstruct behaviorAfterAngle = this.getBehaviorAfterAngle (angle);
         if (behaviorAfterAngle != null) {
-            behaviorCondition = behaviorAfterAngle.getCondition();
+            behaviorTrigger = behaviorAfterAngle.getCondition();
         }
 
-        return behaviorCondition;
+        return behaviorTrigger;
     }
 
     /**

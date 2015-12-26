@@ -16,13 +16,15 @@ public class LoopPerspective {
     public Point startAnglePoint = null;
     public Point spanPoint = null;
 
-    public double DEFAULT_SNAP_DISTANCE = 200;
+    public double DEFAULT_SNAP_DISTANCE = 300;
 
     private Perspective perspective = null;
 
     private LoopConstruct loopConstruct = null;
     private LoopPerspective previousPerspective = null;
     private LoopPerspective nextPerspective = null;
+
+    private double snapDistance = DEFAULT_SNAP_DISTANCE;
 
     private BehaviorConstruct firstBehaviorConstruct = null; // The first behavior construct displayed in the perspective's span
 
@@ -35,21 +37,6 @@ public class LoopPerspective {
         this.setStartAngle (angle);
         this.setSpan (span);
     }
-
-    /**
-     * Get the angle at which the specified point falls relative to the the center of the loop,
-     * like the method LoopConstruct.getAngle(...), but also relative to the start angle of the
-     * this perspective.
-     */
-    /*
-    public double getAngle (int x, int y) {
-        // TODO: Implement this function!
-//        Point startAngle = this.getPoint (this.startAngle);
-//        Point stopAngle = new Point (x, y);
-//        double angle = this.getAngle(startAngle, stopAngle);
-//        return angle;
-    }
-    */
 
     public int getRadius () {
         return this.radius + (DEFAULT_RADIUS_EXTENSION - (int) ((this.getSpan () / 360.0) * DEFAULT_RADIUS_EXTENSION));
@@ -123,8 +110,6 @@ public class LoopPerspective {
         }
 
     }
-
-    private double snapDistance = DEFAULT_SNAP_DISTANCE;
 
     public double getSnapDistance () {
         return this.snapDistance;

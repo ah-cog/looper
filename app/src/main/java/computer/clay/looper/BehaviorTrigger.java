@@ -1,6 +1,6 @@
 package computer.clay.looper;
 
-public class BehaviorCondition { // TODO: Consider renaming this to BehaviorPrecursor
+public class BehaviorTrigger { // TODO: Consider renaming this to BehaviorPrecursor
 
     private BehaviorConstruct behaviorConstruct;
 
@@ -14,7 +14,7 @@ public class BehaviorCondition { // TODO: Consider renaming this to BehaviorPrec
 
     private Type type = Type.NONE;
 
-    BehaviorCondition (BehaviorConstruct behaviorConstruct, Type type) {
+    BehaviorTrigger(BehaviorConstruct behaviorConstruct, Type type) {
         this.behaviorConstruct = behaviorConstruct;
         this.type = type;
     }

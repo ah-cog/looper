@@ -13,7 +13,7 @@ public class BehaviorConstruct {
 
     private Behavior behavior = null;
 
-    private BehaviorCondition condition = null;
+    private BehaviorTrigger condition = null;
 
     private Point position = new Point ();
     private int radius;
@@ -67,7 +67,7 @@ public class BehaviorConstruct {
         Behavior.BEHAVIOR_COUNT++;
 
         // Create the behavior condition associated with this behavior construct.
-        this.condition = new BehaviorCondition(this, BehaviorCondition.Type.NONE);
+        this.condition = new BehaviorTrigger(this, BehaviorTrigger.Type.NONE);
     }
 
     public boolean isSynchronized () {
@@ -148,11 +148,11 @@ public class BehaviorConstruct {
         return (this.behavior != null);
     }
 
-    public void setCondition (BehaviorCondition condition) {
+    public void setCondition (BehaviorTrigger condition) {
         this.condition = condition;
     }
 
-    public BehaviorCondition getCondition () {
+    public BehaviorTrigger getCondition () {
         return this.condition;
     }
 
@@ -172,7 +172,7 @@ public class BehaviorConstruct {
     public Point settlePosition () {
         Log.v("Clay", "settlePosition");
 
-        Point resolvedPoint = new Point ();
+        Point resolvedPoint = new Point (this.getPosition ());
 
         /* Check if the action is entangled. */
 
@@ -182,26 +182,28 @@ public class BehaviorConstruct {
 
         // Get the perspective at the behavior's angle
         LoopPerspective nearestLoopConstructPerspective = nearestLoopConstruct.getPerspective (behaviorConstructAngle);
-        double nearestLoopConstructPerspectiveDistance = this.getDistanceToLoopPerspective (nearestLoopConstructPerspective);
+        if (nearestLoopConstructPerspective != null) {
+            double nearestLoopConstructPerspectiveDistance = this.getDistanceToLoopPerspective(nearestLoopConstructPerspective);
 
-        // Snap to the loop if within snapping range
-        if (nearestLoopConstruct != null) {
-            if (nearestLoopConstructPerspectiveDistance < nearestLoopConstructPerspective.getSnapDistance ()) { // TODO: Replace magic number with a static class variable.
+            // Snap to the loop if within snapping range
+            if (nearestLoopConstruct != null) {
+                if (nearestLoopConstructPerspectiveDistance < nearestLoopConstructPerspective.getSnapDistance()) { // TODO: Replace magic number with a static class variable.
 
-                Point nearestPoint = this.getNearestPoint (nearestLoopConstructPerspective);
-                this.setPosition (nearestPoint.x, nearestPoint.y);
+                    Point nearestPoint = this.getNearestPoint(nearestLoopConstructPerspective);
+                    this.setPosition(nearestPoint.x, nearestPoint.y);
 
-                nearestLoopConstruct.addBehaviorConstruct (this);
+                    nearestLoopConstruct.addBehaviorConstruct(this);
 
-            } else { // The behavior was positioned outside the snapping boundary of the loop.
+                } else { // The behavior was positioned outside the snapping boundary of the loop.
 
-                if (this.hasLoopConstruct ()) { // Check if this behavior placeholder is in a loop sequence.
-                    Log.v ("Clay", "REMOVING BEHAVIOR CONSTRUCT FROM LOOP CONSTRUCT.");
-                    this.getLoopConstruct ().removeBehaviorConstruct (this);
+                    if (this.hasLoopConstruct()) { // Check if this behavior placeholder is in a loop sequence.
+                        Log.v("Clay", "REMOVING BEHAVIOR CONSTRUCT FROM LOOP CONSTRUCT.");
+                        this.getLoopConstruct().removeBehaviorConstruct(this);
 //                    this.removeLoopConstruct ();
-                } else {
-                    // NOTE: This happens when a free behavior is moved, but not onto a loop (it remains free after being moved).
-                    Log.v ("Clay", "UNHANGLED CONDITION MET. HANDLE THIS CONDITION!");
+                    } else {
+                        // NOTE: This happens when a free behavior is moved, but not onto a loop (it remains free after being moved).
+                        Log.v("Clay", "UNHANGLED CONDITION MET. HANDLE THIS CONDITION!");
+                    }
                 }
             }
         }
@@ -244,29 +246,20 @@ public class BehaviorConstruct {
 
     public double getDistance (int x, int y) {
         double distanceSquare = Math.pow (x - this.position.x, 2) + Math.pow (y - this.position.y, 2);
-        double distance = Math.sqrt(distanceSquare);
+        double distance = Math.sqrt (distanceSquare);
         return distance;
     }
 
     public Point getNearestPoint (LoopPerspective loopPerspective) {
 
-        Point nearestPoint = null;
+        double deltaX = this.position.x - loopPerspective.getLoopConstruct ().getPosition ().x;
+        double deltaY = this.position.y - loopPerspective.getLoopConstruct ().getPosition ().y;
+        double angleInDegrees = Math.atan2 (deltaY, deltaX);
 
-        if (loopPerspective != null) {
+        int nearestX = (int) ((0) + (loopPerspective.getRadius ()) * Math.cos(angleInDegrees));
+        int nearestY = (int) ((0) + (loopPerspective.getRadius ()) * Math.sin (angleInDegrees));
 
-            nearestPoint = new Point();
-
-            double deltaX = this.position.x - loopPerspective.getLoopConstruct ().getPosition ().x;
-            double deltaY = this.position.y - loopPerspective.getLoopConstruct ().getPosition ().y;
-            double angleInDegrees = Math.atan2 (deltaY, deltaX);
-
-            int nearestX = (int) ((0) + (loopPerspective.getRadius ()) * Math.cos (angleInDegrees));
-            int nearestY = (int) ((0) + (loopPerspective.getRadius ()) * Math.sin (angleInDegrees));
-
-            nearestPoint.set (nearestX, nearestY);
-        }
-
-        return nearestPoint;
+        return new Point (nearestX, nearestY);
     }
 
     public double getDistanceToLoopPerspective (LoopPerspective loopPerspective) {

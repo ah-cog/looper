@@ -251,7 +251,7 @@ public class Communication {
                     Unit unit = new Unit (clay, UUID.fromString (unitUuid));
                     unit.setInternetAddress (unitAddress);
                     getClay ().addUnit (unit);
-                    getClay ().getTimeline ().addEvent (unit, "discovered");
+//                    getClay ().getDatabase().addEvent (unit, "discovered");
 
                     // HACK: This should not be here always. It should eventually be replaced with a command to load a specific loop from the Internet.
 //                    sendMessage (unit.getInternetAddress (), "reset");
@@ -280,7 +280,7 @@ public class Communication {
 
         } else {
             Log.v ("Clay", "Error: Unrecognized message.");
-            // TODO: Add the unrecognized message the Timeline in a category for unrecognized messages, and allow it to be defined.
+            // TODO: Add the unrecognized message the Database in a category for unrecognized messages, and allow it to be defined.
         }
     }
 

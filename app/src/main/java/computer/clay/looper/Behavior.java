@@ -16,9 +16,9 @@ public class Behavior {
 
     private BehaviorConstruct behaviorConstruct;
 
-    // TODO: private Loop loop;
+//    private Loop loop = null;
 
-    Behavior(String title) {
+    Behavior (String title) {
         this.behaviorConstruct = null;
 
         this.uuid = UUID.randomUUID();
@@ -26,21 +26,12 @@ public class Behavior {
         this.title = title;
         this.description = "";
         this.transform = "";
+
+//        this.loop = new Loop ();
     }
 
     // TODO: Remove this!
     Behavior (BehaviorConstruct behaviorConstruct) {
-        this.behaviorConstruct = behaviorConstruct;
-
-        this.uuid = UUID.randomUUID();
-
-        this.title = title;
-        this.description = "";
-        this.transform = "";
-    }
-
-    // TODO: Remove this!
-    public void setBehaviorConstruct (BehaviorConstruct behaviorConstruct) {
         this.behaviorConstruct = behaviorConstruct;
 
         this.uuid = UUID.randomUUID();

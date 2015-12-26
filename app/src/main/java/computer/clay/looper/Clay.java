@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.UUID;
 
 public class Clay {
 
@@ -20,7 +19,7 @@ public class Clay {
     private Person person = new Person (this); // i.e., like the "controller"
 
     // Physical systems
-    private Timeline timeline = null;
+    private Database database = null;
     private Communication communication = null;
 
     // Hacks for debugging!
@@ -31,6 +30,9 @@ public class Clay {
 
     private Calendar calendar = Calendar.getInstance (TimeZone.getTimeZone ("GMT"));
 
+    // Settings
+    public boolean enablePerspectiveMovingProperty = false;
+
     Clay () {
 
         // TODO: throw exception if context is not defined!
@@ -38,10 +40,8 @@ public class Clay {
         // Start the communications systems
         this.communication = new Communication (this);
 
-        // Start the timeline system
-        this.timeline = new Timeline (this);
-
-        // discoverVirtualUnits ();
+        // Start the database system
+        this.database = new Database (this);
 
         // TODO: Discover units!
     }
@@ -56,7 +56,7 @@ public class Clay {
     }
 
     public Date getDate () {
-        return this.calendar.getTime ();
+        return this.calendar.getTime();
     }
 
     public long getTime () {
@@ -80,8 +80,8 @@ public class Clay {
         return this.communication;
     }
 
-    public Timeline getTimeline () {
-        return this.timeline;
+    public Database getDatabase() {
+        return this.database;
     }
 
     public System getSystem () {
@@ -144,11 +144,6 @@ public class Clay {
 
     public void discoverUnits () {
 
-    }
-
-    public void discoverVirtualUnits () {
-        Unit virtualUnit = new Unit (this, UUID.randomUUID ());
-        addUnit (virtualUnit);
     }
 
     // TODO: discoverUnits() : Discover devices via UDP (maybe TCP).

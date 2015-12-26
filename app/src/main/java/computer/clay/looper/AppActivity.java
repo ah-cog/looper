@@ -91,18 +91,18 @@ public class AppActivity extends Activity {
 
     @Override
     protected void onPause () {
-        super.onPause ();
-        mySurfaceView.AppSurfaceView_OnPause ();
+        super.onPause();
+        mySurfaceView.AppSurfaceView_OnPause();
 
 //        // Pause the communications
 //        // HACK: Resume this!
 //        communication.stopDatagramServer ();
-//        clay.getCommunication ().stopDatagramServer ();
+//        clay.getNetwork ().stopDatagramServer ();
     }
 
     @Override
     protected void onActivityResult (int requestCode, int resultCode, Intent data) {
-        super.onActivityResult (requestCode, resultCode, data);
+        super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == CHECK_CODE){
             if(resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS){
                 speaker = new Speaker(this);
@@ -115,7 +115,7 @@ public class AppActivity extends Activity {
     }
 
     public void Hack_Speak (String phrase) {
-        Log.v ("Clay_Verbalizer", "Hack_Speak: " + phrase);
+        Log.v("Clay_Verbalizer", "Hack_Speak: " + phrase);
 //        if (speaker.isAllowed ())
         if (speaker != null) {
             speaker.allow (true);
@@ -167,7 +167,7 @@ public class AppActivity extends Activity {
         builder.setView (transformLayout);
 
         // Set up the buttons
-        builder.setPositiveButton ("OK", new DialogInterface.OnClickListener () {
+        builder.setPositiveButton ("DONE", new DialogInterface.OnClickListener () {
             @Override
             public void onClick (DialogInterface dialog, int which) {
 
@@ -197,6 +197,12 @@ public class AppActivity extends Activity {
         builder.setTitle ("Change the channel.");
         builder.setMessage ("What do you want to do?");
         // builder.setTitle ("Behavior Transform");
+
+        // Populate with the current transform values (if any).
+        if (behaviorConstruct.getBehavior().getTransform() != null) {
+            Log.v("Behavior_Transform", behaviorConstruct.getBehavior().getTransform());
+            // TODO: Store the previous values so they can be used to initialize the interface.
+        }
 
         // TODO: Specify the units to receive the change.
 
@@ -509,7 +515,7 @@ public class AppActivity extends Activity {
         builder.setView (transformLayout);
 
         // Set up the buttons
-        builder.setPositiveButton ("OK", new DialogInterface.OnClickListener () {
+        builder.setPositiveButton ("DONE", new DialogInterface.OnClickListener () {
             @Override
             public void onClick (DialogInterface dialog, int which) {
 //                Hack_behaviorTitle = input.getText ().toString ();
@@ -666,7 +672,7 @@ public class AppActivity extends Activity {
         transformLayout.addView (switchEffectLabel);
 
         LinearLayout switchEffectLayout = new LinearLayout (this);
-        switchEffectLayout.setOrientation (LinearLayout.HORIZONTAL);
+        switchEffectLayout.setOrientation(LinearLayout.HORIZONTAL);
         final ArrayList<ToggleButton> switchEffectToggleButtons = new ArrayList<> ();
 //        final ArrayList<ArrayList<Boolean>> switchEffectChannels = new ArrayList<> ();
 //        for (int i = 0; i < 12; i++) {
@@ -726,7 +732,7 @@ public class AppActivity extends Activity {
         builder.setView (transformLayout);
 
         // Set up the buttons
-        builder.setPositiveButton ("OK", new DialogInterface.OnClickListener () {
+        builder.setPositiveButton ("DONE", new DialogInterface.OnClickListener () {
             @Override
             public void onClick (DialogInterface dialog, int which) {
 //                Hack_behaviorTitle = input.getText ().toString ();
@@ -790,7 +796,7 @@ public class AppActivity extends Activity {
         builder.setView(input);
 
         // Set up the buttons
-        builder.setPositiveButton ("OK", new DialogInterface.OnClickListener () {
+        builder.setPositiveButton ("DONE", new DialogInterface.OnClickListener () {
             @Override
             public void onClick (DialogInterface dialog, int which) {
                 Hack_PromptForSpeechTitle = input.getText ().toString ();
@@ -823,12 +829,12 @@ public class AppActivity extends Activity {
         builder.setView(input);
 
         // Set up the buttons
-        builder.setPositiveButton ("OK", new DialogInterface.OnClickListener () {
+        builder.setPositiveButton ("DONE", new DialogInterface.OnClickListener () {
             @Override
             public void onClick (DialogInterface dialog, int which) {
                 Hack_PromptForMessageTitle = input.getText ().toString ();
-                behaviorConstruct.getBehavior ().setTitle ("say");
-                behaviorConstruct.getBehavior ().setTransform ("say " + Hack_PromptForMessageTitle);
+                behaviorConstruct.getBehavior ().setTitle ("message");
+                behaviorConstruct.getBehavior ().setTransform ("message " + Hack_PromptForMessageTitle);
             }
         });
         builder.setNegativeButton ("Cancel", new DialogInterface.OnClickListener () {
@@ -864,7 +870,7 @@ public class AppActivity extends Activity {
                 } else if (basicBehaviors[item].toString ().equals ("cause/effect")) {
                     Hack_PromptForSwitchBehaviorTransform (behaviorConstruct);
                 } else if (basicBehaviors[item].toString ().equals ("message")) {
-                    Hack_PromptForMessage (behaviorConstruct);
+                    Hack_PromptForMessage(behaviorConstruct);
                 } else if (basicBehaviors[item].toString ().equals ("say")) {
                     Hack_PromptForSpeech (behaviorConstruct);
                 }
@@ -924,7 +930,7 @@ public class AppActivity extends Activity {
 //                        builderInner.setMessage (strName);
 //                        builderInner.setTitle ("Your Selected Item is");
 //                        builderInner.setPositiveButton (
-//                                "Ok",
+//                                "DONE",
 //                                new DialogInterface.OnClickListener () {
 //                                    @Override
 //                                    public void onClick (

@@ -16,17 +16,6 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-import computer.clay.looper.AppActivity;
-import computer.clay.looper.AppRenderingThread;
-import computer.clay.looper.BehaviorCondition;
-import computer.clay.looper.BehaviorConstruct;
-import computer.clay.looper.Clay;
-import computer.clay.looper.System;
-import computer.clay.looper.Loop;
-import computer.clay.looper.LoopConstruct;
-import computer.clay.looper.LoopPerspective;
-import computer.clay.looper.Unit;
-
 public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callback {
 
     private AppRenderingThread appRenderingThread;
@@ -148,7 +137,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
         appRenderingThread.start ();
 
         // Start communications
-        getClay ().getCommunication ().startDatagramServer ();
+        getClay ().getCommunication ().startDatagramServer();
 
     }
 
@@ -544,7 +533,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
                 if (behaviorConstruct.hasCondition ()) {
 
-                    if (behaviorConstruct.getCondition ().getType () == BehaviorCondition.Type.NONE) {
+                    if (behaviorConstruct.getCondition ().getType () == BehaviorTrigger.Type.NONE) {
 
                         // Set the behavior condition's style
                         paint.setStyle (Paint.Style.STROKE);
@@ -554,7 +543,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                         // Draw the condition
                         canvas.drawArc (loopLeft, loopTop, loopRight, loopBottom, (float) previousBehaviorAngle, (float) behaviorAngle - previousBehaviorAngle, false, paint);
 
-                    } else if (behaviorConstruct.getCondition ().getType () == BehaviorCondition.Type.SWITCH) {
+                    } else if (behaviorConstruct.getCondition ().getType () == BehaviorTrigger.Type.SWITCH) {
 
                         float spacingBeforeArc = (loopPerspective.hasPreviousPerspective () ? 0.0f : 20.0f);
                         float spacingAfterArc = (loopPerspective.hasNextPerspective () ? 0.0f : 20.0f);
@@ -591,7 +580,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
                         canvas.restore ();
 
-                    } else if (behaviorConstruct.getCondition ().getType () == BehaviorCondition.Type.THRESHOLD) {
+                    } else if (behaviorConstruct.getCondition ().getType () == BehaviorTrigger.Type.THRESHOLD) {
 
                         // Set the behavior condition's style
                         paint.setStyle (Paint.Style.STROKE);
@@ -601,7 +590,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                         // Draw the condition
                         canvas.drawArc (loopLeft, loopTop, loopRight, loopBottom, (float) previousBehaviorAngle, (float) behaviorAngle - previousBehaviorAngle, false, paint);
 
-                    } else if (behaviorConstruct.getCondition ().getType () == BehaviorCondition.Type.GESTURE) {
+                    } else if (behaviorConstruct.getCondition ().getType () == BehaviorTrigger.Type.GESTURE) {
 
                         // Set the behavior condition's style
                         paint.setStyle (Paint.Style.STROKE);
@@ -611,7 +600,7 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                         // Draw the condition
                         canvas.drawArc (loopLeft, loopTop, loopRight, loopBottom, (float) previousBehaviorAngle, (float) behaviorAngle - previousBehaviorAngle, false, paint);
 
-                    } else if (behaviorConstruct.getCondition ().getType () == BehaviorCondition.Type.MESSAGE) {
+                    } else if (behaviorConstruct.getCondition ().getType () == BehaviorTrigger.Type.MESSAGE) {
 
                         // Set the behavior condition's style
                         paint.setStyle (Paint.Style.STROKE);
@@ -644,12 +633,11 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
      */
     void drawBehaviorConstructs (Canvas canvas) {
 
-        for (LoopConstruct loopConstruct : getClay ().getPerspective ().getLoopConstructs ()) {
+        for (LoopConstruct loopConstruct : getClay().getPerspective().getLoopConstructs()) {
 
             canvas.save ();
 
-            //LoopConstruct loopConstruct = this.getClay ().getPerspective().getLoopConstruct (loop);
-
+            // LoopConstruct loopConstruct = this.getClay ().getPerspective().getLoopConstruct (loop);
 
             if (loopConstruct.hasBehaviorConstructs ()) {
                 for (BehaviorConstruct behaviorConstruct : loopConstruct.getBehaviorConstructs ()) { // for (BehaviorConstruct behaviorConstruct : loop.getBehaviors ()) {
@@ -731,10 +719,12 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
                     // TODO: Get the radius of the perspective
 
-                    // Draw snapping path to nearest loop
-                    if (behaviorConstruct.getDistanceToLoopPerspective (nearestLoopConstructPerspective) < nearestLoopConstructPerspective.getSnapDistance ()) { // if (behaviorConstruct.getDistanceToLoopPerspective (nearestLoopConstructPerspective) < nearestLoopConstructPerspective.getRadius ()) {
-                        Point nearestPoint = behaviorConstruct.getNearestPoint (nearestLoopConstructPerspective);
-                        canvas.drawLine (behaviorConstruct.getPosition ().x, behaviorConstruct.getPosition ().y, nearestPoint.x, nearestPoint.y, paint);
+                    if (nearestLoopConstructPerspective != null) {
+                        // Draw snapping path to nearest loop
+                        if (behaviorConstruct.getDistanceToLoopPerspective(nearestLoopConstructPerspective) < nearestLoopConstructPerspective.getSnapDistance()) { // if (behaviorConstruct.getDistanceToLoopPerspective (nearestLoopConstructPerspective) < nearestLoopConstructPerspective.getRadius ()) {
+                            Point nearestPoint = behaviorConstruct.getNearestPoint(nearestLoopConstructPerspective);
+                            canvas.drawLine(behaviorConstruct.getPosition().x, behaviorConstruct.getPosition().y, nearestPoint.x, nearestPoint.y, paint);
+                        }
                     }
                 }
             }
@@ -835,10 +825,12 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
             // Draw snapping path to nearest loop
 //                if (behaviorConstruct.getDistanceToLoop (nearestLoop) < nearestLoopPerspective.getRadius ()) {
-            if (behaviorConstruct.getDistanceToLoopPerspective (nearestLoopConstructPerspective) < 200) {
-                Point nearestPoint = behaviorConstruct.getNearestPoint (nearestLoopConstructPerspective);
-                //Point nearestPoint = nearestLoopConstructPerspective.getNearestPoint (nearestLoopConstruct);
-                canvas.drawLine (behaviorConstruct.getPosition ().x, behaviorConstruct.getPosition ().y, nearestPoint.x, nearestPoint.y, paint);
+            if (nearestLoopConstructPerspective != null) {
+                if (behaviorConstruct.getDistanceToLoopPerspective(nearestLoopConstructPerspective) < 200) {
+                    Point nearestPoint = behaviorConstruct.getNearestPoint(nearestLoopConstructPerspective);
+                    //Point nearestPoint = nearestLoopConstructPerspective.getNearestPoint (nearestLoopConstruct);
+                    canvas.drawLine(behaviorConstruct.getPosition().x, behaviorConstruct.getPosition().y, nearestPoint.x, nearestPoint.y, paint);
+                }
             }
 
             // Draw snapping path to nearest loop
@@ -852,15 +844,15 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
     void drawCandidatePerspectives (Canvas canvas, Loop loop) {
 
-        LoopConstruct loopConstruct = this.getClay ().getPerspective ().getLoopConstruct (loop);
+        LoopConstruct loopConstruct = this.getClay ().getPerspective().getLoopConstruct (loop);
 
         myCanvas.save ();
 
-        if (this.getClay ().getPerspective ().hasLoopConstruct (loop)) {
+        if (this.getClay ().getPerspective().hasLoopConstruct (loop)) {
 
-            if (this.getClay ().getPerspective ().getLoopConstruct (loop).hasCandidatePerspective (loop)) {
+            if (this.getClay ().getPerspective().getLoopConstruct (loop).hasCandidatePerspective (loop)) {
 
-                LoopPerspective candidateLoopPerspective = this.getClay ().getPerspective ().getLoopConstruct (loop).getCandidatePerspective (loop);
+                LoopPerspective candidateLoopPerspective = this.getClay ().getPerspective().getLoopConstruct (loop).getCandidatePerspective (loop);
 
                 if (candidateLoopPerspective.startAnglePoint != null && candidateLoopPerspective.spanPoint != null) {
 
@@ -978,8 +970,8 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                 // Update touch action state with the raw touch information provided by the operating platform (i.e., Android).
                 for (int i = 0; i < pointCount; i++) {
                     int id = motionEvent.getPointerId (i);
-                    xTouches[id] = (motionEvent.getX (i) - getClay ().getPerspective ().getPosition ().x) / getClay ().getPerspective ().getScaleFactor (); // HACK: TODO: Get x position directly!
-                    yTouches[id] = (motionEvent.getY (i) - getClay ().getPerspective ().getPosition ().y) / getClay ().getPerspective ().getScaleFactor (); // HACK: TODO: Get y position directly!
+                    xTouches[id] = (motionEvent.getX (i) - getClay ().getPerspective().getPosition ().x) / getClay ().getPerspective().getScaleFactor (); // HACK: TODO: Get x position directly!
+                    yTouches[id] = (motionEvent.getY (i) - getClay ().getPerspective().getPosition ().y) / getClay ().getPerspective().getScaleFactor (); // HACK: TODO: Get y position directly!
                 }
 
 //                // Check if touching _any_ behaviors (or loops, or canvas, or perspective). If so, keep the canvas locked, and find the action that's being touched.
@@ -995,8 +987,8 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
                 // Update the state of the touched object based on the current touch interaction state.
                 if (touchAction == MotionEvent.ACTION_DOWN) {
 
-                    getClay ().getPerson ().touch (pointerId, xTouches[pointerId], yTouches[pointerId]);
-                    getClay ().getPerson ().classify (pointerId);
+                    getClay ().getPerson().touch (pointerId, xTouches[pointerId], yTouches[pointerId]);
+                    getClay ().getPerson().classify (pointerId);
 
                 } else if (touchAction == MotionEvent.ACTION_POINTER_DOWN) {
 
@@ -1004,13 +996,13 @@ public class AppSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 
                 } else if (touchAction == MotionEvent.ACTION_MOVE) {
 
-                    getClay ().getPerson ().touch (pointerId, xTouches[pointerId], yTouches[pointerId]);
-                    getClay ().getPerson ().classify (pointerId);
+                    getClay ().getPerson().touch (pointerId, xTouches[pointerId], yTouches[pointerId]);
+                    getClay ().getPerson().classify (pointerId);
 
                 } else if (touchAction == MotionEvent.ACTION_UP) {
 
-                    getClay ().getPerson ().untouch (pointerId, xTouches[pointerId], yTouches[pointerId]);
-                    getClay ().getPerson ().classify(pointerId);
+                    getClay ().getPerson().untouch (pointerId, xTouches[pointerId], yTouches[pointerId]);
+                    getClay ().getPerson().classify(pointerId);
 
                 } else if (touchAction == MotionEvent.ACTION_POINTER_UP) {
 

@@ -15,7 +15,7 @@ public class Person {
     public final int MAXIMUM_TOUCH_COUNT = 5;
 
 //    public static int DEFAULT_DRAG_DISTANCE = 15;
-    public final int MINIMUM_DRAG_DISTANCE = 15;
+    public final int MINIMUM_DRAG_DISTANCE = 35;
 
     private boolean hasTouches = false; // i.e., a touch is detected
     private int touchCount = 0; // i.e., the number of touch points detected
@@ -59,8 +59,9 @@ public class Person {
     BehaviorConstruct touchedBehaviorConstruct = null;
 
     boolean isPerformingBehaviorGesture = false; // True if touching _any_ action.
+    boolean isMovingBehavior = false;
 
-    BehaviorCondition touchedCondition = null;
+    BehaviorTrigger touchedCondition = null;
 
     boolean isPerformingPerspectiveGesture = false;
     boolean isMovingPerspective = false; // True if not touching an action, but dragging (not just touching) the canvas.
@@ -200,6 +201,7 @@ public class Person {
                     // Update the state of the touched behavior.
                     isTouchingBehavior[finger] = true; // TODO: Set state of finger
                     behaviorConstruct.state = BehaviorConstruct.State.MOVING;
+//                    getClay().getPerspective().setScaleFactor(0.8f);
 
                     // Add the touched behavior to the list of touched behaviors.
                     touchedBehaviorConstruct = behaviorConstruct;
@@ -321,11 +323,11 @@ public class Person {
                     if (nearestLoopDistance < (nearestLoopPerspective.getRadius () + conditionTouchProximity)) {
                         double touchAngle = nearestLoopConstruct.getAngle ((int) xTouch[finger], (int) yTouch[finger]); // i.e., the touch angle relative to the nearest loop
 
-                        BehaviorCondition behaviorCondition = nearestLoopConstruct.getBehaviorConditionAtAngle (touchAngle);
-                        if (behaviorCondition != null) {
+                        BehaviorTrigger behaviorTrigger = nearestLoopConstruct.getBehaviorConditionAtAngle (touchAngle);
+                        if (behaviorTrigger != null) {
                             isPerformingConditionGesture = true;
                             Log.v ("Condition", "starting condition gesture");
-                            this.touchedCondition = behaviorCondition;
+                            this.touchedCondition = behaviorTrigger;
                         }
 
                         // TODO: Loop.getBehaviorBeforeAngle(float angle)
@@ -362,6 +364,7 @@ public class Person {
                 if (isPerformingBehaviorGesture) {
 
                     Log.v("Condition", "continuing behavior gesture (response)");
+                    isMovingBehavior = true;
 
                 } else if (isPerformingConditionGesture) {
 
@@ -475,7 +478,12 @@ public class Person {
 
                     // If a loop gesture is not being performed, then it must be the case that the perspective is being moved.
                     if (isTouchingBehavior[finger] == false) {
-                        isMovingPerspective = true;
+
+                        // Move the perspective if it an be moved.
+                        if (getClay().enablePerspectiveMovingProperty) {
+                            isMovingPerspective = true;
+                        }
+
                     }
                 }
             }
@@ -530,47 +538,51 @@ public class Person {
 
                 Log.v ("Clay_Loop_Construct", "performing behavior construct gesture");
 
-                // Get the nearest loop construct to the touch
-                // TODO: Move this into a new function Perspective.getNearestLoopConstruct().
-                LoopConstruct nearestLoopConstruct = null;
-                float nearestLoopDistance = Float.MAX_VALUE;
-                for (LoopConstruct loopConstruct : this.getClay ().getPerspective ().getLoopConstructs ()) {
-                    double distanceToTouch = loopConstruct.getDistance((int) xTouch[finger], (int) yTouch[finger]);
-                    if (distanceToTouch < nearestLoopDistance) {
-                        nearestLoopDistance = (float) distanceToTouch;
-                        nearestLoopConstruct = loopConstruct;
+                if (isMovingBehavior) {
+
+                    // Get the nearest loop construct to the touch
+                    // TODO: Move this into a new function Perspective.getNearestLoopConstruct().
+                    LoopConstruct nearestLoopConstruct = null;
+                    float nearestLoopDistance = Float.MAX_VALUE;
+                    for (LoopConstruct loopConstruct : this.getClay().getPerspective().getLoopConstructs()) {
+                        double distanceToTouch = loopConstruct.getDistance((int) xTouch[finger], (int) yTouch[finger]);
+                        if (distanceToTouch < nearestLoopDistance) {
+                            nearestLoopDistance = (float) distanceToTouch;
+                            nearestLoopConstruct = loopConstruct;
+                        }
                     }
-                }
 
-                // Declare the distance around arc that will respond to touch
-                float conditionTouchProximity = nearestLoopConstruct.getRadius () + 200;
+                    // Declare the distance around arc that will respond to touch
+                    float conditionTouchProximity = nearestLoopConstruct.getRadius() + 200;
 
-                Log.v ("Clay_Loop_Construct", "nearestLoopDistance = " + nearestLoopDistance);
-                Log.v ("Clay_Loop_Construct", "conditionTouchProximity = " + conditionTouchProximity);
+                    Log.v("Clay_Loop_Construct", "nearestLoopDistance = " + nearestLoopDistance);
+                    Log.v("Clay_Loop_Construct", "conditionTouchProximity = " + conditionTouchProximity);
 
-                if (nearestLoopDistance > conditionTouchProximity) {
-                    Log.v ("Clay_Loop_Construct", "removing from loop: " + nearestLoopDistance);
-                    touchedBehaviorConstruct.state = BehaviorConstruct.State.MOVING;
+                    if (nearestLoopDistance > conditionTouchProximity) {
+                        Log.v("Clay_Loop_Construct", "removing from loop: " + nearestLoopDistance);
+                        touchedBehaviorConstruct.state = BehaviorConstruct.State.MOVING;
+//                        getClay().getPerspective().setScaleFactor(0.8f);
 //                    if (behaviorConstruct.hasLoopConstruct ()) {
 //                        behaviorConstruct.getLoopConstruct ().removeBehaviorConstruct (behaviorConstruct);
 //                    }
-                } else {
-                    Log.v ("Clay_Loop_Construct", "adding to loop: " + nearestLoopDistance);
-                    touchedBehaviorConstruct.state = BehaviorConstruct.State.COUPLED;
+                    } else {
+                        Log.v("Clay_Loop_Construct", "adding to loop: " + nearestLoopDistance);
+                        touchedBehaviorConstruct.state = BehaviorConstruct.State.COUPLED;
+//                        getClay().getPerspective().setScaleFactor(0.8f);
 //                    nearestLoopConstruct.addBehaviorConstruct (behaviorConstruct);
-                }
+                    }
 
-                // TODO: Get nearest loop to the touch point (where the behavior is being dragged)
-                // TODO: Get nearest loop perspective
-                // TODO: Get the loop placeholder associated with the nearest perspective
-                // TODO: Update the behavior's loop (based on the loop in the placeholder). (TODO: Shift removed behaviors into place in perspectives observing the segment where the removed behavior was.)
-                // TODO: Update position based on inferred position relative to the nearest loop in snapping range.
-                // TODO: Get the segment of the loop placeholder exposed by the perspective
-                // TODO: Calculate the relative angle of the touched behavior on the loop segment
-                // TODO: Calculate the relative point of the touched behavior on the loop segment
+                    // TODO: Get nearest loop to the touch point (where the behavior is being dragged)
+                    // TODO: Get nearest loop perspective
+                    // TODO: Get the loop placeholder associated with the nearest perspective
+                    // TODO: Update the behavior's loop (based on the loop in the placeholder). (TODO: Shift removed behaviors into place in perspectives observing the segment where the removed behavior was.)
+                    // TODO: Update position based on inferred position relative to the nearest loop in snapping range.
+                    // TODO: Get the segment of the loop placeholder exposed by the perspective
+                    // TODO: Calculate the relative angle of the touched behavior on the loop segment
+                    // TODO: Calculate the relative point of the touched behavior on the loop segment
 
-                // Update the position of the behavior construct to the touched point.
-                touchedBehaviorConstruct.setPosition ((int) xTouch[finger], (int) yTouch[finger]);
+                    // Update the position of the behavior construct to the touched point.
+                    touchedBehaviorConstruct.setPosition((int) xTouch[finger], (int) yTouch[finger]);
 
 //                for (BehaviorConstruct behaviorConstruct : touchedBehaviors) {
 //                    behaviorConstruct.setPosition ((int) xTouch[finger], (int) yTouch[finger]);
@@ -592,6 +604,7 @@ public class Person {
 ////                    behaviorConstruct.removeLoopConstruct ();/*
 ////                    behaviorConstruct.setLoopConstruct (nearestLoopConstruct);*/
 //                }
+                }
             }
 
         } else if (this.isTouch[finger] == false && this.isTouchPrevious[finger] == true) { // ...untouch.
@@ -601,79 +614,102 @@ public class Person {
             // Move the canvas if this is a drag event!
             if (isPerformingBehaviorGesture) {
 
-                Log.v("Condition", "stopping behavior gesture");
+                if (isMovingBehavior) {
+                    Log.v("Condition", "stopping behavior gesture");
 
-                // TODO: If moving an action, upon release, call "searchForPosition()" to check the "logical state" of the action in the system WRT the other loops, and find it's final position and update its state (e.g., if it's near enough to snap to a loop, to be deleted, etc.).
+                    // TODO: If moving an action, upon release, call "searchForPosition()" to check the "logical state" of the action in the system WRT the other loops, and find it's final position and update its state (e.g., if it's near enough to snap to a loop, to be deleted, etc.).
 
-                Log.v("Clay", "before isTouchingBehavior[pointerId]");
+                    Log.v("Clay", "before isTouchingBehavior[pointerId]");
 //                if (touchedBehaviors.size() > 0) {
-                if (touchedBehaviorConstruct != null) {
+                    if (touchedBehaviorConstruct != null) {
 //                    Log.v("Clay", "touchedBehaviors.size() = " + touchedBehaviors.size());
 
-                    Log.v ("Clay_Loop_Construct", "performing behavior construct gesture");
+                        Log.v("Clay_Loop_Construct", "performing behavior construct gesture");
 
-                    // Get the nearest loop construct to the touch
-                    // TODO: Move this into a new function Perspective.getNearestLoopConstruct().
-                    LoopConstruct nearestLoopConstruct = null;
-                    float nearestLoopDistance = Float.MAX_VALUE;
-                    for (LoopConstruct loopConstruct : this.getClay ().getPerspective ().getLoopConstructs ()) {
-                        double distanceToTouch = loopConstruct.getDistance((int) xTouch[finger], (int) yTouch[finger]);
-                        if (distanceToTouch < nearestLoopDistance) {
-                            nearestLoopDistance = (float) distanceToTouch;
-                            nearestLoopConstruct = loopConstruct;
+                        // Get the nearest loop construct to the touch
+                        // TODO: Move this into a new function Perspective.getNearestLoopConstruct().
+                        LoopConstruct nearestLoopConstruct = null;
+                        float nearestLoopDistance = Float.MAX_VALUE;
+                        for (LoopConstruct loopConstruct : this.getClay().getPerspective().getLoopConstructs()) {
+                            double distanceToTouch = loopConstruct.getDistance((int) xTouch[finger], (int) yTouch[finger]);
+                            if (distanceToTouch < nearestLoopDistance) {
+                                nearestLoopDistance = (float) distanceToTouch;
+                                nearestLoopConstruct = loopConstruct;
+                            }
                         }
-                    }
 
-                    // Declare the distance around arc that will respond to touch
-                    float conditionTouchProximity = nearestLoopConstruct.getRadius () + 200;
+                        // Declare the distance around arc that will respond to touch
+                        float conditionTouchProximity = nearestLoopConstruct.getRadius() + 200;
 
-                    Log.v ("Clay_Loop_Construct", "nearestLoopDistance = " + nearestLoopDistance);
-                    Log.v ("Clay_Loop_Construct", "conditionTouchProximity = " + conditionTouchProximity);
+                        Log.v("Clay_Loop_Construct", "nearestLoopDistance = " + nearestLoopDistance);
+                        Log.v("Clay_Loop_Construct", "conditionTouchProximity = " + conditionTouchProximity);
 
-                    // TODO: Move this into LoopConstruct.settlePosition()
-                    if (nearestLoopDistance > conditionTouchProximity) {
-                        Log.v ("Clay_Loop_Construct", "removing from loop: " + nearestLoopDistance);
-                        touchedBehaviorConstruct.state = BehaviorConstruct.State.FREE; // TODO: Move this into LoopConstruct.settlePosition()
-                        // TODO: send UDP message "remove behavior <uuid> from loop <uuid>"
-                        if (touchedBehaviorConstruct.hasLoopConstruct ()) {
-                            touchedBehaviorConstruct.getLoopConstruct ().removeBehaviorConstruct (touchedBehaviorConstruct);
-                        }
-                    } else {
-                        Log.v ("Clay_Loop_Construct", "adding to loop: " + nearestLoopDistance);
-                        touchedBehaviorConstruct.state = BehaviorConstruct.State.SEQUENCED; // TODO: Move this into LoopConstruct.settlePosition()
+                        // TODO: Move this into LoopConstruct.settlePosition()
+                        if (nearestLoopDistance > conditionTouchProximity) {
+                            Log.v("Clay_Loop_Construct", "removing from loop: " + nearestLoopDistance);
+                            touchedBehaviorConstruct.state = BehaviorConstruct.State.FREE; // TODO: Move this into LoopConstruct.settlePosition()
+//                        getClay().getPerspective().setScaleFactor(1.0f);
+                            // TODO: send UDP message "remove behavior <uuid> from loop <uuid>"
+                            if (touchedBehaviorConstruct.hasLoopConstruct()) {
+                                touchedBehaviorConstruct.getLoopConstruct().removeBehaviorConstruct(touchedBehaviorConstruct);
+                            }
+                        } else {
+                            Log.v("Clay_Loop_Construct", "adding to loop: " + nearestLoopDistance);
+                            touchedBehaviorConstruct.state = BehaviorConstruct.State.SEQUENCED; // TODO: Move this into LoopConstruct.settlePosition()
+//                        getClay().getPerspective().setScaleFactor(1.0f);
 //                        nearestLoopConstruct.addBehaviorConstruct (touchedBehaviorConstruct);
-                        // TODO: send UDP message "add behavior <uuid> to loop <uuid>"
-                        // <HACK>
-                        // Queue behavior transformation in the outgoing message queue.
-                        // e.g., create behavior <uuid> "turn light <number> on" --> Response: got <message>
-                        // e.g., (shorthand) "add behavior <uuid> to loop (<uuid>)"
-                        // e.g., "focus perspective on behavior <uuid>" (Changes perspective so implicit language refers to it.)
-                        String behaviorUuid = touchedBehaviorConstruct.getUuid ().toString (); // HACK: BehaviorConstruct and Behavior should have separate UUIDs.
-                        //String behaviorConstructUuid = behaviorConstruct.getUuid ().toString (); // HACK: BehaviorConstruct and Behavior should have separate UUIDs.
+                            // TODO: send UDP message "add behavior <uuid> to loop <uuid>"
+                            // <HACK>
+                            // Queue behavior transformation in the outgoing message queue.
+                            // e.g., create behavior <uuid> "turn light <number> on" --> Response: got <message>
+                            // e.g., (shorthand) "add behavior <uuid> to loop (<uuid>)"
+                            // e.g., "focus perspective on behavior <uuid>" (Changes perspective so implicit language refers to it.)
+                            String behaviorUuid = touchedBehaviorConstruct.getUuid().toString(); // HACK: BehaviorConstruct and Behavior should have separate UUIDs.
+                            //String behaviorConstructUuid = behaviorConstruct.getUuid ().toString (); // HACK: BehaviorConstruct and Behavior should have separate UUIDs.
 //                        getClay ().getCommunication ().sendMessage (nearestLoopConstruct.getUnit ().getInternetAddress (), "create behavior " + behaviorUuid + " \"" + touchedBehaviorConstruct.getBehavior ().getTitle () + "\"");
 //                        getClay ().getCommunication ().sendMessage (nearestLoopConstruct.getUnit ().getInternetAddress (), "add behavior " + behaviorUuid + " to loop");
 //                        // </HACK>
-                    }
+                        }
 
-                    // Settle position of action.
+                        // Settle position of action.
 //                    for (BehaviorConstruct behaviorConstruct : touchedBehaviors) {
 //                        behaviorConstruct.settlePosition();
 //                    }
-                    touchedBehaviorConstruct.settlePosition ();
+                        touchedBehaviorConstruct.settlePosition();
 
-                    // HACK: This hack removes _all_ touched behaviors when _any_ finger is lifted up.
+                        // HACK: This hack removes _all_ touched behaviors when _any_ finger is lifted up.
 //                    touchedBehaviors.clear();
 //                    touchedBehaviorConstruct = null;
-                    // TODO: Remove specific finger from the list of fingers touching down.
+                        // TODO: Remove specific finger from the list of fingers touching down.
 
-                    // HACK: This hack updates the touch flag that indicates if _any_ finger is touching to false.
-                    isPerformingBehaviorGesture = false;
-                    // TODO: Set state of finger
+                        // HACK: This hack updates the touch flag that indicates if _any_ finger is touching to false.
+                        isPerformingBehaviorGesture = false;
+                        // TODO: Set state of finger
 
 //                            // Update the gesture state
 //                            isPerformingLoopGesture = false;
 //                            selectedLoop = null;
+
+                        // Delete behavior (if it's in the right position!)
+                        if (touchedBehaviorConstruct.getPosition().y > 750) {
+                            // Remove behavior construct from perspective!
+                            // NOTE: This shouldn't delete it from the behavior repository!
+                            LoopConstruct loopConstruct = touchedBehaviorConstruct.getLoopConstruct();
+                            getClay().getPerspective().getBehaviorConstructs().remove(touchedBehaviorConstruct);
+                        }
+                    }
+
+                } else {
+                    Log.v ("Clay_Update_Behavior", "Updating behavior");
+
+                    // <HACK>
+                    ((AppActivity) getClay ().getPlatformContext()).Hack_PromptForBehaviorTransform(touchedBehaviorConstruct);
+                    // </HACK>
+
+                    // TODO: Populate the behavior transform editor with the present behavior.
                 }
+
+                isMovingBehavior = false;
 
             } else if (isPerformingConditionGesture) {
 
@@ -684,16 +720,16 @@ public class Person {
 
                     Log.v ("Condition", "touchedCondition.type = " + this.touchedCondition.getType());
 
-                    if (touchedCondition.getType() == BehaviorCondition.Type.NONE) {
-                        touchedCondition.setType(BehaviorCondition.Type.SWITCH);
-                    } else if (touchedCondition.getType() == BehaviorCondition.Type.SWITCH) {
-                        touchedCondition.setType(BehaviorCondition.Type.THRESHOLD);
-                    } else if (touchedCondition.getType() == BehaviorCondition.Type.THRESHOLD) {
-                        touchedCondition.setType(BehaviorCondition.Type.GESTURE);
-                    } else if (touchedCondition.getType() == BehaviorCondition.Type.GESTURE) {
-                        touchedCondition.setType(BehaviorCondition.Type.MESSAGE);
-                    } else if (touchedCondition.getType() == BehaviorCondition.Type.MESSAGE) {
-                        touchedCondition.setType(BehaviorCondition.Type.NONE);
+                    if (touchedCondition.getType() == BehaviorTrigger.Type.NONE) {
+                        touchedCondition.setType(BehaviorTrigger.Type.SWITCH);
+                    } else if (touchedCondition.getType() == BehaviorTrigger.Type.SWITCH) {
+                        touchedCondition.setType(BehaviorTrigger.Type.THRESHOLD);
+                    } else if (touchedCondition.getType() == BehaviorTrigger.Type.THRESHOLD) {
+                        touchedCondition.setType(BehaviorTrigger.Type.GESTURE);
+                    } else if (touchedCondition.getType() == BehaviorTrigger.Type.GESTURE) {
+                        touchedCondition.setType(BehaviorTrigger.Type.MESSAGE);
+                    } else if (touchedCondition.getType() == BehaviorTrigger.Type.MESSAGE) {
+                        touchedCondition.setType(BehaviorTrigger.Type.NONE);
                     }
 
                     touchedCondition = null;
@@ -753,7 +789,7 @@ public class Person {
 
                 if (isMovingPerspective) {
 
-                    this.getClay ().getPerspective ().moveBy ((int) (xTouch[finger] - xTouchStart[finger]), (int) (yTouch[finger] - yTouchStart[finger]));
+                    this.getClay().getPerspective().moveBy((int) (xTouch[finger] - xTouchStart[finger]), (int) (yTouch[finger] - yTouchStart[finger]));
 
                 } else {
 
@@ -780,6 +816,7 @@ public class Person {
 
             // TODO: In processTouchInteractions, compute isMovingPerspective and if it is true, move the perspective.
             isPerformingBehaviorGesture = false;
+            isMovingBehavior = false;
             isPerformingLoopGesture = false;
             isCreatingLoopPerspective = false;
             isPerformingLoopPerspectiveGesture = false;
