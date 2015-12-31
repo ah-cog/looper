@@ -254,7 +254,7 @@ public class Communication {
 //                    getClay ().getDatabase().addEvent (unit, "discovered");
 
                     // HACK: This should not be here always. It should eventually be replaced with a command to load a specific loop from the Internet.
-//                    sendMessage (unit.getInternetAddress (), "reset");
+//                    sendMessage (unit.getInternetAddress (), "reData");
 
                     /*
                     // Print the current list of Clay units.

@@ -5,6 +5,7 @@ import android.util.Log;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
 
 import java.text.SimpleDateFormat;
@@ -26,7 +27,7 @@ public class Database {
         this.enableFirebase ();
         this.startFirebase();
 
-        getBehaviors();
+//        getBehaviors();
 
 //        testAddUnit();
     }
@@ -43,8 +44,76 @@ public class Database {
         return this.clay;
     }
 
-    public void addBehaviorToRepository (Behavior behavior) {
+    public void addUnit (Unit unit) {
+        Firebase unitRef = rootRef.child ("units");
+        unitRef.push ().setValue (unit);
+    }
 
+    public void getUnit (final UUID unitUuid) {
+
+        final String unitUuidString = unitUuid.toString();
+
+        Firebase unitsRef = rootRef.child("units");
+//        Query unitQueryRef = unitsRef.orderByChild ("uuid").equalTo (unitUuidString);
+
+        unitsRef.addValueEventListener (new ValueEventListener () {
+
+            @Override
+            public void onDataChange (DataSnapshot dataSnapshot) {
+
+                if (dataSnapshot.getChildrenCount() == 0) {
+                    Log.v("Clay_Database", "There is no unit with UUID equal to " + unitUuidString + ".");
+
+                    // Save unit to database.
+                    if (getClay ().hasUnitByUuid (unitUuid)) {
+                        Log.v("Clay_Database", "Saving unit to database.");
+                        Unit unit = getClay ().getUnitByUuid (unitUuid);
+                        addUnit(unit);
+                    } else {
+                        Log.v("Clay_Database", "Failed to save unit to database. This entails undefined problems.");
+                    }
+
+                } else if (dataSnapshot.getChildrenCount() > 0) {
+
+                    // Store unit in the local cache.
+                    for (DataSnapshot unitSnapshot : dataSnapshot.getChildren()) {
+                        // Create behavior object from database.
+                        Unit retrievedUnit = unitSnapshot.getValue (Unit.class);
+                        Log.v("Clay_Database", "Retrieved unit (UUID: " + retrievedUnit.getUuid() + ").");
+
+                        // Update cached unit from database.
+                        if (getClay ().hasUnitByUuid (unitUuid)) {
+                            Unit unit = getClay ().getUnitByUuid (unitUuid);
+
+                            // Updated the cached unit with information from the unit retrieved from the database.
+                            // TODO: unit.setLoop () <-- retrievedUnit.getLoop()
+
+                            Log.v("Clay_Database", "Saving unit to database.");
+                        } else {
+                            Log.v("Clay_Database", "Failed to save unit to database. This entails undefined problems.");
+                        }
+
+
+                        // TODO: Update the state of unit in the cache. This includes (1) streaming in the current behavior.
+                    }
+
+                }
+            }
+
+            @Override
+            public void onCancelled (FirebaseError firebaseError) {
+                Log.v ("Clay_Database", "The read failed: " + firebaseError.getMessage ());
+            }
+        });
+
+    }
+
+    public void addBehavior(Behavior behavior) {
+
+        Firebase behaviorRef = rootRef.child ("behaviors");
+        behaviorRef.push ().setValue (behavior);
+
+        /*
         // Behaviors/<uuid>
         String behaviorUuid = behavior.getUuid ().toString ();
         Firebase behaviorRef = rootRef.child ("Behaviors").child (behaviorUuid);
@@ -52,6 +121,7 @@ public class Database {
         // Behaviors/<uuid>/Transform
         String behaviorTransform = behavior.getTransform ();
         behaviorRef.child ("Transform").setValue  (behaviorTransform);
+        */
 
         // Behaviors/<uuid>/Loop
         // TODO: Create a list of the UUIDs that are part of the unit's behavior.
@@ -62,37 +132,43 @@ public class Database {
 
     public void getBehaviors () {
 
-        // Firebase unitRef = rootRef.child ("Units").child (unitUuid);
-        Firebase unitRef = new Firebase ("https://clay.firebaseio.com/Units");
-
-        unitRef.addValueEventListener(new ValueEventListener() {
+        Firebase behaviorRef = rootRef.child ("behaviors");
+        behaviorRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot child : dataSnapshot.getChildren()) {
-                    Log.v("Firebase", child.getValue().toString());
+
+                // Store behaviors in the local cache.
+                for (DataSnapshot behaviorSnapshot : dataSnapshot.getChildren()) {
+                    // Create behavior object from database.
+                    Behavior behavior = behaviorSnapshot.getValue (Behavior.class);
+                    Log.v ("Clay_Behavior_Repo", "Adding behavior " + behavior.getTitle() + " (UUID: " + behavior.getUuid() + ")");
+                    getClay ().getBehaviorRepository ().addBehavior (behavior);
                 }
+
+                // Add the basic behaviors if they do not exist.
+                getClay ().getBehaviorRepository().verifyBasicBehaviors ();
             }
 
             @Override
             public void onCancelled(FirebaseError firebaseError) {
-                Log.v("Firebase", "The read failed: " + firebaseError.getMessage());
+                Log.v ("Clay_Behavior_Repo", "The read failed: " + firebaseError.getMessage ());
             }
         });
 
     }
 
-    public void setBehavior (Unit unit, Behavior behavior) {
-
-        String unitUuid = unit.getUuid ().toString ();
-
-        // Units/<uuid>
-        Firebase unitRef = rootRef.child ("Units").child (unitUuid);
-
-        // Units/<uuid>/Behavior
-        String behaviorUuid = behavior.getUuid ().toString ();
-        unitRef.child ("Behavior").setValue  (behaviorUuid);
-
-    }
+//    public void setBehavior (Unit unit, Behavior behavior) {
+//
+//        String unitUuid = unit.getUuid ().toString ();
+//
+//        // Units/<uuid>
+//        Firebase unitRef = rootRef.child ("Units").child (unitUuid);
+//
+//        // Units/<uuid>/Behavior
+//        String behaviorUuid = behavior.getUuid ().toString ();
+//        unitRef.child ("Behavior").setValue  (behaviorUuid);
+//
+//    }
 
 //    public void testAddUnit () {
 //        // TODO: String unitUuid = clay.getUnits().get(0).getUuid();

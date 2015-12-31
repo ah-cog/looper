@@ -7,12 +7,13 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.UUID;
 
 public class Clay {
 
     private ArrayList<Unit> units = new ArrayList<Unit> (); // TODO: Move this to the System class!
 
-    private BehaviorRepository behaviorRepository = new BehaviorRepository (this);
+    private BehaviorRepository behaviorRepository = null;
 
     private System system = new System (this); // i.e., like the "model"
     private Perspective perspective = new Perspective (this); // ie., like the "view"
@@ -43,6 +44,9 @@ public class Clay {
         // Start the database system
         this.database = new Database (this);
 
+        // Set up behavior repository
+        this.behaviorRepository = new BehaviorRepository (this);
+
         // TODO: Discover units!
     }
 
@@ -60,7 +64,7 @@ public class Clay {
     }
 
     public long getTime () {
-        return this.calendar.getTimeInMillis ();
+        return this.calendar.getTimeInMillis();
     }
 
     public static Context getPlatformContext () {
@@ -111,7 +115,13 @@ public class Clay {
 
     public void addUnit (Unit unit) {
         if (!this.units.contains (unit)) {
+
+            // Add unit to present (i.e., local cache).
             this.units.add (unit);
+
+            // Retrieve unit from memory (i.e., database).
+            //getDatabase().addUnit(unit);
+            //getDatabase ().getUnit (unit.getUuid ());
         }
     }
 
@@ -121,6 +131,32 @@ public class Clay {
 
     public boolean hasUnit (Unit unit) {
         return this.units.contains (unit);
+    }
+
+    public boolean hasUnitByUuid (UUID unitUuid) {
+        Log.v ("Clay_Time", "Looking for unit (in set of " + getUnits ().size () + ") with UUID " + unitUuid + "...");
+        for (Unit unit : getUnits ()) {
+            Log.v ("Clay_Time", "\t...checking address " + unit.getInternetAddress ());
+            if (unit.getUuid().compareTo(unitUuid) == 0) {
+                Log.v ("Clay_Time", "Found matching address " + unit.getInternetAddress ());
+                return true;
+            }
+        }
+        Log.v ("Clay_Time", "Didn't find a matching address");
+        return false;
+    }
+
+    public Unit getUnitByUuid (UUID unitUuid) {
+        Log.v ("Clay_Time", "Looking for unit (in set of " + getUnits ().size () + ") with UUID " + unitUuid + "...");
+        for (Unit unit : getUnits ()) {
+            Log.v ("Clay_Time", "\t...checking address " + unit.getInternetAddress ());
+            if (unit.getUuid().compareTo(unitUuid) == 0) {
+                Log.v ("Clay_Time", "Found matching address " + unit.getInternetAddress ());
+                return unit;
+            }
+        }
+        Log.v ("Clay_Time", "Didn't find a matching address");
+        return null;
     }
 
     public boolean hasUnitByAddress (String address) {

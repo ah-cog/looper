@@ -6,9 +6,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
 
-/**
- * Created by mrgubbels on 11/12/15.
- */
 public class Unit {
 
     private Clay clay = null;
@@ -22,6 +19,10 @@ public class Unit {
     private Loop loop = null; // The unit's IP address
 
     // TODO: Cache/model the unit's state and behavior
+
+    public Unit () {
+        // This empty default constructor is necessary for Firebase to be able to deserialize objects.
+    }
 
     Unit (Clay clay, UUID uuid) {
         this.clay = clay;
@@ -77,8 +78,6 @@ public class Unit {
     public String getMeshAddress () {
         return this.meshAddress;
     }
-
-    // TODO: Simulate the unit's state change based on its behavior
 
     public Loop getLoop () {
         return this.loop;

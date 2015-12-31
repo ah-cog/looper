@@ -63,8 +63,7 @@ public class BehaviorConstruct {
 
         // Create and associate a behavior with this behavior construct.
         this.behavior = new Behavior(this); // TODO: Remove this! Assign this through the behavior selection interface.
-        this.behavior.setTitle (String.valueOf(Behavior.BEHAVIOR_COUNT));
-        Behavior.BEHAVIOR_COUNT++;
+        this.behavior.setTitle ("");
 
         // Create the behavior condition associated with this behavior construct.
         this.condition = new BehaviorTrigger(this, BehaviorTrigger.Type.NONE);

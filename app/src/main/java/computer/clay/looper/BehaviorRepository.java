@@ -1,5 +1,7 @@
 package computer.clay.looper;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 
 public class BehaviorRepository {
@@ -16,60 +18,65 @@ public class BehaviorRepository {
 
         // HACK: Set up some sample behaviors
         // TODO: Load these from a server! Or recover them from the local cache.
-        this.setupTestRepository();
+        initializeRepository ();
 
         // TODO: Populate repository with basic behavior transforms.
     }
 
-    private void setupTestRepository () {
+    public Clay getClay () {
+        return this.clay;
+    }
+
+    private void initializeRepository () {
+        getClay ().getDatabase ().getBehaviors ();
+    }
+
+    public void addBehavior (Behavior behavior) {
+        this.cachedBehaviors.add (behavior);
+        Log.v("Clay_Behavior_Repo", "Adding behavior to repository.");
+    }
+
+    public void verifyBasicBehaviors () {
 
         Behavior behavior = null;
 
-        behavior = new Behavior ("control");
-        this.cachedBehaviors.add (behavior);
+        if (!hasBehaviorByTitle ("control")) {
+            Log.v ("Clay_Behavior_Repo", "\"control\" behavior not found in the repository. Adding it.");
+            behavior = new Behavior("control");
+            this.cachedBehaviors.add(behavior);
+            getClay().getDatabase().addBehavior(behavior);
+        }
 
-        behavior = new Behavior ("time");
-        this.cachedBehaviors.add (behavior);
+        if (!hasBehaviorByTitle ("time")) {
+            Log.v ("Clay_Behavior_Repo", "\"time\" behavior not found in the repository. Adding it.");
+            behavior = new Behavior("time");
+            this.cachedBehaviors.add(behavior);
+            getClay().getDatabase().addBehavior(behavior);
+        }
 
-        behavior = new Behavior ("cause/effect");
-        this.cachedBehaviors.add (behavior);
+        if (!hasBehaviorByTitle ("cause/effect")) {
+            Log.v ("Clay_Behavior_Repo", "\"cause/effect\" behavior not found in the repository. Adding it.");
+            behavior = new Behavior("cause/effect");
+            this.cachedBehaviors.add(behavior);
+            getClay().getDatabase().addBehavior(behavior);
+        }
 
-        behavior = new Behavior ("message");
-        this.cachedBehaviors.add (behavior);
+        if (!hasBehaviorByTitle ("message")) {
+            Log.v ("Clay_Behavior_Repo", "\"message\" behavior not found in the repository. Adding it.");
+            behavior = new Behavior("message");
+            this.cachedBehaviors.add(behavior);
+            getClay().getDatabase().addBehavior(behavior);
+        }
 
-        behavior = new Behavior ("say");
-        this.cachedBehaviors.add (behavior);
+        if (!hasBehaviorByTitle ("say")) {
+            Log.v ("Clay_Behavior_Repo", "\"say\" behavior not found in the repository. Adding it.");
+            behavior = new Behavior("say");
+            this.cachedBehaviors.add(behavior);
+            getClay().getDatabase().addBehavior(behavior);
+        }
 
-        /*
-        final CharSequence[] items = {
-                "channel",
-                "time",
-                "cause/effect",
-                "message",
-                "say",
-
-                "reset",
-                "condition",
-                "connect component",
-                "request",
-                "memory",
-
-//                "turn light 1 on",
-//                "turn light 1 off",
-//                "turn light 2 on",
-//                "turn light 2 off",
-//                "turn lights on",
-//                "turn lights off",
-//                "wait 200 ms",
-//                "wait 1000",
-//                "say \"i sense a soul in search of answers\"",
-//                "slowly say it's done",
-//                "quickly say it's done",
-//                "request plug the sensor's signal wire into channel 6. i am blinking it for you.",
-//                "request connect ground",
-//                "request connect power"
-        };
-        */
+        // TODO:
+        // - Add "choose behavior" behavior which tells Clay to ask to "select one of the following menu of curated behaviors and I will perform it."
 
 //        Behavior lightBehavior = new Behavior("light"); // e.g., "turn on lights  3 8 9 10 12"
 //        this.cachedBehaviors.add(lightBehavior);
@@ -91,16 +98,44 @@ public class BehaviorRepository {
 //        this.cachedBehaviors.add(serviceBehavior);
     }
 
+    private boolean hasBehaviorByTitle (String title) {
+        for (Behavior cachedBehavior : this.cachedBehaviors) {
+            if (cachedBehavior.getTitle().equals(title)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void addRepositoryUri (String repositoryUri) {
         this.repositoryUris.add (repositoryUri);
     }
 
-    public void hasBehavior (String behaviorUri) {
-        // TODO: Search current set of repositories for the specified behavior
+    public boolean hasBehavior (String behaviorUuid) {
+
+        // Search cached behaviors.
+        for (Behavior cachedBehavior : this.cachedBehaviors) {
+            if (cachedBehavior.getUuid().equals(behaviorUuid)) {
+                return true;
+            }
+        }
+
+        // TODO: Search online behavior repository.
+
+        return false;
     }
 
-    public Behavior getBehavior (String behaviorUri) {
-        // TODO: Return the behavior with the specified URI or null.
+    public Behavior getBehavior (String behaviorUuid) {
+
+        // Search cached behaviors.
+        for (Behavior cachedBehavior : this.cachedBehaviors) {
+            if (cachedBehavior.getUuid().equals(behaviorUuid)) {
+                return cachedBehavior;
+            }
+        }
+
+        // TODO: Search online behavior repository.
+
         return null;
     }
 

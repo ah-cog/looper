@@ -6,8 +6,6 @@ import java.util.UUID;
 
 public class Behavior {
 
-    public static int BEHAVIOR_COUNT = 0; // TODO: Replace this with UUID!
-
     private UUID uuid;
 
     private String title;
@@ -17,6 +15,10 @@ public class Behavior {
     private BehaviorConstruct behaviorConstruct;
 
 //    private Loop loop = null;
+
+    public Behavior () {
+        // This empty default constructor is necessary for Firebase to be able to deserialize objects.
+    }
 
     Behavior (String title) {
         this.behaviorConstruct = null;
